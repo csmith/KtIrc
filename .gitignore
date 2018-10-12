@@ -1,0 +1,7 @@
+# IDEA files
+/.idea
+/*.iml
+
+# Gradle intermediates
+/.gradle
+/out
