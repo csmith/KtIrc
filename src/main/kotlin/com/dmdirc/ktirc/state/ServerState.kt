@@ -37,6 +37,7 @@ sealed class ServerFeature<T : Any>(val name: String, val type: KClass<T>, val d
     object MaximumChannels : ServerFeature<Int>("CHANLIMIT", Int::class)
     object ChannelModes : ServerFeature<String>("CHANMODES", String::class)
     object MaximumChannelNameLength : ServerFeature<Int>("CHANNELLEN", Int::class, 200)
+    object WhoxSupport : ServerFeature<Boolean>("WHOX", Boolean::class, false)
 }
 
 val serverFeatures: Map<String, ServerFeature<*>> by lazy {

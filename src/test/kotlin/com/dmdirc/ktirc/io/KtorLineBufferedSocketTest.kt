@@ -175,41 +175,4 @@ internal class KtorLineBufferedSocketTest {
         }
     }
 
-    @Test
-    fun `KtorLineBufferedSocket reports sent lines to debug receiver`() = runBlocking {
-        ServerSocket(12321).use { serverSocket ->
-            val socket = KtorLineBufferedSocket("localhost", 12321)
-            GlobalScope.launch {
-                serverSocket.accept()
-            }
-
-            var received = ""
-            socket.debugReceiver = { str -> received = str }
-            socket.connect()
-            socket.sendLine("Test 123")
-
-            assertEquals(">>> Test 123", received)
-        }
-    }
-
-    @Test
-    fun `KtorLineBufferedSocket reports received lines to debug receiver`() = runBlocking {
-        ServerSocket(12321).use { serverSocket ->
-            val socket = KtorLineBufferedSocket("localhost", 12321)
-            GlobalScope.launch {
-                with(serverSocket.accept()) {
-                    getOutputStream().write("Hi there\r\n".toByteArray())
-                    close()
-                }
-            }
-
-            var received = ""
-            socket.debugReceiver = { str -> received = str }
-            socket.connect()
-            socket.readLines(this).receive()
-
-            assertEquals("<<< Hi there", received)
-        }
-    }
-
 }

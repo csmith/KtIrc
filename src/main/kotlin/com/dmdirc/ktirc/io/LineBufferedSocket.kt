@@ -1,5 +1,6 @@
 package com.dmdirc.ktirc.io
 
+import com.dmdirc.ktirc.util.logger
 import io.ktor.network.selector.ActorSelectorManager
 import io.ktor.network.sockets.Socket
 import io.ktor.network.sockets.aSocket
@@ -14,9 +15,6 @@ import kotlinx.coroutines.io.ByteWriteChannel
 import java.net.InetSocketAddress
 
 interface LineBufferedSocket {
-
-    // TODO: This is a bit pants.
-    var debugReceiver: ((String) -> Unit)?
 
     suspend fun connect()
     fun disconnect()
@@ -39,26 +37,27 @@ class KtorLineBufferedSocket(private val host: String, private val port: Int): L
         const val LINE_FEED = '\n'.toByte()
     }
 
-    // TODO: This is a bit pants.
-    override var debugReceiver: ((String) -> Unit)? = null
+    private val log by logger()
 
     private lateinit var socket: Socket
     private lateinit var readChannel: ByteReadChannel
     private lateinit var writeChannel: ByteWriteChannel
 
     override suspend fun connect() {
+        log.info { "Connecting..." }
         socket = aSocket(ActorSelectorManager(ioCoroutineDispatcher)).tcp().connect(InetSocketAddress(host, port))
         readChannel = socket.openReadChannel()
         writeChannel = socket.openWriteChannel()
     }
 
     override fun disconnect() {
+        log.info { "Disconnecting..." }
         socket.close()
     }
 
     override suspend fun sendLine(line: ByteArray, offset: Int, length: Int) {
         with (writeChannel) {
-            debugReceiver?.let { it(">>> ${String(line, offset, length)}") }
+            log.fine { ">>> ${String(line, offset, length)}" }
             writeAvailable(line, offset, length)
             writeByte(CARRIAGE_RETURN)
             writeByte(LINE_FEED)
@@ -78,7 +77,7 @@ class KtorLineBufferedSocket(private val host: String, private val port: Int): L
                 if (lineBuffer[i] == CARRIAGE_RETURN || lineBuffer[i] == LINE_FEED) {
                     if (start < i) {
                         val line = lineBuffer.sliceArray(start until i)
-                        debugReceiver?.let { it("<<< ${String(line)}") }
+                        log.fine { "<<< ${String(line)}" }
                         send(line)
                     }
                     start = i + 1

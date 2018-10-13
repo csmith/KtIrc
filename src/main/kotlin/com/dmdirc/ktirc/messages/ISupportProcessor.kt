@@ -5,9 +5,12 @@ import com.dmdirc.ktirc.io.CaseMapping
 import com.dmdirc.ktirc.io.IrcMessage
 import com.dmdirc.ktirc.state.ServerState
 import com.dmdirc.ktirc.state.serverFeatures
+import com.dmdirc.ktirc.util.logger
 import kotlin.reflect.KClass
 
 class ISupportProcessor(val serverState: ServerState) : MessageProcessor {
+
+    private val log by logger()
 
     override val commands = arrayOf("005")
 
@@ -27,20 +30,33 @@ class ISupportProcessor(val serverState: ServerState) : MessageProcessor {
         }
     }
 
-    private fun resetFeature(name: ByteArray) = name.asFeature()?.let { serverState.resetFeature(it) }
+    private fun resetFeature(name: ByteArray) = name.asFeature()?.let {
+        serverState.resetFeature(it)
+        log.finer { "Reset feature ${it::class}" }
+    }
 
     @Suppress("UNCHECKED_CAST")
     private fun enableFeature(name: ByteArray, value: ByteArray) {
         name.asFeature()?.let { feature ->
             serverState.setFeature(feature, value.cast(feature.type))
+            log.finer { "Set feature ${feature::class} to ${String(value)}" }
         }
     }
 
     private fun enableFeatureWithDefault(name: ByteArray) {
-        TODO("not implemented")
+        name.asFeature()?.let { feature ->
+            when (feature.type) {
+                Boolean::class -> serverState.setFeature(feature, true)
+                else -> TODO("not implemented")
+            }
+        }
     }
 
     private fun ByteArray.asFeature() = serverFeatures[String(this)]
+            ?: run {
+                log.warning { "Unknown feature in 005: ${String(this)}" }
+                null
+            }
 
     private fun ByteArray.cast(to: KClass<out Any>): Any = when (to) {
         Int::class -> String(this).toInt()
