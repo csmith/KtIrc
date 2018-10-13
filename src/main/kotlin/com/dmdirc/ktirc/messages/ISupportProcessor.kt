@@ -2,7 +2,6 @@ package com.dmdirc.ktirc.messages
 
 import com.dmdirc.ktirc.io.CaseMapping
 import com.dmdirc.ktirc.io.IrcMessage
-import com.dmdirc.ktirc.state.ServerFeature
 import com.dmdirc.ktirc.state.ServerState
 import com.dmdirc.ktirc.state.serverFeatures
 import kotlin.reflect.KClass
