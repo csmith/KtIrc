@@ -1,10 +1,9 @@
 package com.dmdirc.ktirc.io
 
+import com.dmdirc.ktirc.events.IrcEvent
+import com.dmdirc.ktirc.events.ServerConnected
 import com.dmdirc.ktirc.messages.MessageProcessor
-import com.nhaarman.mockitokotlin2.doReturn
-import com.nhaarman.mockitokotlin2.inOrder
-import com.nhaarman.mockitokotlin2.mock
-import com.nhaarman.mockitokotlin2.verify
+import com.nhaarman.mockitokotlin2.*
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Test
@@ -21,7 +20,7 @@ internal class MessageHandlerTest {
 
     @Test
     fun `MessageHandler passes message on to correct processor`() = runBlocking {
-        val handler = MessageHandler(listOf(joinProcessor, nickProcessor))
+        val handler = MessageHandler(listOf(joinProcessor, nickProcessor)) {}
         val message = IrcMessage(null, null, "JOIN", emptyList())
 
         with(Channel<IrcMessage>(1)) {
@@ -31,11 +30,12 @@ internal class MessageHandlerTest {
         }
 
         verify(joinProcessor).process(message)
+        Unit
     }
 
     @Test
     fun `MessageHandler reads multiple messages`() = runBlocking {
-        val handler = MessageHandler(listOf(joinProcessor, nickProcessor))
+        val handler = MessageHandler(listOf(joinProcessor, nickProcessor)) {}
         val joinMessage = IrcMessage(null, null, "JOIN", emptyList())
         val nickMessage = IrcMessage(null, null, "NICK", emptyList())
         val otherMessage = IrcMessage(null, null, "OTHER", emptyList())
@@ -52,6 +52,23 @@ internal class MessageHandlerTest {
             verify(joinProcessor).process(joinMessage)
             verify(nickProcessor).process(nickMessage)
         }
+        Unit
+    }
+
+    @Test
+    fun `MessageHandler invokes event handler with returned events`() = runBlocking {
+        val eventHandler = mock<(IrcEvent) -> Unit>()
+        val handler = MessageHandler(listOf(joinProcessor, nickProcessor), eventHandler)
+        val joinMessage = IrcMessage(null, null, "JOIN", emptyList())
+        whenever(joinProcessor.process(any())).thenReturn(listOf(ServerConnected))
+
+        with(Channel<IrcMessage>(1)) {
+            send(joinMessage)
+            close()
+            handler.processMessages(this)
+        }
+
+        verify(eventHandler).invoke(ServerConnected)
     }
 
 }

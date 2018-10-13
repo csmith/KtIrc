@@ -1,5 +1,6 @@
 package com.dmdirc.ktirc.messages
 
+import com.dmdirc.ktirc.events.IrcEvent
 import com.dmdirc.ktirc.io.IrcMessage
 
 interface MessageProcessor {
@@ -12,6 +13,6 @@ interface MessageProcessor {
     /**
      * Processes the given message.
      */
-    fun process(message: IrcMessage)
+    fun process(message: IrcMessage): List<IrcEvent>
 
 }

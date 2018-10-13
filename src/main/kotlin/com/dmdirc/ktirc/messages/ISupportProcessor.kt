@@ -1,5 +1,6 @@
 package com.dmdirc.ktirc.messages
 
+import com.dmdirc.ktirc.events.IrcEvent
 import com.dmdirc.ktirc.io.CaseMapping
 import com.dmdirc.ktirc.io.IrcMessage
 import com.dmdirc.ktirc.state.ServerState
@@ -10,11 +11,12 @@ class ISupportProcessor(val serverState: ServerState) : MessageProcessor {
 
     override val commands = arrayOf("005")
 
-    override fun process(message: IrcMessage) {
+    override fun process(message: IrcMessage): List<IrcEvent> {
         // Ignore the first (nickname) and last ("are supported by this server") params
         for (i in 1 until message.params.size - 1) {
             parseParam(message.params[i])
         }
+        return emptyList()
     }
 
     private fun parseParam(param: ByteArray) = when (param[0]) {
