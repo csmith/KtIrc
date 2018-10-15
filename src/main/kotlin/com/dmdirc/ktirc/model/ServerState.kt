@@ -1,36 +1,31 @@
-package com.dmdirc.ktirc.state
+package com.dmdirc.ktirc.model
 
 import com.dmdirc.ktirc.io.CaseMapping
 import kotlin.reflect.KClass
 
-interface ServerState {
+class ServerState(initialNickname: String) {
 
-    var localNickname: String
-
-    fun <T : Any> getFeature(feature: ServerFeature<T>): T?
-    fun setFeature(feature: ServerFeature<*>, value: Any)
-    fun resetFeature(feature: ServerFeature<*>): Any?
+    var localNickname: String = initialNickname
+    val features = ServerFeatureMap()
 
 }
 
-class IrcServerState(initialNickname: String) : ServerState {
+class ServerFeatureMap {
 
-    override var localNickname: String = initialNickname
-
-    private val features = HashMap<ServerFeature<*>, Any>()
+    private val features = HashMap<ServerFeature<*>, Any?>()
 
     @Suppress("UNCHECKED_CAST")
-    override fun <T : Any> getFeature(feature: ServerFeature<T>) = features.getOrDefault(feature, feature.default) as? T?
+    operator fun <T : Any> get(feature: ServerFeature<T>) = features.getOrDefault(feature, feature.default) as? T? ?: feature.default
 
-    override fun setFeature(feature: ServerFeature<*>, value: Any) {
+    operator fun set(feature: ServerFeature<*>, value: Any) {
         require(feature.type.isInstance(value))
         features[feature] = value
     }
 
-    override fun resetFeature(feature: ServerFeature<*>) = features.remove(feature)
+    fun setAll(featureMap: ServerFeatureMap) = featureMap.features.forEach { feature, value -> features[feature] = value }
+    fun reset(feature: ServerFeature<*>) = features.put(feature, null)
 
 }
-
 
 sealed class ServerFeature<T : Any>(val name: String, val type: KClass<T>, val default: T? = null) {
     object ServerCaseMapping : ServerFeature<CaseMapping>("CASEMAPPING", CaseMapping::class, CaseMapping.Rfc)

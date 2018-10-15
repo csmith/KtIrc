@@ -16,3 +16,9 @@ interface MessageProcessor {
     fun process(message: IrcMessage): List<IrcEvent>
 
 }
+
+val messageProcessors = setOf(
+        ISupportProcessor(),
+        PingProcessor(),
+        WelcomeProcessor()
+)

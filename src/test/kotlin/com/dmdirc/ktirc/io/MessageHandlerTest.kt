@@ -1,7 +1,9 @@
 package com.dmdirc.ktirc.io
 
-import com.dmdirc.ktirc.events.IrcEvent
+import com.dmdirc.ktirc.IrcClient
+import com.dmdirc.ktirc.events.EventHandler
 import com.dmdirc.ktirc.events.ServerConnected
+import com.dmdirc.ktirc.events.ServerWelcome
 import com.dmdirc.ktirc.messages.MessageProcessor
 import com.nhaarman.mockitokotlin2.*
 import kotlinx.coroutines.channels.Channel
@@ -9,6 +11,8 @@ import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Test
 
 internal class MessageHandlerTest {
+
+    private val ircClient = mock<IrcClient>()
 
     private val nickProcessor = mock<MessageProcessor> {
         on { commands } doReturn arrayOf("FOO", "NICK")
@@ -20,13 +24,13 @@ internal class MessageHandlerTest {
 
     @Test
     fun `MessageHandler passes message on to correct processor`() = runBlocking {
-        val handler = MessageHandler(listOf(joinProcessor, nickProcessor)) {}
+        val handler = MessageHandler(listOf(joinProcessor, nickProcessor), emptyList())
         val message = IrcMessage(null, null, "JOIN", emptyList())
 
         with(Channel<IrcMessage>(1)) {
             send(message)
             close()
-            handler.processMessages(this)
+            handler.processMessages(ircClient, this)
         }
 
         verify(joinProcessor).process(message)
@@ -35,7 +39,7 @@ internal class MessageHandlerTest {
 
     @Test
     fun `MessageHandler reads multiple messages`() = runBlocking {
-        val handler = MessageHandler(listOf(joinProcessor, nickProcessor)) {}
+        val handler = MessageHandler(listOf(joinProcessor, nickProcessor), emptyList())
         val joinMessage = IrcMessage(null, null, "JOIN", emptyList())
         val nickMessage = IrcMessage(null, null, "NICK", emptyList())
         val otherMessage = IrcMessage(null, null, "OTHER", emptyList())
@@ -45,7 +49,7 @@ internal class MessageHandlerTest {
             send(nickMessage)
             send(otherMessage)
             close()
-            handler.processMessages(this)
+            handler.processMessages(ircClient, this)
         }
 
         with(inOrder(joinProcessor, nickProcessor)) {
@@ -56,19 +60,23 @@ internal class MessageHandlerTest {
     }
 
     @Test
-    fun `MessageHandler invokes event handler with returned events`() = runBlocking {
-        val eventHandler = mock<(IrcEvent) -> Unit>()
-        val handler = MessageHandler(listOf(joinProcessor, nickProcessor), eventHandler)
+    fun `MessageHandler invokes all event handler with all returned events`() = runBlocking {
+        val eventHandler1 = mock<EventHandler>()
+        val eventHandler2 = mock<EventHandler>()
+        val handler = MessageHandler(listOf(joinProcessor, nickProcessor), listOf(eventHandler1, eventHandler2))
         val joinMessage = IrcMessage(null, null, "JOIN", emptyList())
-        whenever(joinProcessor.process(any())).thenReturn(listOf(ServerConnected))
+        whenever(joinProcessor.process(any())).thenReturn(listOf(ServerConnected, ServerWelcome("abc")))
 
         with(Channel<IrcMessage>(1)) {
             send(joinMessage)
             close()
-            handler.processMessages(this)
+            handler.processMessages(ircClient, this)
         }
 
-        verify(eventHandler).invoke(ServerConnected)
+        verify(eventHandler1).processEvent(ircClient, ServerConnected)
+        verify(eventHandler1).processEvent(ircClient, ServerWelcome("abc"))
+        verify(eventHandler2).processEvent(ircClient, ServerConnected)
+        verify(eventHandler2).processEvent(ircClient, ServerWelcome("abc"))
     }
 
 }

@@ -1,28 +1,27 @@
 package com.dmdirc.ktirc.messages
 
-import com.dmdirc.ktirc.events.IrcEvent
+import com.dmdirc.ktirc.events.ServerFeaturesUpdated
 import com.dmdirc.ktirc.io.CaseMapping
 import com.dmdirc.ktirc.io.IrcMessage
-import com.dmdirc.ktirc.state.ServerState
-import com.dmdirc.ktirc.state.serverFeatures
+import com.dmdirc.ktirc.model.ServerFeatureMap
+import com.dmdirc.ktirc.model.serverFeatures
 import com.dmdirc.ktirc.util.logger
 import kotlin.reflect.KClass
 
-class ISupportProcessor(val serverState: ServerState) : MessageProcessor {
+class ISupportProcessor : MessageProcessor {
 
     private val log by logger()
 
     override val commands = arrayOf("005")
 
-    override fun process(message: IrcMessage): List<IrcEvent> {
+    override fun process(message: IrcMessage) = listOf(ServerFeaturesUpdated(ServerFeatureMap().apply {
         // Ignore the first (nickname) and last ("are supported by this server") params
         for (i in 1 until message.params.size - 1) {
             parseParam(message.params[i])
         }
-        return emptyList()
-    }
+    }))
 
-    private fun parseParam(param: ByteArray) = when (param[0]) {
+    private fun ServerFeatureMap.parseParam(param: ByteArray) = when (param[0]) {
         '-'.toByte() -> resetFeature(param.sliceArray(1 until param.size))
         else -> when (val equals = param.indexOf('='.toByte())) {
             -1 -> enableFeatureWithDefault(param)
@@ -30,23 +29,23 @@ class ISupportProcessor(val serverState: ServerState) : MessageProcessor {
         }
     }
 
-    private fun resetFeature(name: ByteArray) = name.asFeature()?.let {
-        serverState.resetFeature(it)
+    private fun ServerFeatureMap.resetFeature(name: ByteArray) = name.asFeature()?.let {
+        reset(it)
         log.finer { "Reset feature ${it::class}" }
     }
 
     @Suppress("UNCHECKED_CAST")
-    private fun enableFeature(name: ByteArray, value: ByteArray) {
+    private fun ServerFeatureMap.enableFeature(name: ByteArray, value: ByteArray) {
         name.asFeature()?.let { feature ->
-            serverState.setFeature(feature, value.cast(feature.type))
+            set(feature, value.cast(feature.type))
             log.finer { "Set feature ${feature::class} to ${String(value)}" }
         }
     }
 
-    private fun enableFeatureWithDefault(name: ByteArray) {
+    private fun ServerFeatureMap.enableFeatureWithDefault(name: ByteArray) {
         name.asFeature()?.let { feature ->
             when (feature.type) {
-                Boolean::class -> serverState.setFeature(feature, true)
+                Boolean::class -> set(feature, true)
                 else -> TODO("not implemented")
             }
         }
