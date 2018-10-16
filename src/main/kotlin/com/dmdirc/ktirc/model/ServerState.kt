@@ -27,8 +27,17 @@ class ServerFeatureMap {
 
 }
 
+data class ModePrefixMapping(val modes: String, val prefixes: String) {
+
+    fun isPrefix(char: Char) = prefixes.contains(char)
+    fun getMode(prefix: Char) = modes[prefixes.indexOf(prefix)]
+    fun getModes(prefixes: String) = String(prefixes.map(this::getMode).toCharArray())
+
+}
+
 sealed class ServerFeature<T : Any>(val name: String, val type: KClass<T>, val default: T? = null) {
     object ServerCaseMapping : ServerFeature<CaseMapping>("CASEMAPPING", CaseMapping::class, CaseMapping.Rfc)
+    object ModePrefixes : ServerFeature<ModePrefixMapping>("PREFIX", ModePrefixMapping::class, ModePrefixMapping("ov", "@+"))
     object MaximumChannels : ServerFeature<Int>("CHANLIMIT", Int::class)
     object ChannelModes : ServerFeature<String>("CHANMODES", String::class)
     object MaximumChannelNameLength : ServerFeature<Int>("CHANNELLEN", Int::class, 200)

@@ -3,6 +3,7 @@ package com.dmdirc.ktirc.messages
 import com.dmdirc.ktirc.events.ServerFeaturesUpdated
 import com.dmdirc.ktirc.io.CaseMapping
 import com.dmdirc.ktirc.io.IrcMessage
+import com.dmdirc.ktirc.model.ModePrefixMapping
 import com.dmdirc.ktirc.model.ServerFeatureMap
 import com.dmdirc.ktirc.model.serverFeatures
 import com.dmdirc.ktirc.util.logger
@@ -57,11 +58,14 @@ class ISupportProcessor : MessageProcessor {
                 null
             }
 
-    private fun ByteArray.cast(to: KClass<out Any>): Any = when (to) {
-        Int::class -> String(this).toInt()
-        String::class -> String(this)
-        CaseMapping::class -> CaseMapping.fromName(String(this))
-        else -> TODO("not implemented")
+    private fun ByteArray.cast(to: KClass<out Any>): Any = with (String(this)) {
+        when (to) {
+            Int::class -> toInt()
+            String::class -> this
+            CaseMapping::class -> CaseMapping.fromName(this)
+            ModePrefixMapping::class -> indexOf(')').let { ModePrefixMapping(substring(1 until it), substring(it + 1)) }
+            else -> TODO("not implemented")
+        }
     }
 
 }

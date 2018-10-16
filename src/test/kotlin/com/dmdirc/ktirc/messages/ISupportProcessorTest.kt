@@ -2,6 +2,7 @@ package com.dmdirc.ktirc.messages
 
 import com.dmdirc.ktirc.io.CaseMapping
 import com.dmdirc.ktirc.io.IrcMessage
+import com.dmdirc.ktirc.model.ModePrefixMapping
 import com.dmdirc.ktirc.model.ServerFeature
 import com.dmdirc.ktirc.model.ServerFeatureMap
 import org.junit.jupiter.api.Assertions.*
@@ -50,6 +51,14 @@ internal class ISupportProcessorTest {
                 listOf("nickname", "CASEMAPPING=rfc1459-strict", "are supported blah blah").map { it.toByteArray() }))
 
         assertEquals(CaseMapping.RfcStrict, events[0].serverFeatures[ServerFeature.ServerCaseMapping])
+    }
+
+    @Test
+    fun `ISupportProcessor handles mode prefix arguments`() {
+        val events = processor.process(IrcMessage(null, "server.com".toByteArray(), "005",
+                listOf("nickname", "PREFIX=(ovd)@+%", "are supported blah blah").map { it.toByteArray() }))
+
+        assertEquals(ModePrefixMapping("ovd", "@+%"), events[0].serverFeatures[ServerFeature.ModePrefixes])
     }
 
     @Test
