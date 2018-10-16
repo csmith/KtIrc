@@ -4,7 +4,7 @@ import com.dmdirc.ktirc.events.ChannelParted
 import com.dmdirc.ktirc.io.IrcMessage
 import com.dmdirc.ktirc.model.asUser
 
-class PartProcessor : MessageProcessor {
+internal class PartProcessor : MessageProcessor {
 
     override val commands = arrayOf("PART")
 

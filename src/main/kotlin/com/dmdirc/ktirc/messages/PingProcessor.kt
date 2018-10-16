@@ -3,7 +3,7 @@ package com.dmdirc.ktirc.messages
 import com.dmdirc.ktirc.events.PingReceived
 import com.dmdirc.ktirc.io.IrcMessage
 
-class PingProcessor : MessageProcessor {
+internal class PingProcessor : MessageProcessor {
 
     override val commands = arrayOf("PING")
 

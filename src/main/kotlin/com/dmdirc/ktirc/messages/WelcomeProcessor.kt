@@ -3,7 +3,7 @@ package com.dmdirc.ktirc.messages
 import com.dmdirc.ktirc.events.ServerWelcome
 import com.dmdirc.ktirc.io.IrcMessage
 
-class WelcomeProcessor : MessageProcessor {
+internal class WelcomeProcessor : MessageProcessor {
 
     override val commands = arrayOf("001")
 

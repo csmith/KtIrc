@@ -4,7 +4,7 @@ import com.dmdirc.ktirc.events.ChannelJoined
 import com.dmdirc.ktirc.io.IrcMessage
 import com.dmdirc.ktirc.model.asUser
 
-class JoinProcessor : MessageProcessor {
+internal class JoinProcessor : MessageProcessor {
 
     override val commands = arrayOf("JOIN")
 

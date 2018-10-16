@@ -23,5 +23,6 @@ val messageProcessors = setOf(
         NamesProcessor(),
         PartProcessor(),
         PingProcessor(),
+        PrivmsgProcessor(),
         WelcomeProcessor()
 )

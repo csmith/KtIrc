@@ -9,7 +9,7 @@ import com.dmdirc.ktirc.model.serverFeatures
 import com.dmdirc.ktirc.util.logger
 import kotlin.reflect.KClass
 
-class ISupportProcessor : MessageProcessor {
+internal class ISupportProcessor : MessageProcessor {
 
     private val log by logger()
 

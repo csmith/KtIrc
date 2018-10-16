@@ -31,3 +31,6 @@ data class ChannelNamesReceived(val channel: String, val names: List<String>) : 
 
 /** Raised when the entirety of the channel's member list has been received. */
 data class ChannelNamesFinished(val channel: String) : IrcEvent()
+
+/** Raised when a message is received. */
+data class MessageReceived(val user: User, val target: String, val message: String) : IrcEvent()

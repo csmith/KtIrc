@@ -4,7 +4,7 @@ import com.dmdirc.ktirc.events.ChannelNamesFinished
 import com.dmdirc.ktirc.events.ChannelNamesReceived
 import com.dmdirc.ktirc.io.IrcMessage
 
-class NamesProcessor : MessageProcessor {
+internal class NamesProcessor : MessageProcessor {
 
     override val commands = arrayOf("353", "366")
 

@@ -1,9 +1,6 @@
 package com.dmdirc.ktirc
 
-import com.dmdirc.ktirc.events.EventHandler
-import com.dmdirc.ktirc.events.IrcEvent
-import com.dmdirc.ktirc.events.ServerWelcome
-import com.dmdirc.ktirc.events.eventHandlers
+import com.dmdirc.ktirc.events.*
 import com.dmdirc.ktirc.io.*
 import com.dmdirc.ktirc.messages.*
 import com.dmdirc.ktirc.model.*
@@ -24,6 +21,8 @@ interface IrcClient {
     val caseMapping: CaseMapping
         get() = serverState.features[ServerFeature.ServerCaseMapping] ?: CaseMapping.Rfc
 
+    var eventHandler: EventHandler?
+
     fun isLocalUser(user: User): Boolean = caseMapping.areEquivalent(user.nickname, serverState.localNickname)
 
 }
@@ -38,13 +37,14 @@ class IrcClientImpl(private val server: Server, private val profile: Profile) : 
     override val serverState = ServerState(profile.initialNick)
     override val channelState = ChannelStateMap { caseMapping }
 
-    private val messageHandler = MessageHandler(messageProcessors, eventHandlers + object : EventHandler {
-        override suspend fun processEvent(client: IrcClient, event: IrcEvent) {
-            when (event) {
-                is ServerWelcome -> client.send(joinMessage("#mdbot"))
-            }
+    override var eventHandler: EventHandler? = null
+        set(value) {
+            field?.let { messageHandler.handlers.remove(it) }
+            field = value
+            field?.let { messageHandler.handlers.add(it) }
         }
-    })
+
+    private val messageHandler = MessageHandler(messageProcessors.toList(), eventHandlers.toMutableList())
 
     private val parser = MessageParser()
     private var socket: LineBufferedSocket? = null
@@ -81,7 +81,15 @@ class IrcClientImpl(private val server: Server, private val profile: Profile) : 
             }
 
             runBlocking {
-                val client = IrcClientImpl(Server("irc.quakenet.org", 6667), Profile("KtIrc", "Kotlin!", "kotlin"))
+                val client = IrcClientImpl(Server("uk.quakenet.org", 6667), Profile("KtIrc", "Kotlin!", "kotlin"))
+                client.eventHandler = object : EventHandler {
+                    override suspend fun processEvent(client: IrcClient, event: IrcEvent) {
+                        when (event) {
+                            is ServerWelcome -> client.send(joinMessage("#mdbot"))
+                            is MessageReceived -> if (event.message == "!test") client.send(privmsgMessage(event.target, "Test successful!"))
+                        }
+                    }
+                }
                 client.connect()
             }
         }

@@ -24,7 +24,7 @@ internal class MessageHandlerTest {
 
     @Test
     fun `MessageHandler passes message on to correct processor`() = runBlocking {
-        val handler = MessageHandler(listOf(joinProcessor, nickProcessor), emptyList())
+        val handler = MessageHandler(listOf(joinProcessor, nickProcessor), mutableListOf())
         val message = IrcMessage(null, null, "JOIN", emptyList())
 
         with(Channel<IrcMessage>(1)) {
@@ -39,7 +39,7 @@ internal class MessageHandlerTest {
 
     @Test
     fun `MessageHandler reads multiple messages`() = runBlocking {
-        val handler = MessageHandler(listOf(joinProcessor, nickProcessor), emptyList())
+        val handler = MessageHandler(listOf(joinProcessor, nickProcessor), mutableListOf())
         val joinMessage = IrcMessage(null, null, "JOIN", emptyList())
         val nickMessage = IrcMessage(null, null, "NICK", emptyList())
         val otherMessage = IrcMessage(null, null, "OTHER", emptyList())
@@ -63,7 +63,7 @@ internal class MessageHandlerTest {
     fun `MessageHandler invokes all event handler with all returned events`() = runBlocking {
         val eventHandler1 = mock<EventHandler>()
         val eventHandler2 = mock<EventHandler>()
-        val handler = MessageHandler(listOf(joinProcessor, nickProcessor), listOf(eventHandler1, eventHandler2))
+        val handler = MessageHandler(listOf(joinProcessor, nickProcessor), mutableListOf(eventHandler1, eventHandler2))
         val joinMessage = IrcMessage(null, null, "JOIN", emptyList())
         whenever(joinProcessor.process(any())).thenReturn(listOf(ServerConnected, ServerWelcome("abc")))
 
