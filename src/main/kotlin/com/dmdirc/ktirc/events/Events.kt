@@ -3,6 +3,7 @@
 package com.dmdirc.ktirc.events
 
 import com.dmdirc.ktirc.model.ServerFeatureMap
+import com.dmdirc.ktirc.model.User
 
 sealed class IrcEvent
 
@@ -26,3 +27,8 @@ object ServerConnected : IrcEvent()
  * Raised whenever a PING is received from the server.
  */
 data class PingReceived(val nonce: ByteArray): IrcEvent()
+
+/**
+ * Raised when a user joins a channel.
+ */
+data class ChannelJoined(val user: User, val channel: String): IrcEvent()

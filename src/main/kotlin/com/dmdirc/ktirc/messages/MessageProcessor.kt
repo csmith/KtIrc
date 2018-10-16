@@ -19,6 +19,7 @@ interface MessageProcessor {
 
 val messageProcessors = setOf(
         ISupportProcessor(),
+        JoinProcessor(),
         PingProcessor(),
         WelcomeProcessor()
 )

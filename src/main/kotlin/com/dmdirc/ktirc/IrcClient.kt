@@ -4,14 +4,9 @@ import com.dmdirc.ktirc.events.EventHandler
 import com.dmdirc.ktirc.events.IrcEvent
 import com.dmdirc.ktirc.events.ServerWelcome
 import com.dmdirc.ktirc.events.eventHandlers
-import com.dmdirc.ktirc.io.KtorLineBufferedSocket
-import com.dmdirc.ktirc.io.LineBufferedSocket
-import com.dmdirc.ktirc.io.MessageHandler
-import com.dmdirc.ktirc.io.MessageParser
+import com.dmdirc.ktirc.io.*
 import com.dmdirc.ktirc.messages.*
-import com.dmdirc.ktirc.model.Profile
-import com.dmdirc.ktirc.model.Server
-import com.dmdirc.ktirc.model.ServerState
+import com.dmdirc.ktirc.model.*
 import kotlinx.coroutines.channels.map
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.runBlocking
@@ -24,6 +19,12 @@ interface IrcClient {
     suspend fun send(message: String)
 
     val serverState: ServerState
+    val channelState: ChannelStateMap
+
+    val caseMapping: CaseMapping
+        get() = serverState.features[ServerFeature.ServerCaseMapping] ?: CaseMapping.Rfc
+
+    fun isLocalUser(user: User): Boolean = caseMapping.areEquivalent(user.nickname, serverState.localNickname)
 
 }
 
@@ -35,6 +36,7 @@ class IrcClientImpl(private val server: Server, private val profile: Profile) : 
     var socketFactory: (String, Int) -> LineBufferedSocket = ::KtorLineBufferedSocket
 
     override val serverState = ServerState(profile.initialNick)
+    override val channelState = ChannelStateMap { caseMapping }
 
     private val messageHandler = MessageHandler(messageProcessors, eventHandlers + object : EventHandler {
         override suspend fun processEvent(client: IrcClient, event: IrcEvent) {
