@@ -21,6 +21,7 @@ val messageProcessors = setOf(
         ISupportProcessor(),
         JoinProcessor(),
         NamesProcessor(),
+        PartProcessor(),
         PingProcessor(),
         WelcomeProcessor()
 )

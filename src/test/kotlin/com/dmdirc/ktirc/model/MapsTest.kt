@@ -7,21 +7,23 @@ import org.junit.jupiter.api.assertThrows
 
 internal class CaseInsensitiveMapTest {
 
+    private data class Wrapper(val name: String)
+
     private var caseMapping = CaseMapping.Rfc
-    private val map = object : CaseInsensitiveMap<String>({ caseMapping }, { str -> str.substring(0, 4) }) {}
+    private val map = object : CaseInsensitiveMap<Wrapper>({ caseMapping }, { it -> it.name }) {}
 
     @Test
     fun `CaseInsensitiveMap stores values`() {
-        val value = "acidBurn"
+        val value = Wrapper("acidBurn")
 
         map += value
 
-        assertSame(value, map["acid"])
+        assertSame(value, map["acidBurn"])
     }
 
     @Test
     fun `CaseInsensitiveMap disallows the same value twice`() {
-        val value = "acidBurn"
+        val value = Wrapper("acidBurn")
 
         map += value
 
@@ -32,26 +34,26 @@ internal class CaseInsensitiveMapTest {
 
     @Test
     fun `CaseInsensitiveMap retrieves values using differently cased keys`() {
-        val value = "[acidBurn]"
+        val value = Wrapper("[acidBurn]")
         map += value
 
-        assertSame(value, map["{ACI"])
+        assertSame(value, map["{ACIDBURN}"])
     }
 
     @Test
     fun `CaseInsensitiveMap retrieves values if the casemapping changes`() {
-        val value = "[acidBurn]"
+        val value = Wrapper("[acidBurn]")
         map += value
 
         caseMapping = CaseMapping.Ascii
 
-        assertSame(value, map["[ACI"])
-        assertNull(map["{aci"])
+        assertSame(value, map["[ACIDBURN]"])
+        assertNull(map["{acidburn}"])
     }
 
     @Test
     fun `CaseInsensitiveMap retrieves null if value not found`() {
-        val value = "[acidBurn]"
+        val value = Wrapper("[acidBurn]")
         map += value
 
         assertNull(map["acidBurn"])
@@ -60,19 +62,18 @@ internal class CaseInsensitiveMapTest {
 
     @Test
     fun `CaseInsensitiveMap removes values`() {
-        map += "acidBurn"
+        map += Wrapper("acidBurn")
         map -= "ACIDburn"
 
         assertNull(map["acidBurn"])
-        assertNull(map["ACIDburn"])
     }
 
     @Test
     fun `CaseInsensitiveMap can be iterated`() {
-        map += "acidBurn"
-        map += "zeroCool"
+        map += Wrapper("acidBurn")
+        map += Wrapper("zeroCool")
 
-        val names = map.toList()
+        val names = map.map { it.name }.toList()
         assertEquals(2, names.size)
         assertTrue(names.contains("acidBurn"))
         assertTrue(names.contains("zeroCool"))
@@ -80,21 +81,21 @@ internal class CaseInsensitiveMapTest {
 
     @Test
     fun `ChannelInsensitiveMap indicates if it contains a value or not`() {
-        map += "acidBurn"
+        map += Wrapper("acidBurn")
 
-        assertTrue("acid" in map)
-        assertFalse("theP" in map)
+        assertTrue("acidBurn" in map)
+        assertFalse("thePlague" in map)
     }
 
     @Test
     fun `ChannelInsensitiveMap can be cleared`() {
-        map += "acidBurn"
-        map += "zeroCool"
+        map += Wrapper("acidBurn")
+        map += Wrapper("zeroCool")
 
         map.clear()
 
-        assertFalse("acid" in map)
-        assertFalse("zero" in map)
+        assertFalse("acidBurn" in map)
+        assertFalse("zeroCool" in map)
         assertEquals(0, map.count())
     }
 

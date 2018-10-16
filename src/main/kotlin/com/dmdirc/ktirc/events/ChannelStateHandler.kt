@@ -13,6 +13,7 @@ class ChannelStateHandler : EventHandler {
     override suspend fun processEvent(client: IrcClient, event: IrcEvent) {
         when (event) {
             is ChannelJoined -> handleJoin(client, event)
+            is ChannelParted -> handlePart(client, event)
             is ChannelNamesReceived -> handleNamesReceived(client, event)
             is ChannelNamesFinished -> handleNamesFinished(client, event)
         }
@@ -25,6 +26,17 @@ class ChannelStateHandler : EventHandler {
         }
 
         client.channelState[event.channel]?.let { it.users += ChannelUser(event.user.nickname) }
+    }
+
+    private fun handlePart(client: IrcClient, event: ChannelParted) {
+        if (client.isLocalUser(event.user)) {
+            log.info { "Left channel: ${event.channel}" }
+            client.channelState -= event.channel
+        } else {
+            client.channelState[event.channel]?.let {
+                it.users -= event.user.nickname
+            }
+        }
     }
 
     private fun handleNamesReceived(client: IrcClient, event: ChannelNamesReceived) {

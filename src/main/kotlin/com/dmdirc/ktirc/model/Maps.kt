@@ -13,8 +13,8 @@ abstract class CaseInsensitiveMap<T>(private val caseMappingProvider: () -> Case
         values.add(value)
     }
 
-    operator fun minusAssign(state: T) {
-        values.removeIf { caseMappingProvider().areEquivalent(nameOf(it), nameOf(state)) }
+    operator fun minusAssign(name: String) {
+        values.removeIf { caseMappingProvider().areEquivalent(nameOf(it), name) }
     }
 
     operator fun contains(name: String) = get(name) != null

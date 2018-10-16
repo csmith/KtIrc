@@ -23,6 +23,9 @@ data class PingReceived(val nonce: ByteArray) : IrcEvent()
 /** Raised when a user joins a channel. */
 data class ChannelJoined(val user: User, val channel: String) : IrcEvent()
 
+/** Raised when a user leaves a channel. */
+data class ChannelParted(val user: User, val channel: String, val reason: String = "") : IrcEvent()
+
 /** Raised when a batch of the channel's member list has been received. More batches may follow. */
 data class ChannelNamesReceived(val channel: String, val names: List<String>) : IrcEvent()
 

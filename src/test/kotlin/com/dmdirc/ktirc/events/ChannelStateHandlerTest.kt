@@ -100,4 +100,25 @@ internal class ChannelStateHandlerTest {
         assertEquals("", channel.users["cerealKiller"]?.modes)
     }
 
+    @Test
+    fun `ChannelStateHandler removes state object for local parts`() = runBlocking {
+        val channel = ChannelState("#thegibson") { CaseMapping.Rfc }
+        channelStateMap += channel
+
+        handler.processEvent(ircClient, ChannelParted(User("acidburn", "libby", "root.localhost"), "#thegibson"))
+
+        assertFalse("#thegibson" in channelStateMap)
+    }
+
+    @Test
+    fun `ChannelStateHandler removes user from channel member list for remote parts`() = runBlocking {
+        val channel = ChannelState("#thegibson") { CaseMapping.Rfc }
+        channel.users += ChannelUser("ZeroCool")
+        channelStateMap += channel
+
+        handler.processEvent(ircClient, ChannelParted(User("zerocool", "dade", "root.localhost"), "#thegibson"))
+
+        assertFalse("zerocool" in channel.users)
+    }
+
 }
