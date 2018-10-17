@@ -16,6 +16,7 @@ class ChannelStateHandler : EventHandler {
             is ChannelParted -> handlePart(client, event)
             is ChannelNamesReceived -> handleNamesReceived(client, event)
             is ChannelNamesFinished -> handleNamesFinished(client, event)
+            is UserQuit -> handleQuit(client, event)
         }
     }
 
@@ -61,6 +62,10 @@ class ChannelStateHandler : EventHandler {
             it.receivingUserList = false
             log.finest { "Finished receiving names in ${event.channel}. Users: ${it.users.toList()}" }
         }
+    }
+
+    private fun handleQuit(client: IrcClient, event: UserQuit) {
+        client.channelState.forEach { it.users -= event.user.nickname }
     }
 
 }

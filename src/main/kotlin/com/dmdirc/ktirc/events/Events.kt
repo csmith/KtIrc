@@ -34,3 +34,6 @@ data class ChannelNamesFinished(val channel: String) : IrcEvent()
 
 /** Raised when a message is received. */
 data class MessageReceived(val user: User, val target: String, val message: String) : IrcEvent()
+
+/** Raised when a user quits. */
+data class UserQuit(val user: User, val reason: String = "") : IrcEvent()

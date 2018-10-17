@@ -121,4 +121,29 @@ internal class ChannelStateHandlerTest {
         assertFalse("zerocool" in channel.users)
     }
 
+    @Test
+    fun `ChannelStateHandler removes user from all channel member lists for quits`() = runBlocking {
+        with (ChannelState("#thegibson") { CaseMapping.Rfc }) {
+            users += ChannelUser("ZeroCool")
+            channelStateMap += this
+        }
+
+        with (ChannelState("#dumpsterdiving") { CaseMapping.Rfc }) {
+            users += ChannelUser("ZeroCool")
+            channelStateMap += this
+        }
+
+        with (ChannelState("#chat") { CaseMapping.Rfc }) {
+            users += ChannelUser("AcidBurn")
+            channelStateMap += this
+        }
+
+        handler.processEvent(ircClient, UserQuit(User("zerocool", "dade", "root.localhost")))
+
+        assertFalse("zerocool" in channelStateMap["#thegibson"]!!.users)
+        assertFalse("zerocool" in channelStateMap["#dumpsterdiving"]!!.users)
+        assertFalse("zerocool" in channelStateMap["#chat"]!!.users)
+        assertTrue("acidburn" in channelStateMap["#chat"]!!.users)
+    }
+
 }
