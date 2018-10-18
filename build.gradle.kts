@@ -38,8 +38,6 @@ tasks.withType<Test> {
     testLogging {
         events("passed", "skipped", "failed")
     }
-    systemProperty("junit.jupiter.execution.parallel.enabled", "true")
-    systemProperty("junit.jupiter.execution.parallel.config.dynamic.factor", "5")
 }
 
 configurations.all {
