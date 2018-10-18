@@ -52,7 +52,7 @@ class ChannelStateHandler : EventHandler {
         val modePrefixes = client.serverState.features[ServerFeature.ModePrefixes]!!
         for (user in event.names) {
             user.takeWhile { modePrefixes.isPrefix(it) }.let { prefix ->
-                channel.users += ChannelUser(user.substring(prefix.length), modePrefixes.getModes(prefix))
+                channel.users += ChannelUser(user.nickname(prefix.length), modePrefixes.getModes(prefix))
             }
         }
     }
@@ -67,5 +67,7 @@ class ChannelStateHandler : EventHandler {
     private fun handleQuit(client: IrcClient, event: UserQuit) {
         client.channelState.forEach { it.users -= event.user.nickname }
     }
+
+    private fun String.nickname(prefixLength: Int) = substring(prefixLength).substringBefore('!')
 
 }

@@ -101,6 +101,20 @@ internal class ChannelStateHandlerTest {
     }
 
     @Test
+    fun `ChannelStateHandler adds users with full hosts`() = runBlocking {
+        val channel = ChannelState("#thegibson") { CaseMapping.Rfc }
+        channelStateMap += channel
+        serverState.features[ServerFeature.ModePrefixes] = ModePrefixMapping("ov", "@+")
+
+        handler.processEvent(ircClient, ChannelNamesReceived("#thegibson", listOf("@zeroCool!dade@root.localhost", "+acidBurn!libby@root.localhost")))
+        handler.processEvent(ircClient, ChannelNamesFinished("#thegibson"))
+
+        assertEquals(2, channel.users.count())
+        assertEquals("o", channel.users["zeroCool"]?.modes)
+        assertEquals("v", channel.users["acidBurn"]?.modes)
+    }
+
+    @Test
     fun `ChannelStateHandler removes state object for local parts`() = runBlocking {
         val channel = ChannelState("#thegibson") { CaseMapping.Rfc }
         channelStateMap += channel
