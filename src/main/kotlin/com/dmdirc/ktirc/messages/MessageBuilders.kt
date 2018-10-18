@@ -1,5 +1,7 @@
 package com.dmdirc.ktirc.messages
 
+fun capabilityEndMessage() = "CAP END"
+fun capabilityRequestMessage(capabilities: List<String>) = "CAP REQ :${capabilities.joinToString(" ")}"
 fun joinMessage(channel: String) = "JOIN :$channel"
 fun nickMessage(nick: String) = "NICK :$nick"
 fun passwordMessage(password: String) = "PASS :$password"

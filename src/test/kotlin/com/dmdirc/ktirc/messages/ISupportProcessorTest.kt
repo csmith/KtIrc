@@ -20,7 +20,7 @@ internal class ISupportProcessorTest {
     @Test
     fun `ISupportProcessor handles multiple numeric arguments`() {
         val events = processor.process(IrcMessage(null, "server.com".toByteArray(), "005",
-                listOf("nickname", "CHANLIMIT=123", "CHANNELLEN=456", "are supported blah blah").map { it.toByteArray() }))
+                listOf("nickname", "MAXCHANNELS=123", "CHANNELLEN=456", "are supported blah blah").map { it.toByteArray() }))
 
         assertEquals(123, events[0].serverFeatures[ServerFeature.MaximumChannels])
         assertEquals(456, events[0].serverFeatures[ServerFeature.MaximumChannelNameLength])

@@ -7,6 +7,7 @@ class ServerState(initialNickname: String) {
 
     var localNickname: String = initialNickname
     val features = ServerFeatureMap()
+    val capabilities = CapabilitiesState()
 
 }
 
@@ -38,7 +39,7 @@ data class ModePrefixMapping(val modes: String, val prefixes: String) {
 sealed class ServerFeature<T : Any>(val name: String, val type: KClass<T>, val default: T? = null) {
     object ServerCaseMapping : ServerFeature<CaseMapping>("CASEMAPPING", CaseMapping::class, CaseMapping.Rfc)
     object ModePrefixes : ServerFeature<ModePrefixMapping>("PREFIX", ModePrefixMapping::class, ModePrefixMapping("ov", "@+"))
-    object MaximumChannels : ServerFeature<Int>("CHANLIMIT", Int::class)
+    object MaximumChannels : ServerFeature<Int>("MAXCHANNELS", Int::class) // TODO: CHANLIMIT also exists
     object ChannelModes : ServerFeature<String>("CHANMODES", String::class)
     object MaximumChannelNameLength : ServerFeature<Int>("CHANNELLEN", Int::class, 200)
     object WhoxSupport : ServerFeature<Boolean>("WHOX", Boolean::class, false)

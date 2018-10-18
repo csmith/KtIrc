@@ -18,6 +18,7 @@ interface MessageProcessor {
 }
 
 val messageProcessors = setOf(
+        CapabilityProcessor(),
         ISupportProcessor(),
         JoinProcessor(),
         NamesProcessor(),

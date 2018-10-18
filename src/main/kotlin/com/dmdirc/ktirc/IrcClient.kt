@@ -60,7 +60,7 @@ class IrcClientImpl(private val server: Server, private val profile: Profile) : 
             with(socketFactory(server.host, server.port)) {
                 socket = this
                 connect()
-                // TODO: CAP LS
+                sendLine("CAP LS 302")
                 server.password?.let { pass -> sendLine(passwordMessage(pass)) }
                 sendLine(nickMessage(profile.initialNick))
                 // TODO: Send correct host
@@ -81,11 +81,11 @@ class IrcClientImpl(private val server: Server, private val profile: Profile) : 
             }
 
             runBlocking {
-                val client = IrcClientImpl(Server("uk.quakenet.org", 6667), Profile("KtIrc", "Kotlin!", "kotlin"))
+                val client = IrcClientImpl(Server("testnet.inspircd.org", 6667), Profile("KtIrc", "Kotlin!", "kotlin"))
                 client.eventHandler = object : EventHandler {
                     override suspend fun processEvent(client: IrcClient, event: IrcEvent) {
                         when (event) {
-                            is ServerWelcome -> client.send(joinMessage("#mdbot"))
+                            is ServerWelcome -> client.send(joinMessage("#ktirc"))
                             is MessageReceived -> if (event.message == "!test") client.send(privmsgMessage(event.target, "Test successful!"))
                         }
                     }

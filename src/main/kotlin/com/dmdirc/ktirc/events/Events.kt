@@ -2,6 +2,7 @@
 
 package com.dmdirc.ktirc.events
 
+import com.dmdirc.ktirc.model.Capability
 import com.dmdirc.ktirc.model.ServerFeatureMap
 import com.dmdirc.ktirc.model.User
 
@@ -37,3 +38,12 @@ data class MessageReceived(val user: User, val target: String, val message: Stri
 
 /** Raised when a user quits. */
 data class UserQuit(val user: User, val reason: String = "") : IrcEvent()
+
+/** Raised when available server capabilities are received. More batches may follow. */
+data class ServerCapabilitiesReceived(val capabilities: Map<Capability, String>): IrcEvent()
+
+/** Raised when our requested capabilities are acknowledged. More batches may follow. */
+data class ServerCapabilitiesAcknowledged(val capabilities: Map<Capability, String>): IrcEvent()
+
+/** Raised when the server has finished sending us capabilities. */
+object ServerCapabilitiesFinished : IrcEvent()

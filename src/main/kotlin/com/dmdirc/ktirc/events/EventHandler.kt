@@ -9,6 +9,7 @@ interface EventHandler {
 }
 
 val eventHandlers = setOf(
+        CapabilitiesHandler(),
         ChannelStateHandler(),
         PingHandler(),
         ServerStateHandler()

@@ -79,6 +79,7 @@ internal class IrcClientImplTest {
             client.connect()
 
             with(inOrder(mockSocket).verify(mockSocket)) {
+                sendLine("CAP LS 302")
                 sendLine("NICK :$NICK")
                 sendLine("USER $USER_NAME localhost $HOST :$REAL_NAME")
             }
@@ -95,6 +96,7 @@ internal class IrcClientImplTest {
             client.connect()
 
             with(inOrder(mockSocket).verify(mockSocket)) {
+                sendLine("CAP LS 302")
                 sendLine("PASS :$PASSWORD")
                 sendLine("NICK :$NICK")
             }
