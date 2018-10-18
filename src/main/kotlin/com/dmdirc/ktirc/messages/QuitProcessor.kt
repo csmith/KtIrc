@@ -2,14 +2,13 @@ package com.dmdirc.ktirc.messages
 
 import com.dmdirc.ktirc.events.UserQuit
 import com.dmdirc.ktirc.model.IrcMessage
-import com.dmdirc.ktirc.model.asUser
 
 internal class QuitProcessor : MessageProcessor {
 
     override val commands = arrayOf("QUIT")
 
-    override fun process(message: IrcMessage) = message.prefix?.let {
-        listOf(UserQuit(message.time, it.asUser(), message.reason))
+    override fun process(message: IrcMessage) = message.sourceUser?.let { user ->
+        listOf(UserQuit(message.time, user, message.reason))
     } ?: emptyList()
 
     private val IrcMessage.reason

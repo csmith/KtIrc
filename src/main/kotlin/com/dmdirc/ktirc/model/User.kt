@@ -1,6 +1,13 @@
 package com.dmdirc.ktirc.model
 
-data class User(val nickname: String, val ident: String? = null, val hostname: String? = null)
+data class User(
+        var nickname: String,
+        var ident: String? = null,
+        var hostname: String? = null,
+        var account: String? = null,
+        var realName: String? = null,
+        var awayMessage: String? = null
+)
 
 fun ByteArray.asUser(): User {
     val string = String(this)

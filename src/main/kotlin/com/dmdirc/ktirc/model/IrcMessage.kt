@@ -17,6 +17,12 @@ class IrcMessage(val tags: Map<MessageTag, String>, val prefix: ByteArray?, val 
         currentTimeProvider()
     }
 
+    val sourceUser by lazy {
+        prefix?.asUser()?.apply {
+            tags[MessageTag.AccountName]?.let { account = it }
+        }
+    }
+
 }
 
 sealed class MessageTag(val name: String) {
