@@ -3,7 +3,7 @@ package com.dmdirc.ktirc.messages
 import com.dmdirc.ktirc.events.ServerCapabilitiesAcknowledged
 import com.dmdirc.ktirc.events.ServerCapabilitiesFinished
 import com.dmdirc.ktirc.events.ServerCapabilitiesReceived
-import com.dmdirc.ktirc.io.IrcMessage
+import com.dmdirc.ktirc.model.IrcMessage
 import com.dmdirc.ktirc.model.capabilities
 import com.dmdirc.ktirc.util.logger
 

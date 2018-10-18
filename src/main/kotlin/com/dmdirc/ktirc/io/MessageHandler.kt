@@ -3,6 +3,7 @@ package com.dmdirc.ktirc.io
 import com.dmdirc.ktirc.IrcClient
 import com.dmdirc.ktirc.events.EventHandler
 import com.dmdirc.ktirc.messages.MessageProcessor
+import com.dmdirc.ktirc.model.IrcMessage
 import com.dmdirc.ktirc.util.logger
 import kotlinx.coroutines.channels.ReceiveChannel
 import kotlinx.coroutines.channels.consumeEach

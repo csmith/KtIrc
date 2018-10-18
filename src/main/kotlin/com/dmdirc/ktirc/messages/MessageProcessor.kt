@@ -1,7 +1,7 @@
 package com.dmdirc.ktirc.messages
 
 import com.dmdirc.ktirc.events.IrcEvent
-import com.dmdirc.ktirc.io.IrcMessage
+import com.dmdirc.ktirc.model.IrcMessage
 
 interface MessageProcessor {
 

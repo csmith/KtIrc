@@ -1,7 +1,7 @@
 package com.dmdirc.ktirc.messages
 
 import com.dmdirc.ktirc.io.CaseMapping
-import com.dmdirc.ktirc.io.IrcMessage
+import com.dmdirc.ktirc.model.IrcMessage
 import com.dmdirc.ktirc.model.ModePrefixMapping
 import com.dmdirc.ktirc.model.ServerFeature
 import com.dmdirc.ktirc.model.ServerFeatureMap
@@ -19,7 +19,7 @@ internal class ISupportProcessorTest {
 
     @Test
     fun `ISupportProcessor handles multiple numeric arguments`() {
-        val events = processor.process(IrcMessage(null, "server.com".toByteArray(), "005",
+        val events = processor.process(IrcMessage(emptyMap(), "server.com".toByteArray(), "005",
                 listOf("nickname", "MAXCHANNELS=123", "CHANNELLEN=456", "are supported blah blah").map { it.toByteArray() }))
 
         assertEquals(123, events[0].serverFeatures[ServerFeature.MaximumChannels])
@@ -28,7 +28,7 @@ internal class ISupportProcessorTest {
 
     @Test
     fun `ISupportProcessor handles string arguments`() {
-        val events = processor.process(IrcMessage(null, "server.com".toByteArray(), "005",
+        val events = processor.process(IrcMessage(emptyMap(), "server.com".toByteArray(), "005",
                 listOf("nickname", "CHANMODES=abcd", "are supported blah blah").map { it.toByteArray() }))
 
         assertEquals("abcd", events[0].serverFeatures[ServerFeature.ChannelModes])
@@ -36,7 +36,7 @@ internal class ISupportProcessorTest {
 
     @Test
     fun `ISupportProcessor handles resetting arguments`() {
-        val events = processor.process(IrcMessage(null, "server.com".toByteArray(), "005",
+        val events = processor.process(IrcMessage(emptyMap(), "server.com".toByteArray(), "005",
                 listOf("nickname", "-CHANMODES", "are supported blah blah").map { it.toByteArray() }))
 
         val oldFeatures = ServerFeatureMap()
@@ -47,7 +47,7 @@ internal class ISupportProcessorTest {
 
     @Test
     fun `ISupportProcessor handles case mapping arguments`() {
-        val events = processor.process(IrcMessage(null, "server.com".toByteArray(), "005",
+        val events = processor.process(IrcMessage(emptyMap(), "server.com".toByteArray(), "005",
                 listOf("nickname", "CASEMAPPING=rfc1459-strict", "are supported blah blah").map { it.toByteArray() }))
 
         assertEquals(CaseMapping.RfcStrict, events[0].serverFeatures[ServerFeature.ServerCaseMapping])
@@ -55,7 +55,7 @@ internal class ISupportProcessorTest {
 
     @Test
     fun `ISupportProcessor handles mode prefix arguments`() {
-        val events = processor.process(IrcMessage(null, "server.com".toByteArray(), "005",
+        val events = processor.process(IrcMessage(emptyMap(), "server.com".toByteArray(), "005",
                 listOf("nickname", "PREFIX=(ovd)@+%", "are supported blah blah").map { it.toByteArray() }))
 
         assertEquals(ModePrefixMapping("ovd", "@+%"), events[0].serverFeatures[ServerFeature.ModePrefixes])
@@ -63,7 +63,7 @@ internal class ISupportProcessorTest {
 
     @Test
     fun `ISupportProcessor handles boolean features with no arguments`() {
-        val events = processor.process(IrcMessage(null, "server.com".toByteArray(), "005",
+        val events = processor.process(IrcMessage(emptyMap(), "server.com".toByteArray(), "005",
                 listOf("nickname", "WHOX", "are supported blah blah").map { it.toByteArray() }))
 
         assertEquals(true, events[0].serverFeatures[ServerFeature.WhoxSupport])

@@ -5,6 +5,7 @@ import com.dmdirc.ktirc.events.EventHandler
 import com.dmdirc.ktirc.events.ServerConnected
 import com.dmdirc.ktirc.events.ServerWelcome
 import com.dmdirc.ktirc.messages.MessageProcessor
+import com.dmdirc.ktirc.model.IrcMessage
 import com.nhaarman.mockitokotlin2.*
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.runBlocking
@@ -25,7 +26,7 @@ internal class MessageHandlerTest {
     @Test
     fun `MessageHandler passes message on to correct processor`() = runBlocking {
         val handler = MessageHandler(listOf(joinProcessor, nickProcessor), mutableListOf())
-        val message = IrcMessage(null, null, "JOIN", emptyList())
+        val message = IrcMessage(emptyMap(), null, "JOIN", emptyList())
 
         with(Channel<IrcMessage>(1)) {
             send(message)
@@ -40,9 +41,9 @@ internal class MessageHandlerTest {
     @Test
     fun `MessageHandler reads multiple messages`() = runBlocking {
         val handler = MessageHandler(listOf(joinProcessor, nickProcessor), mutableListOf())
-        val joinMessage = IrcMessage(null, null, "JOIN", emptyList())
-        val nickMessage = IrcMessage(null, null, "NICK", emptyList())
-        val otherMessage = IrcMessage(null, null, "OTHER", emptyList())
+        val joinMessage = IrcMessage(emptyMap(), null, "JOIN", emptyList())
+        val nickMessage = IrcMessage(emptyMap(), null, "NICK", emptyList())
+        val otherMessage = IrcMessage(emptyMap(), null, "OTHER", emptyList())
 
         with(Channel<IrcMessage>(3)) {
             send(joinMessage)
@@ -64,7 +65,7 @@ internal class MessageHandlerTest {
         val eventHandler1 = mock<EventHandler>()
         val eventHandler2 = mock<EventHandler>()
         val handler = MessageHandler(listOf(joinProcessor, nickProcessor), mutableListOf(eventHandler1, eventHandler2))
-        val joinMessage = IrcMessage(null, null, "JOIN", emptyList())
+        val joinMessage = IrcMessage(emptyMap(), null, "JOIN", emptyList())
         whenever(joinProcessor.process(any())).thenReturn(listOf(ServerConnected, ServerWelcome("abc")))
 
         with(Channel<IrcMessage>(1)) {

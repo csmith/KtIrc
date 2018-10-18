@@ -1,5 +1,9 @@
 package com.dmdirc.ktirc.io
 
+import com.dmdirc.ktirc.model.IrcMessage
+import com.dmdirc.ktirc.model.messageTags
+import com.dmdirc.ktirc.util.logger
+
 /**
  * Parses a message received from an IRC server.
  *
@@ -30,14 +34,16 @@ class MessageParser {
         private const val COLON = ':'.toByte()
     }
 
+    private val log by logger()
+
     fun parse(message: ByteArray) = CursorByteArray(message).run {
-        IrcMessage(takeTags(), takePrefix(), String(takeWord()), takeParams().toList())
+        IrcMessage(takeTags(), takePrefix(), String(takeWord()), takeParams())
     }
 
     /**
      * Attempts to read IRCv3 tags from the message.
      */
-    private fun CursorByteArray.takeTags() = takeOptionalPrefixedSection(AT)
+    private fun CursorByteArray.takeTags() = takeOptionalPrefixedSection(AT).toTagMap()
 
     /**
      * Attempts to read a prefix from the message.
@@ -60,17 +66,64 @@ class MessageParser {
         while (!exhausted()) {
             yield(takeParam())
         }
-    }
+    }.toList()
 
+    /**
+     * If the next word starts with the given prefix, takes and returns it, otherwise returns null.
+     */
     private fun CursorByteArray.takeOptionalPrefixedSection(prefix: Byte) = when {
         exhausted() -> null
         peek() == prefix -> takeWord(skip = 1)
         else -> null
     }
 
-}
+    /**
+     * Parses the bytes as a list of message tags. Unknown tags are discarded.
+     */
+    private fun ByteArray?.toTagMap() = sequence {
+        forEachPart(';') { tag ->
+            val index = tag.indexOf('=')
+            val name = if (index == -1) tag else tag.substring(0 until index)
+            messageTags[name]?.let {
+                yield(Pair(it, if (index == -1) "" else tag.substring(index + 1).unescapeTagValue()))
+            } ?: log.severe { "Unknown message tag: $name"}
+        }
+    }.toMap()
 
-class IrcMessage(val tags: ByteArray?, val prefix: ByteArray?, val command: String, val params: List<ByteArray>)
+    /**
+     * Resolves any backslash escaped characters in a tag value.
+     */
+    private fun String.unescapeTagValue() = String(sequence {
+        var escaped = false
+        forEach { char ->
+            when {
+                escaped -> {
+                    char.unescaped()?.let { yield(it) }
+                    escaped = false
+                }
+                char == '\\' -> escaped = true
+                else -> yield(char)
+            }
+        }
+    }.toList().toCharArray())
+
+    /**
+     * Maps an escaped character in a tag value back to its real form. Returns null if the sequence is invalid.
+     */
+    private fun Char.unescaped() = when (this) {
+        ':' -> ';'
+        'n' -> '\n'
+        'r' -> '\r'
+        's' -> ' '
+        '\\' -> '\\'
+        else -> null
+    }
+
+    private inline fun ByteArray?.forEachPart(delimiter: Char, action: (String) -> Unit) = this?.let {
+        String(it).split(delimiter).forEach(action)
+    }
+
+}
 
 /**
  * A ByteArray with a 'cursor' that tracks the current read position.

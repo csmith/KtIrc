@@ -2,7 +2,7 @@ package com.dmdirc.ktirc.messages
 
 import com.dmdirc.ktirc.events.ServerFeaturesUpdated
 import com.dmdirc.ktirc.io.CaseMapping
-import com.dmdirc.ktirc.io.IrcMessage
+import com.dmdirc.ktirc.model.IrcMessage
 import com.dmdirc.ktirc.model.ModePrefixMapping
 import com.dmdirc.ktirc.model.ServerFeatureMap
 import com.dmdirc.ktirc.model.serverFeatures

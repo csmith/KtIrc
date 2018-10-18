@@ -2,7 +2,7 @@ package com.dmdirc.ktirc.messages
 
 import com.dmdirc.ktirc.events.ChannelNamesFinished
 import com.dmdirc.ktirc.events.ChannelNamesReceived
-import com.dmdirc.ktirc.io.IrcMessage
+import com.dmdirc.ktirc.model.IrcMessage
 
 internal class NamesProcessor : MessageProcessor {
 

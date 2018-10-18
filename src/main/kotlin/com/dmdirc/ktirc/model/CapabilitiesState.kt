@@ -23,7 +23,7 @@ sealed class Capability(val name: String) {
     object UserAccountMessageTag : Capability("account-tag") // TODO: Add accounts to user info
 
     // Capabilities that extend existing commands to supply extra information:
-    object HostsInNamesReply : Capability("userhost-in-names") // TODO: Parse these hosts
+    object HostsInNamesReply : Capability("userhost-in-names")
     object MultipleUserModePrefixes : Capability("multi-prefix")
     object AccountAndRealNameInJoinMessages : Capability("extended-join") // TODO: Parse this
 

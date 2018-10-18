@@ -2,7 +2,7 @@ package com.dmdirc.ktirc.messages
 
 import com.dmdirc.ktirc.events.ChannelNamesFinished
 import com.dmdirc.ktirc.events.ChannelNamesReceived
-import com.dmdirc.ktirc.io.IrcMessage
+import com.dmdirc.ktirc.model.IrcMessage
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 
@@ -12,7 +12,7 @@ internal class NamesProcessorTest {
 
     @Test
     fun `NamesProcessor handles end of names reply`() {
-        val events = processor.process(IrcMessage(null, ":the.gibson".toByteArray(), "366", listOf("AcidBurn", "#root", "End of /NAMES list").map { it.toByteArray() }))
+        val events = processor.process(IrcMessage(emptyMap(), ":the.gibson".toByteArray(), "366", listOf("AcidBurn", "#root", "End of /NAMES list").map { it.toByteArray() }))
 
         assertEquals(1, events.size)
         assertEquals("#root", (events[0] as ChannelNamesFinished).channel)
@@ -20,7 +20,7 @@ internal class NamesProcessorTest {
 
     @Test
     fun `NamesProcessor handles names reply`() {
-        val events = processor.process(IrcMessage(null, ":the.gibson".toByteArray(), "353", listOf("AcidBurn", "@", "#root", "AcidBurn @ZeroCool +ThePlague").map { it.toByteArray() }))
+        val events = processor.process(IrcMessage(emptyMap(), ":the.gibson".toByteArray(), "353", listOf("AcidBurn", "@", "#root", "AcidBurn @ZeroCool +ThePlague").map { it.toByteArray() }))
 
         assertEquals(1, events.size)
         val event = events[0] as ChannelNamesReceived

@@ -1,7 +1,7 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-    kotlin("jvm") version "1.3.0-rc-80"
+    kotlin("jvm") version "1.3.0-rc-190"
 }
 
 repositories {
@@ -13,8 +13,8 @@ repositories {
 
 dependencies {
     implementation(kotlin("stdlib-jdk8"))
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:0.30.0-eap13")
-    implementation("io.ktor:ktor-network:0.9.6-alpha-1-rc13")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:0.30.2-eap13")
+    implementation("io.ktor:ktor-network:1.0.0-beta-1")
 
     testCompile("org.junit.jupiter:junit-jupiter-api:5.3.1")
     testCompile("org.junit.jupiter:junit-jupiter-params:5.3.1")
@@ -43,7 +43,7 @@ tasks.withType<Test> {
 configurations.all {
     resolutionStrategy.eachDependency {
         if (requested.group == "org.jetbrains.kotlin") {
-            useVersion("1.3.0-rc-80")
+            useVersion("1.3.0-rc-190")
         }
     }
 }

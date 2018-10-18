@@ -6,8 +6,8 @@ import io.ktor.network.sockets.Socket
 import io.ktor.network.sockets.aSocket
 import io.ktor.network.sockets.openReadChannel
 import io.ktor.network.sockets.openWriteChannel
-import io.ktor.network.util.ioCoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.ReceiveChannel
 import kotlinx.coroutines.channels.produce
 import kotlinx.coroutines.io.ByteReadChannel
@@ -43,9 +43,10 @@ class KtorLineBufferedSocket(private val host: String, private val port: Int): L
     private lateinit var readChannel: ByteReadChannel
     private lateinit var writeChannel: ByteWriteChannel
 
+    @Suppress("EXPERIMENTAL_API_USAGE")
     override suspend fun connect() {
         log.info { "Connecting..." }
-        socket = aSocket(ActorSelectorManager(ioCoroutineDispatcher)).tcp().connect(InetSocketAddress(host, port))
+        socket = aSocket(ActorSelectorManager(Dispatchers.IO)).tcp().connect(InetSocketAddress(host, port))
         readChannel = socket.openReadChannel()
         writeChannel = socket.openWriteChannel()
     }

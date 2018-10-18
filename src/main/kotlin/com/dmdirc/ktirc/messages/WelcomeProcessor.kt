@@ -1,7 +1,7 @@
 package com.dmdirc.ktirc.messages
 
 import com.dmdirc.ktirc.events.ServerWelcome
-import com.dmdirc.ktirc.io.IrcMessage
+import com.dmdirc.ktirc.model.IrcMessage
 
 internal class WelcomeProcessor : MessageProcessor {
 

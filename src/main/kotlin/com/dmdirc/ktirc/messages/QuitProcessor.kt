@@ -1,7 +1,7 @@
 package com.dmdirc.ktirc.messages
 
 import com.dmdirc.ktirc.events.UserQuit
-import com.dmdirc.ktirc.io.IrcMessage
+import com.dmdirc.ktirc.model.IrcMessage
 import com.dmdirc.ktirc.model.asUser
 
 internal class QuitProcessor : MessageProcessor {

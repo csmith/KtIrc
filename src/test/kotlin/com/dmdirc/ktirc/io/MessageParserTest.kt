@@ -1,5 +1,6 @@
 package com.dmdirc.ktirc.io
 
+import com.dmdirc.ktirc.model.MessageTag
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
@@ -15,27 +16,52 @@ internal class MessageParserTest {
         @JvmStatic
         @Suppress("unused")
         fun ircMessageArgumentsProvider(): Stream<Arguments> = Stream.of(
-                arguments("test", null, null, "test", emptyList<String>()),
-                arguments("test 1 2", null, null, "test", listOf("1", "2")),
-                arguments("test    1     2     ", null, null, "test", listOf("1", "2")),
-                arguments("test :1 2", null, null, "test", listOf("1 2")),
-                arguments("test :1 2    ", null, null, "test", listOf("1 2    ")),
-                arguments("123 :1 2    ", null, null, "123", listOf("1 2    ")),
-                arguments(":test abc 1 2    ", null, "test", "abc", listOf("1", "2")),
-                arguments("@tags :test abc 1 2 :three four", "tags", "test", "abc", listOf("1", "2", "three four")),
-                arguments("@tags abc 1 2 : three four ", "tags", null, "abc", listOf("1", "2", " three four "))
+                arguments("test", null, "test", emptyList<String>()),
+                arguments("test 1 2", null, "test", listOf("1", "2")),
+                arguments("test    1     2     ", null, "test", listOf("1", "2")),
+                arguments("test :1 2", null, "test", listOf("1 2")),
+                arguments("test :1 2    ", null, "test", listOf("1 2    ")),
+                arguments("123 :1 2    ", null, "123", listOf("1 2    ")),
+                arguments(":test abc 1 2    ", "test", "abc", listOf("1", "2")),
+                arguments("@tags :test abc 1 2 :three four", "test", "abc", listOf("1", "2", "three four")),
+                arguments("@tags abc 1 2 : three four ", null, "abc", listOf("1", "2", " three four "))
         )
     }
 
     @ParameterizedTest
     @MethodSource("ircMessageArgumentsProvider")
-    fun `Parses IRC messages`(input: String, tags: String?, prefix: String?, command: String, params: List<String>) {
+    fun `Parses basic IRC messages`(input: String, prefix: String?, command: String, params: List<String>) {
         val parsed = MessageParser().parse(input.toByteArray())
 
-        assertEquals(tags, parsed.tags?.let { String(it) }) { "Expected '$input' to have tags '$tags'" }
         assertEquals(prefix, parsed.prefix?.let { String(it) }) { "Expected '$input' to have prefix '$prefix'" }
         assertEquals(command, parsed.command) { "Expected '$input' to have command '$command'" }
         assertEquals(params, parsed.params.map { String(it) }) { "Expected '$input' to have params '$params'" }
+    }
+
+    @Test
+    fun `Parses tags without values`() {
+        val parsed = MessageParser().parse("@time;account= :zeroCool!dade@root.localhost PRIVMSG #chat :Hack the planet!".toByteArray())
+
+        assertEquals(2, parsed.tags.size)
+        assertEquals("", parsed.tags[MessageTag.ServerTime])
+        assertEquals("", parsed.tags[MessageTag.AccountName])
+    }
+
+    @Test
+    fun `Parses tags with values`() {
+        val parsed = MessageParser().parse("@time=2011-10-19T16:40:51.620Z;account=zeroCool :zeroCool!dade@root.localhost PRIVMSG #chat :Hack the planet!".toByteArray())
+
+        assertEquals(2, parsed.tags.size)
+        assertEquals("2011-10-19T16:40:51.620Z", parsed.tags[MessageTag.ServerTime])
+        assertEquals("zeroCool", parsed.tags[MessageTag.AccountName])
+    }
+
+    @Test
+    fun `Parses tags with escape sequences`() {
+        val parsed = MessageParser().parse("""@account=\\hack\sthe\r\nplanet\: :zeroCool!dade@root.localhost PRIVMSG #chat :Hack the planet!""".toByteArray())
+
+        assertEquals(1, parsed.tags.size)
+        assertEquals("\\hack the\r\nplanet;", parsed.tags[MessageTag.AccountName])
     }
 
 }
