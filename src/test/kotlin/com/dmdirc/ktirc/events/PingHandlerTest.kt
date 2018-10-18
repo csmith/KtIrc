@@ -1,6 +1,7 @@
 package com.dmdirc.ktirc.events
 
 import com.dmdirc.ktirc.IrcClient
+import com.dmdirc.ktirc.TestConstants
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.verify
 import kotlinx.coroutines.runBlocking
@@ -14,7 +15,7 @@ internal class PingHandlerTest {
 
     @Test
     fun `PingHandler responses to pings with a pong`() = runBlocking {
-        handler.processEvent(ircClient, PingReceived("the_plague".toByteArray()))
+        handler.processEvent(ircClient, PingReceived(TestConstants.time, "the_plague".toByteArray()))
         verify(ircClient).send("PONG :the_plague")
     }
 

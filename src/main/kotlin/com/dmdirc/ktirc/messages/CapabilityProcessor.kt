@@ -6,6 +6,7 @@ import com.dmdirc.ktirc.events.ServerCapabilitiesReceived
 import com.dmdirc.ktirc.model.IrcMessage
 import com.dmdirc.ktirc.model.capabilities
 import com.dmdirc.ktirc.util.logger
+import java.time.LocalDateTime
 
 class CapabilityProcessor : MessageProcessor {
 
@@ -14,15 +15,15 @@ class CapabilityProcessor : MessageProcessor {
     override val commands = arrayOf("CAP")
 
     override fun process(message: IrcMessage) = when (message.subCommand) {
-        "LS" -> handleList(message.subCommandArguments)
-        "ACK" -> listOf(ServerCapabilitiesAcknowledged(message.params.capabilities))
+        "LS" -> handleList(message.time, message.subCommandArguments)
+        "ACK" -> listOf(ServerCapabilitiesAcknowledged(message.time, message.params.capabilities))
         else -> emptyList()
     }
 
-    private fun handleList(lsParams: List<ByteArray>) = sequence {
-        yield(ServerCapabilitiesReceived(lsParams.capabilities))
+    private fun handleList(time: LocalDateTime, lsParams: List<ByteArray>) = sequence {
+        yield(ServerCapabilitiesReceived(time, lsParams.capabilities))
         if (lsParams.size < 2 || String(lsParams[0]) != "*") {
-            yield(ServerCapabilitiesFinished)
+            yield(ServerCapabilitiesFinished(time))
         }
     }.toList()
 

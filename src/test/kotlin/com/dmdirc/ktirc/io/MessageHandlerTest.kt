@@ -1,6 +1,7 @@
 package com.dmdirc.ktirc.io
 
 import com.dmdirc.ktirc.IrcClient
+import com.dmdirc.ktirc.TestConstants
 import com.dmdirc.ktirc.events.EventHandler
 import com.dmdirc.ktirc.events.ServerConnected
 import com.dmdirc.ktirc.events.ServerWelcome
@@ -66,7 +67,7 @@ internal class MessageHandlerTest {
         val eventHandler2 = mock<EventHandler>()
         val handler = MessageHandler(listOf(joinProcessor, nickProcessor), mutableListOf(eventHandler1, eventHandler2))
         val joinMessage = IrcMessage(emptyMap(), null, "JOIN", emptyList())
-        whenever(joinProcessor.process(any())).thenReturn(listOf(ServerConnected, ServerWelcome("abc")))
+        whenever(joinProcessor.process(any())).thenReturn(listOf(ServerConnected(TestConstants.time), ServerWelcome(TestConstants.time, "abc")))
 
         with(Channel<IrcMessage>(1)) {
             send(joinMessage)
@@ -74,10 +75,10 @@ internal class MessageHandlerTest {
             handler.processMessages(ircClient, this)
         }
 
-        verify(eventHandler1).processEvent(ircClient, ServerConnected)
-        verify(eventHandler1).processEvent(ircClient, ServerWelcome("abc"))
-        verify(eventHandler2).processEvent(ircClient, ServerConnected)
-        verify(eventHandler2).processEvent(ircClient, ServerWelcome("abc"))
+        verify(eventHandler1).processEvent(same(ircClient), isA<ServerConnected>())
+        verify(eventHandler1).processEvent(same(ircClient), isA<ServerWelcome>())
+        verify(eventHandler2).processEvent(same(ircClient), isA<ServerConnected>())
+        verify(eventHandler2).processEvent(same(ircClient), isA<ServerWelcome>())
     }
 
 }

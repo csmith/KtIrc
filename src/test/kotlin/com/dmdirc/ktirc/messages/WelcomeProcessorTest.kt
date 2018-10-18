@@ -1,15 +1,20 @@
 package com.dmdirc.ktirc.messages
 
-import com.dmdirc.ktirc.events.IrcEvent
-import com.dmdirc.ktirc.events.ServerWelcome
+import com.dmdirc.ktirc.TestConstants
 import com.dmdirc.ktirc.model.IrcMessage
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
 internal class WelcomeProcessorTest {
 
     private val processor = WelcomeProcessor()
+
+    @BeforeEach
+    fun setUp() {
+        IrcMessage.currentTimeProvider = { TestConstants.time }
+    }
 
     @Test
     fun `WelcomeProcessor can handle 001s`() {
@@ -21,7 +26,9 @@ internal class WelcomeProcessorTest {
         val events = processor.process(IrcMessage(emptyMap(), ":thegibson.com".toByteArray(), "001", listOf(
                 "acidBurn".toByteArray(),
                 "Welcome to the Internet Relay Network, acidBurn!burn@hacktheplanet.com".toByteArray())))
-        assertEquals(listOf<IrcEvent>(ServerWelcome("acidBurn")), events)
+        assertEquals(1, events.size)
+        assertEquals(TestConstants.time, events[0].time)
+        assertEquals("acidBurn", events[0].localNick)
     }
 
 }

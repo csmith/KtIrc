@@ -9,7 +9,7 @@ internal class PrivmsgProcessor : MessageProcessor {
     override val commands = arrayOf("PRIVMSG")
 
     override fun process(message: IrcMessage) = message.prefix?.let {
-        listOf(MessageReceived(it.asUser(), String(message.params[0]), String(message.params[1])))
+        listOf(MessageReceived(message.time, it.asUser(), String(message.params[0]), String(message.params[1])))
     } ?: emptyList()
 
 }

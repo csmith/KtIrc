@@ -15,7 +15,7 @@ internal class ISupportProcessor : MessageProcessor {
 
     override val commands = arrayOf("005")
 
-    override fun process(message: IrcMessage) = listOf(ServerFeaturesUpdated(ServerFeatureMap().apply {
+    override fun process(message: IrcMessage) = listOf(ServerFeaturesUpdated(message.time, ServerFeatureMap().apply {
         // Ignore the first (nickname) and last ("are supported by this server") params
         for (i in 1 until message.params.size - 1) {
             parseParam(message.params[i])

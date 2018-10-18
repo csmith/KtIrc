@@ -39,11 +39,10 @@ internal class MessageParserTest {
     }
 
     @Test
-    fun `Parses tags without values`() {
-        val parsed = MessageParser().parse("@time;account= :zeroCool!dade@root.localhost PRIVMSG #chat :Hack the planet!".toByteArray())
+    fun `Parses tag without values`() {
+        val parsed = MessageParser().parse("@account= :zeroCool!dade@root.localhost PRIVMSG #chat :Hack the planet!".toByteArray())
 
-        assertEquals(2, parsed.tags.size)
-        assertEquals("", parsed.tags[MessageTag.ServerTime])
+        assertEquals(1, parsed.tags.size)
         assertEquals("", parsed.tags[MessageTag.AccountName])
     }
 

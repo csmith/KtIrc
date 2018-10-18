@@ -1,6 +1,7 @@
 package com.dmdirc.ktirc.events
 
 import com.dmdirc.ktirc.IrcClient
+import com.dmdirc.ktirc.TestConstants
 import com.dmdirc.ktirc.io.CaseMapping
 import com.dmdirc.ktirc.model.*
 import com.nhaarman.mockitokotlin2.doReturn
@@ -22,13 +23,13 @@ internal class ChannelStateHandlerTest {
 
     @Test
     fun `ChannelStateHandler creates new state object for local joins`() = runBlocking {
-        handler.processEvent(ircClient, ChannelJoined(User("acidburn", "libby", "root.localhost"), "#thegibson"))
+        handler.processEvent(ircClient, ChannelJoined(TestConstants.time, User("acidburn", "libby", "root.localhost"), "#thegibson"))
         assertTrue("#thegibson" in channelStateMap)
     }
 
     @Test
     fun `ChannelStateHandler does not create new state object for remote joins`() = runBlocking {
-        handler.processEvent(ircClient, ChannelJoined(User("zerocool", "dade", "root.localhost"), "#thegibson"))
+        handler.processEvent(ircClient, ChannelJoined(TestConstants.time, User("zerocool", "dade", "root.localhost"), "#thegibson"))
         assertFalse("#thegibson" in channelStateMap)
     }
 
@@ -36,7 +37,7 @@ internal class ChannelStateHandlerTest {
     fun `ChannelStateHandler adds joiners to channel state`() = runBlocking {
         channelStateMap += ChannelState("#thegibson") { CaseMapping.Rfc }
 
-        handler.processEvent(ircClient, ChannelJoined(User("zerocool", "dade", "root.localhost"), "#thegibson"))
+        handler.processEvent(ircClient, ChannelJoined(TestConstants.time, User("zerocool", "dade", "root.localhost"), "#thegibson"))
 
         assertTrue("zerocool" in channelStateMap["#thegibson"]?.users!!)
     }
@@ -48,7 +49,7 @@ internal class ChannelStateHandlerTest {
         channel.users += ChannelUser("thePlague")
         channelStateMap += channel
 
-        handler.processEvent(ircClient, ChannelNamesReceived("#thegibson", listOf("zeroCool")))
+        handler.processEvent(ircClient, ChannelNamesReceived(TestConstants.time, "#thegibson", listOf("zeroCool")))
 
         assertEquals(1, channel.users.count())
         assertNotNull(channel.users["zeroCool"])
@@ -59,9 +60,9 @@ internal class ChannelStateHandlerTest {
         val channel = ChannelState("#thegibson") { CaseMapping.Rfc }
         channelStateMap += channel
 
-        handler.processEvent(ircClient, ChannelNamesReceived("#thegibson", listOf("zeroCool")))
-        handler.processEvent(ircClient, ChannelNamesReceived("#thegibson", listOf("acidBurn")))
-        handler.processEvent(ircClient, ChannelNamesReceived("#thegibson", listOf("thePlague")))
+        handler.processEvent(ircClient, ChannelNamesReceived(TestConstants.time, "#thegibson", listOf("zeroCool")))
+        handler.processEvent(ircClient, ChannelNamesReceived(TestConstants.time, "#thegibson", listOf("acidBurn")))
+        handler.processEvent(ircClient, ChannelNamesReceived(TestConstants.time, "#thegibson", listOf("thePlague")))
 
         assertEquals(3, channel.users.count())
         assertNotNull(channel.users["zeroCool"])
@@ -74,10 +75,10 @@ internal class ChannelStateHandlerTest {
         val channel = ChannelState("#thegibson") { CaseMapping.Rfc }
         channelStateMap += channel
 
-        handler.processEvent(ircClient, ChannelNamesReceived("#thegibson", listOf("zeroCool")))
-        handler.processEvent(ircClient, ChannelNamesFinished("#thegibson"))
-        handler.processEvent(ircClient, ChannelNamesReceived("#thegibson", listOf("acidBurn")))
-        handler.processEvent(ircClient, ChannelNamesReceived("#thegibson", listOf("thePlague")))
+        handler.processEvent(ircClient, ChannelNamesReceived(TestConstants.time, "#thegibson", listOf("zeroCool")))
+        handler.processEvent(ircClient, ChannelNamesFinished(TestConstants.time, "#thegibson"))
+        handler.processEvent(ircClient, ChannelNamesReceived(TestConstants.time, "#thegibson", listOf("acidBurn")))
+        handler.processEvent(ircClient, ChannelNamesReceived(TestConstants.time, "#thegibson", listOf("thePlague")))
 
         assertEquals(2, channel.users.count())
         assertNotNull(channel.users["acidBurn"])
@@ -90,8 +91,8 @@ internal class ChannelStateHandlerTest {
         channelStateMap += channel
         serverState.features[ServerFeature.ModePrefixes] = ModePrefixMapping("ov", "@+")
 
-        handler.processEvent(ircClient, ChannelNamesReceived("#thegibson", listOf("@zeroCool", "@+acidBurn", "+thePlague", "cerealKiller")))
-        handler.processEvent(ircClient, ChannelNamesFinished("#thegibson"))
+        handler.processEvent(ircClient, ChannelNamesReceived(TestConstants.time, "#thegibson", listOf("@zeroCool", "@+acidBurn", "+thePlague", "cerealKiller")))
+        handler.processEvent(ircClient, ChannelNamesFinished(TestConstants.time, "#thegibson"))
 
         assertEquals(4, channel.users.count())
         assertEquals("o", channel.users["zeroCool"]?.modes)
@@ -106,8 +107,8 @@ internal class ChannelStateHandlerTest {
         channelStateMap += channel
         serverState.features[ServerFeature.ModePrefixes] = ModePrefixMapping("ov", "@+")
 
-        handler.processEvent(ircClient, ChannelNamesReceived("#thegibson", listOf("@zeroCool!dade@root.localhost", "+acidBurn!libby@root.localhost")))
-        handler.processEvent(ircClient, ChannelNamesFinished("#thegibson"))
+        handler.processEvent(ircClient, ChannelNamesReceived(TestConstants.time, "#thegibson", listOf("@zeroCool!dade@root.localhost", "+acidBurn!libby@root.localhost")))
+        handler.processEvent(ircClient, ChannelNamesFinished(TestConstants.time, "#thegibson"))
 
         assertEquals(2, channel.users.count())
         assertEquals("o", channel.users["zeroCool"]?.modes)
@@ -119,7 +120,7 @@ internal class ChannelStateHandlerTest {
         val channel = ChannelState("#thegibson") { CaseMapping.Rfc }
         channelStateMap += channel
 
-        handler.processEvent(ircClient, ChannelParted(User("acidburn", "libby", "root.localhost"), "#thegibson"))
+        handler.processEvent(ircClient, ChannelParted(TestConstants.time, User("acidburn", "libby", "root.localhost"), "#thegibson"))
 
         assertFalse("#thegibson" in channelStateMap)
     }
@@ -130,7 +131,7 @@ internal class ChannelStateHandlerTest {
         channel.users += ChannelUser("ZeroCool")
         channelStateMap += channel
 
-        handler.processEvent(ircClient, ChannelParted(User("zerocool", "dade", "root.localhost"), "#thegibson"))
+        handler.processEvent(ircClient, ChannelParted(TestConstants.time, User("zerocool", "dade", "root.localhost"), "#thegibson"))
 
         assertFalse("zerocool" in channel.users)
     }
@@ -152,7 +153,7 @@ internal class ChannelStateHandlerTest {
             channelStateMap += this
         }
 
-        handler.processEvent(ircClient, UserQuit(User("zerocool", "dade", "root.localhost")))
+        handler.processEvent(ircClient, UserQuit(TestConstants.time, User("zerocool", "dade", "root.localhost")))
 
         assertFalse("zerocool" in channelStateMap["#thegibson"]!!.users)
         assertFalse("zerocool" in channelStateMap["#dumpsterdiving"]!!.users)

@@ -8,6 +8,8 @@ internal class JoinProcessor : MessageProcessor {
 
     override val commands = arrayOf("JOIN")
 
-    override fun process(message: IrcMessage) = message.prefix?.let { listOf(ChannelJoined(it.asUser(), String(message.params[0]))) } ?: emptyList()
+    override fun process(message: IrcMessage) = message.prefix?.let {
+        listOf(ChannelJoined(message.time, it.asUser(), String(message.params[0])))
+    } ?: emptyList()
 
 }

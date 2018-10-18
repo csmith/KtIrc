@@ -9,7 +9,7 @@ internal class QuitProcessor : MessageProcessor {
     override val commands = arrayOf("QUIT")
 
     override fun process(message: IrcMessage) = message.prefix?.let {
-        listOf(UserQuit(it.asUser(), message.reason))
+        listOf(UserQuit(message.time, it.asUser(), message.reason))
     } ?: emptyList()
 
     private val IrcMessage.reason

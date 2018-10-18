@@ -4,15 +4,13 @@ import com.dmdirc.ktirc.events.EventHandler
 import com.dmdirc.ktirc.events.ServerWelcome
 import com.dmdirc.ktirc.io.CaseMapping
 import com.dmdirc.ktirc.io.LineBufferedSocket
-import com.dmdirc.ktirc.model.Profile
-import com.dmdirc.ktirc.model.Server
-import com.dmdirc.ktirc.model.ServerFeature
-import com.dmdirc.ktirc.model.User
+import com.dmdirc.ktirc.model.*
 import com.nhaarman.mockitokotlin2.*
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 
@@ -38,6 +36,11 @@ internal class IrcClientImplTest {
     }
 
     private val mockEventHandler = mock<EventHandler>()
+
+    @BeforeEach
+    fun setUp() {
+        IrcMessage.currentTimeProvider = { TestConstants.time }
+    }
 
     @Test
     fun `IrcClientImpl uses socket factory to create a new socket on connect`() {
@@ -117,7 +120,7 @@ internal class IrcClientImplTest {
 
             client.connect()
 
-            verify(mockEventHandler).processEvent(client, ServerWelcome("acidBurn"))
+            verify(mockEventHandler).processEvent(same(client), isA<ServerWelcome>())
         }
     }
 
@@ -136,7 +139,7 @@ internal class IrcClientImplTest {
 
             client.connect()
 
-            verify(mockEventHandler, never()).processEvent(client, ServerWelcome("acidBurn"))
+            verify(mockEventHandler, never()).processEvent(client, ServerWelcome(TestConstants.time, "acidBurn"))
         }
     }
 
@@ -155,7 +158,7 @@ internal class IrcClientImplTest {
 
             client.connect()
 
-            verify(mockEventHandler, never()).processEvent(client, ServerWelcome("acidBurn"))
+            verify(mockEventHandler, never()).processEvent(client, ServerWelcome(TestConstants.time, "acidBurn"))
         }
     }
 

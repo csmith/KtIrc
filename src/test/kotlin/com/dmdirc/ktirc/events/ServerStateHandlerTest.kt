@@ -1,6 +1,7 @@
 package com.dmdirc.ktirc.events
 
 import com.dmdirc.ktirc.IrcClient
+import com.dmdirc.ktirc.TestConstants
 import com.dmdirc.ktirc.model.ServerFeature
 import com.dmdirc.ktirc.model.ServerFeatureMap
 import com.dmdirc.ktirc.model.ServerState
@@ -21,7 +22,7 @@ internal class ServerStateHandlerTest {
 
     @Test
     fun `ServerStateHandler sets local nickname on welcome event`() = runBlocking {
-        handler.processEvent(ircClient, ServerWelcome("acidBurn"))
+        handler.processEvent(ircClient, ServerWelcome(TestConstants.time, "acidBurn"))
         assertEquals("acidBurn", serverState.localNickname)
     }
 
@@ -31,7 +32,7 @@ internal class ServerStateHandlerTest {
         features[ServerFeature.ChannelModes] = "abc"
         features[ServerFeature.WhoxSupport] = true
 
-        handler.processEvent(ircClient, ServerFeaturesUpdated(features))
+        handler.processEvent(ircClient, ServerFeaturesUpdated(TestConstants.time, features))
 
         assertEquals("abc", serverState.features[ServerFeature.ChannelModes])
         assertEquals(true, serverState.features[ServerFeature.WhoxSupport])

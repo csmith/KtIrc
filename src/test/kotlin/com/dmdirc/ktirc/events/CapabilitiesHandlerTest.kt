@@ -1,6 +1,7 @@
 package com.dmdirc.ktirc.events
 
 import com.dmdirc.ktirc.IrcClient
+import com.dmdirc.ktirc.TestConstants
 import com.dmdirc.ktirc.model.CapabilitiesNegotiationState
 import com.dmdirc.ktirc.model.Capability
 import com.dmdirc.ktirc.model.ServerState
@@ -23,7 +24,7 @@ internal class CapabilitiesHandlerTest {
     @Test
     fun `CapabilitiesHandler adds new capabilities to the state`() {
         runBlocking {
-            handler.processEvent(ircClient, ServerCapabilitiesReceived(hashMapOf(
+            handler.processEvent(ircClient, ServerCapabilitiesReceived(TestConstants.time, hashMapOf(
                     Capability.EchoMessages to "",
                     Capability.HostsInNamesReply to "123"
             )))
@@ -37,7 +38,7 @@ internal class CapabilitiesHandlerTest {
     @Test
     fun `CapabilitiesHandler updates negotiation state when capabilities finished`() {
         runBlocking {
-            handler.processEvent(ircClient, ServerCapabilitiesFinished)
+            handler.processEvent(ircClient, ServerCapabilitiesFinished(TestConstants.time))
 
             assertEquals(CapabilitiesNegotiationState.AWAITING_ACK, serverState.capabilities.negotiationState)
         }
@@ -49,7 +50,7 @@ internal class CapabilitiesHandlerTest {
             serverState.capabilities.advertisedCapabilities[Capability.EchoMessages] = ""
             serverState.capabilities.advertisedCapabilities[Capability.AccountChangeMessages] = ""
 
-            handler.processEvent(ircClient, ServerCapabilitiesFinished)
+            handler.processEvent(ircClient, ServerCapabilitiesFinished(TestConstants.time))
 
             verify(ircClient).send(argThat { equals("CAP REQ :echo-message account-notify") || equals("CAP REQ :account-notify echo-message") })
         }
@@ -58,7 +59,7 @@ internal class CapabilitiesHandlerTest {
     @Test
     fun `CapabilitiesHandler sends END when capabilities acknowledged`() {
         runBlocking {
-            handler.processEvent(ircClient, ServerCapabilitiesAcknowledged(hashMapOf(
+            handler.processEvent(ircClient, ServerCapabilitiesAcknowledged(TestConstants.time, hashMapOf(
                     Capability.EchoMessages to "",
                     Capability.HostsInNamesReply to "123"
             )))
@@ -70,7 +71,7 @@ internal class CapabilitiesHandlerTest {
     @Test
     fun `CapabilitiesHandler updates negotiation state when capabilities acknowledged`() {
         runBlocking {
-            handler.processEvent(ircClient, ServerCapabilitiesAcknowledged(hashMapOf(
+            handler.processEvent(ircClient, ServerCapabilitiesAcknowledged(TestConstants.time, hashMapOf(
                     Capability.EchoMessages to "",
                     Capability.HostsInNamesReply to "123"
             )))
@@ -82,7 +83,7 @@ internal class CapabilitiesHandlerTest {
     @Test
     fun `CapabilitiesHandler stores enabled caps when capabilities acknowledged`() {
         runBlocking {
-            handler.processEvent(ircClient, ServerCapabilitiesAcknowledged(hashMapOf(
+            handler.processEvent(ircClient, ServerCapabilitiesAcknowledged(TestConstants.time, hashMapOf(
                     Capability.EchoMessages to "",
                     Capability.HostsInNamesReply to "123"
             )))

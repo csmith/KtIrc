@@ -7,6 +7,6 @@ internal class PingProcessor : MessageProcessor {
 
     override val commands = arrayOf("PING")
 
-    override fun process(message: IrcMessage) = listOf(PingReceived(message.params[0]))
+    override fun process(message: IrcMessage) = listOf(PingReceived(message.time, message.params[0]))
 
 }
