@@ -27,3 +27,4 @@ abstract class CaseInsensitiveMap<T>(private val caseMappingProvider: () -> Case
 
 class ChannelStateMap(caseMappingProvider: () -> CaseMapping) : CaseInsensitiveMap<ChannelState>(caseMappingProvider, ChannelState::name)
 class ChannelUserMap(caseMappingProvider: () -> CaseMapping) : CaseInsensitiveMap<ChannelUser>(caseMappingProvider, ChannelUser::nickname)
+class UserMap(caseMappingProvider: () -> CaseMapping) : CaseInsensitiveMap<KnownUser>(caseMappingProvider, { it.details.nickname })

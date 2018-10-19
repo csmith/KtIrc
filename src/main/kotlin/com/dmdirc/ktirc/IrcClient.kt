@@ -17,6 +17,7 @@ interface IrcClient {
 
     val serverState: ServerState
     val channelState: ChannelStateMap
+    val userState: UserState
 
     val caseMapping: CaseMapping
         get() = serverState.features[ServerFeature.ServerCaseMapping] ?: CaseMapping.Rfc
@@ -36,6 +37,7 @@ class IrcClientImpl(private val server: Server, private val profile: Profile) : 
 
     override val serverState = ServerState(profile.initialNick)
     override val channelState = ChannelStateMap { caseMapping }
+    override val userState = UserState { caseMapping }
 
     override var eventHandler: EventHandler? = null
         set(value) {

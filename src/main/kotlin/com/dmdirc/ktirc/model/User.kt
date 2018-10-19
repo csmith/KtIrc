@@ -7,7 +7,16 @@ data class User(
         var account: String? = null,
         var realName: String? = null,
         var awayMessage: String? = null
-)
+) {
+    fun updateFrom(other: User) {
+        nickname = other.nickname
+        other.ident?.let { ident = it }
+        other.hostname?.let { hostname = it }
+        other.account?.let { account = it }
+        other.realName?.let { realName = it }
+        other.awayMessage?.let { awayMessage = it }
+    }
+}
 
 fun ByteArray.asUser(): User {
     val string = String(this)

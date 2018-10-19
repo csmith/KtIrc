@@ -126,3 +126,16 @@ internal class ChannelUserMapTest {
     }
 
 }
+
+internal class UserMapTest {
+
+    @Test
+    fun `UserMap maps users on nickname`() {
+        val userMap = UserMap { CaseMapping.Rfc }
+        userMap += KnownUser(User("acidBurn"))
+        assertTrue("acidBurn" in userMap)
+        assertTrue("acidburn" in userMap)
+        assertFalse("zerocool" in userMap)
+    }
+
+}

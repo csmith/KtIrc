@@ -10,11 +10,9 @@ class CapabilitiesState {
 }
 
 enum class CapabilitiesNegotiationState {
-
     AWAITING_LIST,
     AWAITING_ACK,
     FINISHED
-
 }
 
 @Suppress("unused")
