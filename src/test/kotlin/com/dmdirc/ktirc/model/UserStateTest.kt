@@ -53,4 +53,39 @@ internal class UserStateTest {
         assertNull(userState["acidBurn"])
     }
 
+    @Test
+    fun `addToChannel adds new user if not known`() {
+        userState.addToChannel(User("acidBurn", "libby", "root.localhost"), "#thegibson")
+
+        val user = userState["acidburn"]!!
+        assertEquals("acidBurn", user.details.nickname)
+        assertEquals("libby", user.details.ident)
+        assertEquals("root.localhost", user.details.hostname)
+
+        assertEquals(1, user.channels.count())
+        assertTrue("#thegibson" in user.channels)
+    }
+
+    @Test
+    fun `addToChannel appends channel to existing user`() {
+        userState += User("acidBurn", "libby", "root.localhost")
+        userState.addToChannel(User("acidBurn"), "#thegibson")
+
+        val user = userState["acidburn"]!!
+        assertEquals(1, user.channels.count())
+        assertTrue("#thegibson" in user.channels)
+    }
+
+    @Test
+    fun `removeIf deletes all matching users`() {
+        userState += User("acidBurn", "libby", "root.localhost")
+        userState += User("zeroCool", "dade", "root.localhost")
+        userState += User("acidBurn2", "libby", "root.localhost")
+
+        userState.removeIf { it.details.nickname.startsWith("acidBurn") }
+
+        assertEquals(1, userState.count())
+        assertNotNull(userState["zeroCool"])
+    }
+
 }

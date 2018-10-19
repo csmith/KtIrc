@@ -3,7 +3,6 @@ package com.dmdirc.ktirc.events
 import com.dmdirc.ktirc.IrcClient
 import com.dmdirc.ktirc.model.ChannelState
 import com.dmdirc.ktirc.model.ChannelUser
-import com.dmdirc.ktirc.model.ServerFeature
 import com.dmdirc.ktirc.util.logger
 
 class ChannelStateHandler : EventHandler {
@@ -49,11 +48,8 @@ class ChannelStateHandler : EventHandler {
             channel.receivingUserList = true
         }
 
-        val modePrefixes = client.serverState.features[ServerFeature.ModePrefixes]!!
-        for (user in event.names) {
-            user.takeWhile { modePrefixes.isPrefix(it) }.let { prefix ->
-                channel.users += ChannelUser(user.nickname(prefix.length), modePrefixes.getModes(prefix))
-            }
+        event.toModesAndUsers(client).forEach { (modes, user) ->
+            channel.users += ChannelUser(user.nickname, modes)
         }
     }
 

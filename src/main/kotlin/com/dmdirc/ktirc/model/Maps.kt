@@ -23,6 +23,8 @@ abstract class CaseInsensitiveMap<T>(private val caseMappingProvider: () -> Case
 
     fun clear() = values.clear()
 
+    fun removeIf(predicate: (T) -> Boolean) = values.removeIf(predicate)
+
 }
 
 class ChannelStateMap(caseMappingProvider: () -> CaseMapping) : CaseInsensitiveMap<ChannelState>(caseMappingProvider, ChannelState::name)

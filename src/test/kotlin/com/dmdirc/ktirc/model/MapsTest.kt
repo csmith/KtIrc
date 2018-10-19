@@ -99,6 +99,18 @@ internal class CaseInsensitiveMapTest {
         assertEquals(0, map.count())
     }
 
+    @Test
+    fun `removeIf removes matching items`() {
+        map += Wrapper("acidBurn")
+        map += Wrapper("zeroCool")
+        map += Wrapper("thePlague")
+
+        map.removeIf { it.name.length == 8 }
+
+        assertEquals(1, map.count())
+        assertTrue("thePlague" in map)
+    }
+
 }
 
 internal class ChannelStateMapTest {
@@ -132,7 +144,7 @@ internal class UserMapTest {
     @Test
     fun `UserMap maps users on nickname`() {
         val userMap = UserMap { CaseMapping.Rfc }
-        userMap += KnownUser(User("acidBurn"))
+        userMap += KnownUser({ CaseMapping.Rfc }, User("acidBurn"))
         assertTrue("acidBurn" in userMap)
         assertTrue("acidburn" in userMap)
         assertFalse("zerocool" in userMap)

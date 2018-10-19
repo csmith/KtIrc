@@ -8,9 +8,10 @@ interface EventHandler {
 
 }
 
-val eventHandlers = setOf(
+val eventHandlers = listOf(
         CapabilitiesHandler(),
         ChannelStateHandler(),
         PingHandler(),
-        ServerStateHandler()
+        ServerStateHandler(),
+        UserStateHandler()
 )
