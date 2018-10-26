@@ -38,6 +38,8 @@ internal class CapabilitiesHandlerTest {
     @Test
     fun `CapabilitiesHandler updates negotiation state when capabilities finished`() {
         runBlocking {
+            serverState.capabilities.advertisedCapabilities[Capability.EchoMessages] = ""
+
             handler.processEvent(ircClient, ServerCapabilitiesFinished(TestConstants.time))
 
             assertEquals(CapabilitiesNegotiationState.AWAITING_ACK, serverState.capabilities.negotiationState)
@@ -53,6 +55,24 @@ internal class CapabilitiesHandlerTest {
             handler.processEvent(ircClient, ServerCapabilitiesFinished(TestConstants.time))
 
             verify(ircClient).send(argThat { equals("CAP REQ :echo-message account-notify") || equals("CAP REQ :account-notify echo-message") })
+        }
+    }
+
+    @Test
+    fun `CapabilitiesHandler sends END when blank capabilities received`() {
+        runBlocking {
+            handler.processEvent(ircClient, ServerCapabilitiesFinished(TestConstants.time))
+
+            verify(ircClient).send("CAP END")
+        }
+    }
+
+    @Test
+    fun `CapabilitiesHandler updates negotiation when blank capabilities received`() {
+        runBlocking {
+            handler.processEvent(ircClient, ServerCapabilitiesFinished(TestConstants.time))
+
+            assertEquals(CapabilitiesNegotiationState.FINISHED, serverState.capabilities.negotiationState)
         }
     }
 

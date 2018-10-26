@@ -4,6 +4,11 @@ plugins {
     kotlin("jvm") version "1.3.0-rc-190"
 }
 
+configurations {
+    create("itestImplementation") { extendsFrom(getByName("testImplementation")) }
+    create("itestRuntime") { extendsFrom(getByName("testRuntime")) }
+}
+
 repositories {
     jcenter()
     mavenCentral()
@@ -16,15 +21,29 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:0.30.2-eap13")
     implementation("io.ktor:ktor-network:1.0.0-beta-1")
 
-    testCompile("org.junit.jupiter:junit-jupiter-api:5.3.1")
-    testCompile("org.junit.jupiter:junit-jupiter-params:5.3.1")
-    testRuntime("org.junit.jupiter:junit-jupiter-engine:5.3.1")
     testImplementation("com.nhaarman.mockitokotlin2:mockito-kotlin:2.0.0-RC3")
+    testImplementation("org.junit.jupiter:junit-jupiter-api:5.3.1")
+    testImplementation("org.junit.jupiter:junit-jupiter-params:5.3.1")
+    testRuntime("org.junit.jupiter:junit-jupiter-engine:5.3.1")
 }
 
 java {
     sourceCompatibility = JavaVersion.VERSION_1_8
     targetCompatibility = JavaVersion.VERSION_1_8
+
+    sourceSets {
+        create("itest") {
+            compileClasspath += getByName("main").output
+            runtimeClasspath += getByName("main").output
+            java.srcDirs("src/itest/kotlin")
+        }
+    }
+}
+
+tasks.create<Test>("itest") {
+    group = "verification"
+    testClassesDirs = java.sourceSets.getByName("itest").output.classesDirs
+    classpath = java.sourceSets.getByName("itest").runtimeClasspath
 }
 
 tasks.withType<KotlinCompile> {

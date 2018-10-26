@@ -28,10 +28,15 @@ class CapabilitiesHandler : EventHandler {
         // TODO: We probably need to split the outgoing REQ lines if there are lots of caps
         // TODO: For caps with values we'll need to decide which value to use/whether to enable them/etc
         with (client.serverState.capabilities) {
-            negotiationState = CapabilitiesNegotiationState.AWAITING_ACK
-            advertisedCapabilities.keys.map { it.name }.let {
-                log.info { "Requesting capabilities: ${it.toList()}" }
-                client.send(capabilityRequestMessage(it))
+            if (advertisedCapabilities.keys.isEmpty()) {
+                negotiationState = CapabilitiesNegotiationState.FINISHED
+                client.send(capabilityEndMessage())
+            } else {
+                negotiationState = CapabilitiesNegotiationState.AWAITING_ACK
+                advertisedCapabilities.keys.map { it.name }.let {
+                    log.info { "Requesting capabilities: ${it.toList()}" }
+                    client.send(capabilityRequestMessage(it))
+                }
             }
         }
     }

@@ -34,7 +34,7 @@ class CapabilityProcessor : MessageProcessor {
         get() = params.slice(1 until params.size)
 
     private val List<ByteArray>.capabilities
-        get() = String(last()).split(' ').toCapabilities()
+        get() = with (String(last())) { if (isEmpty()) emptyMap() else split(' ').toCapabilities() }
 
     private fun List<String>.toCapabilities() = sequence {
         forEach { cap ->

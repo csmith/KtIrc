@@ -73,6 +73,10 @@ class IrcClientImpl(private val server: Server, private val profile: Profile) : 
         }
     }
 
+    fun disconnect() {
+        socket?.disconnect()
+    }
+
     companion object {
         @JvmStatic
         fun main(args: Array<String>) {
