@@ -22,7 +22,7 @@ repositories {
 }
 
 dependencies {
-    implementation(kotlin("stdlib-jdk8"))
+    implementation(kotlin("stdlib-jdk8", "1.3.0-rc-190"))
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:0.30.2-eap13")
     implementation("io.ktor:ktor-network:1.0.0-beta-1")
 
@@ -86,6 +86,19 @@ publishing {
             version = project.version as String
             artifact(tasks["jar"])
             artifact(tasks["sourceJar"])
+            pom.withXml {
+                val root = asNode()
+                root.appendNode("name", "KtIrc")
+                root.appendNode("description", "Kotlin library for connecting to and interacting with IRC")
+
+                val dependenciesNode = root.appendNode("dependencies")
+                configurations.implementation.allDependencies.forEach {
+                    val dependencyNode = dependenciesNode.appendNode("dependency")
+                    dependencyNode.appendNode("groupId", it.group)
+                    dependencyNode.appendNode("artifactId", it.name)
+                    dependencyNode.appendNode("version", it.version)
+                }
+            }
         }
     }
 }
