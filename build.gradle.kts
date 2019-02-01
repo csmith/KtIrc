@@ -23,6 +23,7 @@ dependencies {
     implementation(kotlin("stdlib-jdk8", "1.3.20"))
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.1.1")
     implementation("io.ktor:ktor-network:1.1.2")
+    implementation("io.ktor:ktor-network-tls:1.1.2")
 
     testImplementation("com.nhaarman.mockitokotlin2:mockito-kotlin:2.1.0")
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.3.1")

@@ -33,7 +33,7 @@ interface IrcClient {
 // TODO: Should there be a default profile?
 class IrcClientImpl(private val server: Server, private val profile: Profile) : IrcClient {
 
-    var socketFactory: (String, Int) -> LineBufferedSocket = ::KtorLineBufferedSocket
+    var socketFactory: (String, Int, Boolean) -> LineBufferedSocket = ::KtorLineBufferedSocket
 
     override val serverState = ServerState(profile.initialNick)
     override val channelState = ChannelStateMap { caseMapping }
@@ -59,7 +59,7 @@ class IrcClientImpl(private val server: Server, private val profile: Profile) : 
         // TODO: Concurrency!
         check(socket == null)
         coroutineScope {
-            with(socketFactory(server.host, server.port)) {
+            with(socketFactory(server.host, server.port, server.tls)) {
                 socket = this
                 connect()
                 sendLine("CAP LS 302")

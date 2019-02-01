@@ -1,15 +1,22 @@
 package com.dmdirc.ktirc.io
 
+import io.ktor.network.tls.certificates.generateCertificate
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertNotNull
+import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.parallel.Execution
 import org.junit.jupiter.api.parallel.ExecutionMode
+import sun.security.validator.ValidatorException
+import java.io.File
 import java.net.ServerSocket
+import java.security.KeyStore
+import java.security.cert.X509Certificate
+import javax.net.ssl.KeyManagerFactory
+import javax.net.ssl.SSLContext
+import javax.net.ssl.X509TrustManager
 
 @Execution(ExecutionMode.SAME_THREAD)
 internal class KtorLineBufferedSocketTest {
@@ -23,6 +30,22 @@ internal class KtorLineBufferedSocketTest {
             socket.connect()
 
             assertNotNull(clientSocketAsync.await())
+        }
+    }
+
+    @Test
+    fun `KtorLineBufferedSocket throws trying to connect to a server with a bad TLS cert`() = runBlocking {
+        tlsServerSocket(12321).use { serverSocket ->
+            try {
+                val socket = KtorLineBufferedSocket("localhost", 12321)
+                val clientSocketAsync = GlobalScope.async { serverSocket.accept() }
+
+                socket.connect()
+                assertNotNull(clientSocketAsync.await())
+                fail<Unit>()
+            } catch (ex : ValidatorException) {
+                // Expected
+            }
         }
     }
 
@@ -49,6 +72,26 @@ internal class KtorLineBufferedSocketTest {
     fun `KtorLineBufferedSocket can send a string to a server`() = runBlocking {
         ServerSocket(12321).use { serverSocket ->
             val socket = KtorLineBufferedSocket("localhost", 12321)
+            val clientBytesAsync = GlobalScope.async {
+                ByteArray(13).apply {
+                    serverSocket.accept().getInputStream().read(this)
+                }
+            }
+
+            socket.connect()
+            socket.sendLine("Hello World")
+
+            val bytes = clientBytesAsync.await()
+            assertNotNull(bytes)
+            assertEquals("Hello World\r\n", String(bytes))
+        }
+    }
+
+    @Test
+    fun `KtorLineBufferedSocket can send a string to a server over TLS`() = runBlocking {
+        tlsServerSocket(12321).use { serverSocket ->
+            val socket = KtorLineBufferedSocket("localhost", 12321, true)
+            socket.tlsTrustManager = getTrustingManager()
             val clientBytesAsync = GlobalScope.async {
                 ByteArray(13).apply {
                     serverSocket.accept().getInputStream().read(this)
@@ -174,5 +217,29 @@ internal class KtorLineBufferedSocketTest {
             assertEquals(-1, clientSocketAsync.await().getInputStream().read()) { "Server socket should EOF after KtorLineBufferedSocket disconnects" }
         }
     }
+
+    private fun tlsServerSocket(port: Int): ServerSocket {
+        val keyFile = File.createTempFile("selfsigned", "jks")
+        generateCertificate(keyFile)
+
+        val keyStore = KeyStore.getInstance("JKS")
+        keyStore.load(keyFile.inputStream(), "changeit".toCharArray())
+
+        val keyManagerFactory = KeyManagerFactory.getInstance("PKIX")
+        keyManagerFactory.init(keyStore, "changeit".toCharArray())
+
+        val sslContext = SSLContext.getInstance("TLSv1.2")
+        sslContext.init(keyManagerFactory.keyManagers, null, null)
+        return sslContext.serverSocketFactory.createServerSocket(port)
+    }
+
+    private fun getTrustingManager() = object : X509TrustManager {
+        override fun getAcceptedIssuers(): Array<X509Certificate>  = emptyArray()
+
+        override fun checkClientTrusted(certs: Array<X509Certificate>, authType: String) {}
+
+        override fun checkServerTrusted(certs: Array<X509Certificate>, authType: String) {}
+    }
+
 
 }

@@ -6,13 +6,17 @@ import io.ktor.network.sockets.Socket
 import io.ktor.network.sockets.aSocket
 import io.ktor.network.sockets.openReadChannel
 import io.ktor.network.sockets.openWriteChannel
+import io.ktor.network.tls.tls
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.channels.ReceiveChannel
 import kotlinx.coroutines.channels.produce
 import kotlinx.coroutines.io.ByteReadChannel
 import kotlinx.coroutines.io.ByteWriteChannel
 import java.net.InetSocketAddress
+import java.security.SecureRandom
+import javax.net.ssl.X509TrustManager
 
 interface LineBufferedSocket {
 
@@ -29,13 +33,15 @@ interface LineBufferedSocket {
 /**
  * Asynchronous socket that buffers incoming data and emits individual lines.
  */
-// TODO: TLS options
-class KtorLineBufferedSocket(private val host: String, private val port: Int): LineBufferedSocket {
+// TODO: Expose advanced TLS options
+class KtorLineBufferedSocket(private val host: String, private val port: Int, private val tls: Boolean = false): LineBufferedSocket {
 
     companion object {
         const val CARRIAGE_RETURN = '\r'.toByte()
         const val LINE_FEED = '\n'.toByte()
     }
+
+    public var tlsTrustManager: X509TrustManager? = null
 
     private val log by logger()
 
@@ -47,6 +53,10 @@ class KtorLineBufferedSocket(private val host: String, private val port: Int): L
     override suspend fun connect() {
         log.info { "Connecting..." }
         socket = aSocket(ActorSelectorManager(Dispatchers.IO)).tcp().connect(InetSocketAddress(host, port))
+        if (tls) {
+            // TODO: Figure out how exactly scopes work...
+            socket = socket.tls(GlobalScope.coroutineContext, randomAlgorithm = SecureRandom.getInstanceStrong().algorithm, trustManager = tlsTrustManager)
+        }
         readChannel = socket.openReadChannel()
         writeChannel = socket.openWriteChannel()
     }

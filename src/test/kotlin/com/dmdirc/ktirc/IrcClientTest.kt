@@ -31,8 +31,8 @@ internal class IrcClientImplTest {
         on { readLines(any()) } doReturn readLineChannel
     }
 
-    private val mockSocketFactory = mock<(String, Int) -> LineBufferedSocket> {
-        on { invoke(HOST, PORT) } doReturn mockSocket
+    private val mockSocketFactory = mock<(String, Int, Boolean) -> LineBufferedSocket> {
+        on { invoke(eq(HOST), eq(PORT), any()) } doReturn mockSocket
     }
 
     private val mockEventHandler = mock<EventHandler>()
@@ -51,7 +51,20 @@ internal class IrcClientImplTest {
 
             client.connect()
 
-            verify(mockSocketFactory).invoke(HOST, PORT)
+            verify(mockSocketFactory).invoke(HOST, PORT, false)
+        }
+    }
+
+    @Test
+    fun `IrcClientImpl uses socket factory to create a new tls on connect`() {
+        runBlocking {
+            val client = IrcClientImpl(Server(HOST, PORT, true), Profile(NICK, REAL_NAME, USER_NAME))
+            client.socketFactory = mockSocketFactory
+            readLineChannel.close()
+
+            client.connect()
+
+            verify(mockSocketFactory).invoke(HOST, PORT, true)
         }
     }
 
