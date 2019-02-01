@@ -46,14 +46,18 @@ java {
 
 task<Test>("itest") {
     group = "verification"
-    testClassesDirs = java.sourceSets.getByName("itest").output.classesDirs
-    classpath = java.sourceSets.getByName("itest").runtimeClasspath
+    testClassesDirs = sourceSets["itest"].output.classesDirs
+    classpath = sourceSets["itest"].runtimeClasspath
 }
 
 task<Jar>("sourceJar") {
     description = "Creates a JAR that contains the source code."
-    from(java.sourceSets["main"].allSource)
-    classifier = "sources"
+    from(sourceSets["main"].allSource)
+    archiveClassifier.set("sources")
+}
+
+tasks.withType<Wrapper> {
+    gradleVersion = "5.1.1"
 }
 
 tasks.withType<KotlinCompile> {
@@ -91,7 +95,7 @@ publishing {
                 root.appendNode("description", "Kotlin library for connecting to and interacting with IRC")
 
                 val dependenciesNode = root.appendNode("dependencies")
-                configurations.implementation.allDependencies.forEach {
+                configurations.implementation.get().allDependencies.forEach {
                     val dependencyNode = dependenciesNode.appendNode("dependency")
                     dependencyNode.appendNode("groupId", it.group)
                     dependencyNode.appendNode("artifactId", it.name)

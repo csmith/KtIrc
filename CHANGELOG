@@ -1,3 +1,4 @@
 v0.2.0 [in development]
 
   * Added support for connecting over TLS
+  * (Internal) Upgraded to Gradle 5.1.1
