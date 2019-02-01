@@ -5,7 +5,7 @@ group = "com.dmdirc.ktirc"
 
 plugins {
     `maven-publish`
-    kotlin("jvm") version "1.3.0-rc-190"
+    kotlin("jvm") version "1.3.20"
     id("com.jfrog.bintray") version "1.8.4"
 }
 
@@ -17,16 +17,14 @@ configurations {
 repositories {
     jcenter()
     mavenCentral()
-    maven("http://dl.bintray.com/kotlin/kotlin-eap")
-    maven("https://dl.bintray.com/kotlin/ktor")
 }
 
 dependencies {
-    implementation(kotlin("stdlib-jdk8", "1.3.0-rc-190"))
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:0.30.2-eap13")
-    implementation("io.ktor:ktor-network:1.0.0-beta-1")
+    implementation(kotlin("stdlib-jdk8", "1.3.20"))
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.1.1")
+    implementation("io.ktor:ktor-network:1.1.2")
 
-    testImplementation("com.nhaarman.mockitokotlin2:mockito-kotlin:2.0.0-RC3")
+    testImplementation("com.nhaarman.mockitokotlin2:mockito-kotlin:2.1.0")
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.3.1")
     testImplementation("org.junit.jupiter:junit-jupiter-params:5.3.1")
     testRuntime("org.junit.jupiter:junit-jupiter-engine:5.3.1")
@@ -73,7 +71,7 @@ tasks.withType<Test> {
 configurations.all {
     resolutionStrategy.eachDependency {
         if (requested.group == "org.jetbrains.kotlin") {
-            useVersion("1.3.0-rc-190")
+            useVersion("1.3.20")
         }
     }
 }
