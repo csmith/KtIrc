@@ -41,7 +41,7 @@ internal class CapabilityProcessor : MessageProcessor {
             val index = cap.indexOf('=')
             val name = if (index == -1) cap else cap.substring(0 until index)
             val value = if (index == -1) "" else cap.substring(index + 1)
-            capabilities[name]?.let { yield(Pair(it, value)) } ?: log.info { "Unknown capability: $name (value: $value)" }
+            capabilities[name]?.let { yield(it to value) } ?: log.info { "Unknown capability: $name (value: $value)" }
         }
     }.toMap()
 

@@ -89,7 +89,7 @@ internal class MessageParser {
             val index = tag.indexOf('=')
             val name = if (index == -1) tag else tag.substring(0 until index)
             messageTags[name]?.let {
-                yield(Pair(it, if (index == -1) "" else tag.substring(index + 1).unescapeTagValue()))
+                yield(it to if (index == -1) "" else tag.substring(index + 1).unescapeTagValue())
             } ?: log.severe { "Unknown message tag: $name"}
         }
     }.toMap()

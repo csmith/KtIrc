@@ -8,7 +8,7 @@ internal fun ChannelNamesReceived.toModesAndUsers(client: IrcClient) = sequence 
     val modePrefixes = client.serverState.features[ServerFeature.ModePrefixes]!!
     for (user in names) {
         user.takeWhile { modePrefixes.isPrefix(it) }.let { prefix ->
-            yield(Pair(modePrefixes.getModes(prefix), user.substring(prefix.length).asUser()))
+            yield(modePrefixes.getModes(prefix) to user.substring(prefix.length).asUser())
         }
     }
 }.toList()

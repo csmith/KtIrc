@@ -42,7 +42,7 @@ internal class KtorLineBufferedSocket(private val host: String, private val port
         const val LINE_FEED = '\n'.toByte()
     }
 
-    public var tlsTrustManager: X509TrustManager? = null
+    var tlsTrustManager: X509TrustManager? = null
 
     private val log by logger()
 

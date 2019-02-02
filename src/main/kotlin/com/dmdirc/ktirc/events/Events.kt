@@ -5,6 +5,7 @@ import com.dmdirc.ktirc.model.ServerFeatureMap
 import com.dmdirc.ktirc.model.User
 import java.time.LocalDateTime
 
+/** Base class for all events. */
 sealed class IrcEvent(val time: LocalDateTime)
 
 /** Raised when the server initially welcomes us to the IRC network. */
