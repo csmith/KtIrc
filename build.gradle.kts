@@ -5,6 +5,7 @@ group = "com.dmdirc.ktirc"
 
 plugins {
     `maven-publish`
+    `jacoco`
     kotlin("jvm") version "1.3.20"
     id("com.jfrog.bintray") version "1.8.4"
 }
