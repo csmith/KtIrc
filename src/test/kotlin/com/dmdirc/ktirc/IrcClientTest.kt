@@ -1,6 +1,6 @@
 package com.dmdirc.ktirc
 
-import com.dmdirc.ktirc.events.EventHandler
+import com.dmdirc.ktirc.events.IrcEvent
 import com.dmdirc.ktirc.events.ServerWelcome
 import com.dmdirc.ktirc.io.CaseMapping
 import com.dmdirc.ktirc.io.LineBufferedSocket
@@ -35,7 +35,7 @@ internal class IrcClientImplTest {
         on { invoke(eq(HOST), eq(PORT), any()) } doReturn mockSocket
     }
 
-    private val mockEventHandler = mock<EventHandler>()
+    private val mockEventHandler = mock<(IrcEvent) -> Unit>()
 
     @BeforeEach
     fun setUp() {
@@ -124,7 +124,7 @@ internal class IrcClientImplTest {
         runBlocking {
             val client = IrcClientImpl(Server(HOST, PORT, password = PASSWORD), Profile(NICK, REAL_NAME, USER_NAME))
             client.socketFactory = mockSocketFactory
-            client.eventHandler = mockEventHandler
+            client.onEvent(mockEventHandler)
 
             launch {
                 readLineChannel.send(":the.gibson 001 acidBurn :Welcome to the IRC!".toByteArray())
@@ -133,45 +133,7 @@ internal class IrcClientImplTest {
 
             client.connect()
 
-            verify(mockEventHandler).processEvent(same(client), isA<ServerWelcome>())
-        }
-    }
-
-    @Test
-    fun `IrcClientImpl removes old event handlers when new one is added`() {
-        runBlocking {
-            val client = IrcClientImpl(Server(HOST, PORT, password = PASSWORD), Profile(NICK, REAL_NAME, USER_NAME))
-            client.socketFactory = mockSocketFactory
-            client.eventHandler = mockEventHandler
-            client.eventHandler = mock()
-
-            launch {
-                readLineChannel.send(":the.gibson 001 acidBurn :Welcome to the IRC!".toByteArray())
-                readLineChannel.close()
-            }
-
-            client.connect()
-
-            verify(mockEventHandler, never()).processEvent(client, ServerWelcome(TestConstants.time, "acidBurn"))
-        }
-    }
-
-    @Test
-    fun `IrcClientImpl removes old event handlers when it is set to null`() {
-        runBlocking {
-            val client = IrcClientImpl(Server(HOST, PORT, password = PASSWORD), Profile(NICK, REAL_NAME, USER_NAME))
-            client.socketFactory = mockSocketFactory
-            client.eventHandler = mockEventHandler
-            client.eventHandler = null
-
-            launch {
-                readLineChannel.send(":the.gibson 001 acidBurn :Welcome to the IRC!".toByteArray())
-                readLineChannel.close()
-            }
-
-            client.connect()
-
-            verify(mockEventHandler, never()).processEvent(client, ServerWelcome(TestConstants.time, "acidBurn"))
+            verify(mockEventHandler).invoke(isA<ServerWelcome>())
         }
     }
 

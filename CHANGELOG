@@ -1,4 +1,5 @@
 v0.2.0 [in development]
 
   * Added support for connecting over TLS
+  * Simplified how event handlers are registered
   * (Internal) Upgraded to Gradle 5.1.1

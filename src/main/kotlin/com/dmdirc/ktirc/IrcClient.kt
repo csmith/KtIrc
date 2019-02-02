@@ -19,10 +19,10 @@ interface IrcClient {
     val channelState: ChannelStateMap
     val userState: UserState
 
+    fun onEvent(handler: (IrcEvent) -> Unit)
+
     val caseMapping: CaseMapping
         get() = serverState.features[ServerFeature.ServerCaseMapping] ?: CaseMapping.Rfc
-
-    var eventHandler: EventHandler?
 
     fun isLocalUser(user: User): Boolean = caseMapping.areEquivalent(user.nickname, serverState.localNickname)
 
@@ -39,18 +39,12 @@ class IrcClientImpl(private val server: Server, private val profile: Profile) : 
     override val channelState = ChannelStateMap { caseMapping }
     override val userState = UserState { caseMapping }
 
-    override var eventHandler: EventHandler? = null
-        set(value) {
-            field?.let { messageHandler.handlers.remove(it) }
-            field = value
-            field?.let { messageHandler.handlers.add(it) }
-        }
-
     private val messageHandler = MessageHandler(messageProcessors.toList(), eventHandlers.toMutableList())
 
     private val parser = MessageParser()
     private var socket: LineBufferedSocket? = null
 
+    // TODO: It would be cleaner if this didn't suspend but returned immediately
     override suspend fun send(message: String) {
         socket?.sendLine(message)
     }
@@ -77,28 +71,32 @@ class IrcClientImpl(private val server: Server, private val profile: Profile) : 
         socket?.disconnect()
     }
 
-    companion object {
-        @JvmStatic
-        fun main(args: Array<String>) {
-            val rootLogger = LogManager.getLogManager().getLogger("")
-            rootLogger.level = Level.FINEST
-            for (h in rootLogger.handlers) {
-                h.level = Level.FINEST
+    override fun onEvent(handler: (IrcEvent) -> Unit) {
+        messageHandler.handlers.add(object : EventHandler {
+            override suspend fun processEvent(client: IrcClient, event: IrcEvent) {
+                handler(event)
             }
+        })
+    }
+}
 
-            runBlocking {
-                val client = IrcClientImpl(Server("testnet.inspircd.org", 6667), Profile("KtIrc", "Kotlin!", "kotlin"))
-                client.eventHandler = object : EventHandler {
-                    override suspend fun processEvent(client: IrcClient, event: IrcEvent) {
-                        when (event) {
-                            is ServerWelcome -> client.send(joinMessage("#ktirc"))
-                            is MessageReceived -> if (event.message == "!test") client.send(privmsgMessage(event.target, "Test successful!"))
-                        }
-                    }
-                }
-                client.connect()
-            }
-        }
+fun main() {
+    val rootLogger = LogManager.getLogManager().getLogger("")
+    rootLogger.level = Level.FINEST
+    for (h in rootLogger.handlers) {
+        h.level = Level.FINEST
     }
 
+    runBlocking {
+        val client = IrcClientImpl(Server("testnet.inspircd.org", 6667), Profile("KtIrc", "Kotlin!", "kotlin"))
+        client.onEvent { event ->
+            runBlocking {
+                when (event) {
+                    is ServerWelcome -> client.send(joinMessage("#ktirc"))
+                    is MessageReceived -> if (event.message == "!test") client.send(privmsgMessage(event.target, "Test successful!"))
+                }
+            }
+        }
+        client.connect()
+    }
 }
