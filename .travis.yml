@@ -4,3 +4,10 @@ jdk:
   - oraclejdk8
   - oraclejdk9
   - oraclejdk11
+before_install:
+  - chmod +x gradlew
+script:
+  - ./gradlew test
+  - ./gradlew codeCoverageReport
+after_success:
+  - bash <(curl -s https://codecov.io/bash)

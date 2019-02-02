@@ -5,14 +5,26 @@ group = "com.dmdirc.ktirc"
 
 plugins {
     `maven-publish`
-    `jacoco`
+    jacoco
     kotlin("jvm") version "1.3.20"
     id("com.jfrog.bintray") version "1.8.4"
+}
+
+jacoco {
+    toolVersion = "0.8.3"
 }
 
 configurations {
     create("itestImplementation") { extendsFrom(getByName("testImplementation")) }
     create("itestRuntime") { extendsFrom(getByName("testRuntime")) }
+
+    all {
+        resolutionStrategy.eachDependency {
+            if (requested.group == "org.jetbrains.kotlin") {
+                useVersion("1.3.20")
+            }
+        }
+    }
 }
 
 repositories {
@@ -45,39 +57,48 @@ java {
     }
 }
 
-task<Test>("itest") {
-    group = "verification"
-    testClassesDirs = sourceSets["itest"].output.classesDirs
-    classpath = sourceSets["itest"].runtimeClasspath
-}
-
-task<Jar>("sourceJar") {
-    description = "Creates a JAR that contains the source code."
-    from(sourceSets["main"].allSource)
-    archiveClassifier.set("sources")
-}
-
-tasks.withType<Wrapper> {
-    gradleVersion = "5.1.1"
-}
-
-tasks.withType<KotlinCompile> {
-    kotlinOptions {
-        jvmTarget = "1.8"
+tasks {
+    create<Test>("itest") {
+        group = "verification"
+        testClassesDirs = sourceSets["itest"].output.classesDirs
+        classpath = sourceSets["itest"].runtimeClasspath
     }
-}
 
-tasks.withType<Test> {
-    useJUnitPlatform()
-    testLogging {
-        events("passed", "skipped", "failed")
+    create<Jar>("sourceJar") {
+        description = "Creates a JAR that contains the source code."
+        from(sourceSets["main"].allSource)
+        archiveClassifier.set("sources")
     }
-}
 
-configurations.all {
-    resolutionStrategy.eachDependency {
-        if (requested.group == "org.jetbrains.kotlin") {
-            useVersion("1.3.20")
+    create<JacocoReport>("codeCoverageReport") {
+        executionData(fileTree(project.rootDir.absolutePath).include("**/build/jacoco/*.exec"))
+
+        sourceSets(sourceSets["main"])
+
+        reports {
+            xml.isEnabled = true
+            xml.destination = File("$buildDir/reports/jacoco/report.xml")
+            html.isEnabled = true
+            csv.isEnabled = false
+        }
+
+        dependsOn("test")
+    }
+
+    withType<Wrapper> {
+        gradleVersion = "5.1.1"
+    }
+
+    withType<KotlinCompile> {
+        kotlinOptions {
+            jvmTarget = "1.8"
+        }
+    }
+
+    withType<Test> {
+        useJUnitPlatform()
+        testLogging {
+            events("passed", "skipped", "failed")
         }
     }
 }
