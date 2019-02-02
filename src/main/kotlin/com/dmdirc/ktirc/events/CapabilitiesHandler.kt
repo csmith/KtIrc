@@ -12,7 +12,7 @@ class CapabilitiesHandler : EventHandler {
 
     private val log by logger()
 
-    override suspend fun processEvent(client: IrcClient, event: IrcEvent) {
+    override fun processEvent(client: IrcClient, event: IrcEvent) {
         when (event) {
             is ServerCapabilitiesReceived -> handleCapabilitiesReceived(client.serverState.capabilities, event.capabilities)
             is ServerCapabilitiesFinished -> handleCapabilitiesFinished(client)
@@ -24,7 +24,7 @@ class CapabilitiesHandler : EventHandler {
         state.advertisedCapabilities.putAll(capabilities)
     }
 
-    private suspend fun handleCapabilitiesFinished(client: IrcClient) {
+    private fun handleCapabilitiesFinished(client: IrcClient) {
         // TODO: We probably need to split the outgoing REQ lines if there are lots of caps
         // TODO: For caps with values we'll need to decide which value to use/whether to enable them/etc
         with (client.serverState.capabilities) {
@@ -41,7 +41,7 @@ class CapabilitiesHandler : EventHandler {
         }
     }
 
-    private suspend fun handleCapabilitiesAcknowledged(client: IrcClient, capabilities: Map<Capability, String>) {
+    private fun handleCapabilitiesAcknowledged(client: IrcClient, capabilities: Map<Capability, String>) {
         // TODO: Check if everything we wanted is enabled
         with (client.serverState.capabilities) {
             log.info { "Acknowledged capabilities: ${capabilities.keys.map { it.name }.toList()}" }

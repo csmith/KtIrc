@@ -5,7 +5,7 @@ import com.dmdirc.ktirc.IrcClient
 @FunctionalInterface
 interface EventHandler {
 
-    suspend fun processEvent(client: IrcClient, event: IrcEvent)
+    fun processEvent(client: IrcClient, event: IrcEvent)
 
 }
 

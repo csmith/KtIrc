@@ -6,9 +6,11 @@ import com.dmdirc.ktirc.io.CaseMapping
 import com.dmdirc.ktirc.io.LineBufferedSocket
 import com.dmdirc.ktirc.model.*
 import com.nhaarman.mockitokotlin2.*
+import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withTimeoutOrNull
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -44,97 +46,72 @@ internal class IrcClientImplTest {
 
     @Test
     fun `IrcClientImpl uses socket factory to create a new socket on connect`() {
-        runBlocking {
-            val client = IrcClientImpl(Server(HOST, PORT), Profile(NICK, REAL_NAME, USER_NAME))
-            client.socketFactory = mockSocketFactory
-            readLineChannel.close()
+        val client = IrcClientImpl(Server(HOST, PORT), Profile(NICK, REAL_NAME, USER_NAME))
+        client.socketFactory = mockSocketFactory
+        client.connect()
 
-            client.connect()
-
-            verify(mockSocketFactory).invoke(HOST, PORT, false)
-        }
+        verify(mockSocketFactory, timeout(500)).invoke(HOST, PORT, false)
     }
 
     @Test
     fun `IrcClientImpl uses socket factory to create a new tls on connect`() {
-        runBlocking {
-            val client = IrcClientImpl(Server(HOST, PORT, true), Profile(NICK, REAL_NAME, USER_NAME))
-            client.socketFactory = mockSocketFactory
-            readLineChannel.close()
+        val client = IrcClientImpl(Server(HOST, PORT, true), Profile(NICK, REAL_NAME, USER_NAME))
+        client.socketFactory = mockSocketFactory
+        client.connect()
 
-            client.connect()
-
-            verify(mockSocketFactory).invoke(HOST, PORT, true)
-        }
+        verify(mockSocketFactory, timeout(500)).invoke(HOST, PORT, true)
     }
 
     @Test
     fun `IrcClientImpl throws if socket already exists`() {
-        runBlocking {
-            val client = IrcClientImpl(Server(HOST, PORT), Profile(NICK, REAL_NAME, USER_NAME))
-            client.socketFactory = mockSocketFactory
-            readLineChannel.close()
+        val client = IrcClientImpl(Server(HOST, PORT), Profile(NICK, REAL_NAME, USER_NAME))
+        client.socketFactory = mockSocketFactory
+        client.connect()
 
+        assertThrows<IllegalStateException> {
             client.connect()
-
-            assertThrows<IllegalStateException> {
-                runBlocking {
-                    client.connect()
-                }
-            }
         }
     }
 
     @Test
-    fun `IrcClientImpl sends basic connection strings`() {
-        runBlocking {
-            val client = IrcClientImpl(Server(HOST, PORT), Profile(NICK, REAL_NAME, USER_NAME))
-            client.socketFactory = mockSocketFactory
-            readLineChannel.close()
+    fun `IrcClientImpl sends basic connection strings`() = runBlocking {
+        val client = IrcClientImpl(Server(HOST, PORT), Profile(NICK, REAL_NAME, USER_NAME))
+        client.socketFactory = mockSocketFactory
+        client.connect()
 
-            client.connect()
-
-            with(inOrder(mockSocket).verify(mockSocket)) {
-                sendLine("CAP LS 302")
-                sendLine("NICK :$NICK")
-                sendLine("USER $USER_NAME localhost $HOST :$REAL_NAME")
-            }
+        with(inOrder(mockSocket).verify(mockSocket, timeout(500))) {
+            sendLine("CAP LS 302")
+            sendLine("NICK :$NICK")
+            sendLine("USER $USER_NAME localhost $HOST :$REAL_NAME")
         }
     }
 
     @Test
-    fun `IrcClientImpl sends password first, when present`() {
-        runBlocking {
-            val client = IrcClientImpl(Server(HOST, PORT, password = PASSWORD), Profile(NICK, REAL_NAME, USER_NAME))
-            client.socketFactory = mockSocketFactory
-            readLineChannel.close()
+    fun `IrcClientImpl sends password first, when present`() = runBlocking {
+        val client = IrcClientImpl(Server(HOST, PORT, password = PASSWORD), Profile(NICK, REAL_NAME, USER_NAME))
+        client.socketFactory = mockSocketFactory
+        client.connect()
 
-            client.connect()
-
-            with(inOrder(mockSocket).verify(mockSocket)) {
-                sendLine("CAP LS 302")
-                sendLine("PASS :$PASSWORD")
-                sendLine("NICK :$NICK")
-            }
+        with(inOrder(mockSocket).verify(mockSocket, timeout(500))) {
+            sendLine("CAP LS 302")
+            sendLine("PASS :$PASSWORD")
+            sendLine("NICK :$NICK")
         }
     }
 
     @Test
     fun `IrcClientImpl sends events to provided event handler`() {
-        runBlocking {
-            val client = IrcClientImpl(Server(HOST, PORT, password = PASSWORD), Profile(NICK, REAL_NAME, USER_NAME))
-            client.socketFactory = mockSocketFactory
-            client.onEvent(mockEventHandler)
+        val client = IrcClientImpl(Server(HOST, PORT, password = PASSWORD), Profile(NICK, REAL_NAME, USER_NAME))
+        client.socketFactory = mockSocketFactory
+        client.onEvent(mockEventHandler)
 
-            launch {
-                readLineChannel.send(":the.gibson 001 acidBurn :Welcome to the IRC!".toByteArray())
-                readLineChannel.close()
-            }
-
-            client.connect()
-
-            verify(mockEventHandler).invoke(isA<ServerWelcome>())
+        GlobalScope.launch {
+            readLineChannel.send(":the.gibson 001 acidBurn :Welcome to the IRC!".toByteArray())
         }
+
+        client.connect()
+
+        verify(mockEventHandler, timeout(500)).invoke(isA<ServerWelcome>())
     }
 
     @Test
@@ -159,6 +136,43 @@ internal class IrcClientImplTest {
         client.serverState.localNickname = "[acidBurn]"
         client.serverState.features[ServerFeature.ServerCaseMapping] = CaseMapping.Ascii
         assertFalse(client.isLocalUser(User("{acidBurn}", "libby", "root.localhost")))
+    }
+
+    @Test
+    fun `IrcClientImpl join blocks when socket is open`() {
+        val client = IrcClientImpl(Server(HOST, PORT, password = PASSWORD), Profile(NICK, REAL_NAME, USER_NAME))
+        client.socketFactory = mockSocketFactory
+
+        GlobalScope.launch {
+            readLineChannel.send(":the.gibson 001 acidBurn :Welcome to the IRC!".toByteArray())
+        }
+
+        client.connect()
+        runBlocking {
+            assertNull(withTimeoutOrNull(100L) {
+                client.join()
+                true
+            })
+        }
+    }
+
+    @Test
+    fun `IrcClientImpl join returns when socket is closed`() {
+        val client = IrcClientImpl(Server(HOST, PORT, password = PASSWORD), Profile(NICK, REAL_NAME, USER_NAME))
+        client.socketFactory = mockSocketFactory
+
+        GlobalScope.launch {
+            readLineChannel.send(":the.gibson 001 acidBurn :Welcome to the IRC!".toByteArray())
+            readLineChannel.close()
+        }
+
+        client.connect()
+        runBlocking {
+            assertEquals(true, withTimeoutOrNull(500L) {
+                client.join()
+                true
+            })
+        }
     }
 
 }

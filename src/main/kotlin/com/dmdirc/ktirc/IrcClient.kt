@@ -4,16 +4,16 @@ import com.dmdirc.ktirc.events.*
 import com.dmdirc.ktirc.io.*
 import com.dmdirc.ktirc.messages.*
 import com.dmdirc.ktirc.model.*
+import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.map
-import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.runBlocking
+import java.util.concurrent.atomic.AtomicBoolean
 import java.util.logging.Level
 import java.util.logging.LogManager
 
 
 interface IrcClient {
 
-    suspend fun send(message: String)
+    fun send(message: String)
 
     val serverState: ServerState
     val channelState: ChannelStateMap
@@ -44,15 +44,20 @@ class IrcClientImpl(private val server: Server, private val profile: Profile) : 
     private val parser = MessageParser()
     private var socket: LineBufferedSocket? = null
 
-    // TODO: It would be cleaner if this didn't suspend but returned immediately
-    override suspend fun send(message: String) {
-        socket?.sendLine(message)
+    private val scope = CoroutineScope(Dispatchers.IO)
+    private val connecting = AtomicBoolean(false)
+
+    private var connectionJob: Job? = null
+
+    override fun send(message: String) {
+        scope.launch {
+            socket?.sendLine(message)
+        }
     }
 
-    suspend fun connect() {
-        // TODO: Concurrency!
-        check(socket == null)
-        coroutineScope {
+    fun connect() {
+        check(!connecting.getAndSet(true))
+        connectionJob = scope.launch {
             with(socketFactory(server.host, server.port, server.tls)) {
                 socket = this
                 connect()
@@ -62,7 +67,7 @@ class IrcClientImpl(private val server: Server, private val profile: Profile) : 
                 // TODO: Send correct host
                 sendLine(userMessage(profile.userName, "localhost", server.host, profile.realName))
                 // TODO: This should be elsewhere
-                messageHandler.processMessages(this@IrcClientImpl, readLines(this@coroutineScope).map { parser.parse(it) })
+                messageHandler.processMessages(this@IrcClientImpl, readLines(scope).map { parser.parse(it) })
             }
         }
     }
@@ -71,9 +76,13 @@ class IrcClientImpl(private val server: Server, private val profile: Profile) : 
         socket?.disconnect()
     }
 
+    suspend fun join() {
+        connectionJob?.join()
+    }
+
     override fun onEvent(handler: (IrcEvent) -> Unit) {
         messageHandler.handlers.add(object : EventHandler {
-            override suspend fun processEvent(client: IrcClient, event: IrcEvent) {
+            override fun processEvent(client: IrcClient, event: IrcEvent) {
                 handler(event)
             }
         })
@@ -90,13 +99,12 @@ fun main() {
     runBlocking {
         val client = IrcClientImpl(Server("testnet.inspircd.org", 6667), Profile("KtIrc", "Kotlin!", "kotlin"))
         client.onEvent { event ->
-            runBlocking {
-                when (event) {
-                    is ServerWelcome -> client.send(joinMessage("#ktirc"))
-                    is MessageReceived -> if (event.message == "!test") client.send(privmsgMessage(event.target, "Test successful!"))
-                }
+            when (event) {
+                is ServerWelcome -> client.send(joinMessage("#ktirc"))
+                is MessageReceived -> if (event.message == "!test") client.send(privmsgMessage(event.target, "Test successful!"))
             }
         }
         client.connect()
+        client.join()
     }
 }

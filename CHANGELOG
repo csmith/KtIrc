@@ -2,4 +2,5 @@ v0.2.0 [in development]
 
   * Added support for connecting over TLS
   * Simplified how event handlers are registered
+  * Improved use of coroutines so users don't have to worry about them
   * (Internal) Upgraded to Gradle 5.1.1

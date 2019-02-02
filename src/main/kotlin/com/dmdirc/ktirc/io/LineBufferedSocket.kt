@@ -9,6 +9,7 @@ import io.ktor.network.sockets.openWriteChannel
 import io.ktor.network.tls.tls
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.channels.ReceiveChannel
 import kotlinx.coroutines.channels.produce
@@ -78,6 +79,7 @@ class KtorLineBufferedSocket(private val host: String, private val port: Int, pr
 
     override suspend fun sendLine(line: String) = sendLine(line.toByteArray())
 
+    @ExperimentalCoroutinesApi
     override fun readLines(coroutineScope: CoroutineScope) = coroutineScope.produce {
         val lineBuffer = ByteArray(4096)
         var index = 0

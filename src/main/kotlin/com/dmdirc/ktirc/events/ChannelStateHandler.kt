@@ -9,7 +9,7 @@ class ChannelStateHandler : EventHandler {
 
     private val log by logger()
 
-    override suspend fun processEvent(client: IrcClient, event: IrcEvent) {
+    override fun processEvent(client: IrcClient, event: IrcEvent) {
         when (event) {
             is ChannelJoined -> handleJoin(client, event)
             is ChannelParted -> handlePart(client, event)
@@ -63,7 +63,5 @@ class ChannelStateHandler : EventHandler {
     private fun handleQuit(client: IrcClient, event: UserQuit) {
         client.channelState.forEach { it.users -= event.user.nickname }
     }
-
-    private fun String.nickname(prefixLength: Int) = substring(prefixLength).substringBefore('!')
 
 }

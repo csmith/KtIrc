@@ -5,7 +5,7 @@ import com.dmdirc.ktirc.model.UserState
 
 class UserStateHandler : EventHandler {
 
-    override suspend fun processEvent(client: IrcClient, event: IrcEvent) {
+    override fun processEvent(client: IrcClient, event: IrcEvent) {
         when (event) {
             is ChannelJoined -> handleJoin(client.userState, event)
             is ChannelParted -> handlePart(client, event)
