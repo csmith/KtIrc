@@ -1,6 +1,7 @@
 # KtIrc
 
-[![Download](https://api.bintray.com/packages/dmdirc/releases/ktirc/images/download.svg)](https://bintray.com/dmdirc/releases/ktirc/_latestVersion) 
+[![Build Status](https://travis-ci.org/csmith/KtIrc.svg?branch=master)](https://travis-ci.org/csmith/KtIrc)
+[![Download](https://api.bintray.com/packages/dmdirc/releases/ktirc/images/download.svg)](https://bintray.com/dmdirc/releases/ktirc/_latestVersion)
 
 KtIrc is a Kotlin JVM library for connecting to and interacting with IRC servers.
 It is still in an early stage of development.
