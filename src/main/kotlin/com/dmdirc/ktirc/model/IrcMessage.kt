@@ -30,6 +30,6 @@ sealed class MessageTag(val name: String) {
     object ServerTime : MessageTag("time")
 }
 
-val messageTags: Map<String, MessageTag> by lazy {
+internal val messageTags: Map<String, MessageTag> by lazy {
     MessageTag::class.nestedClasses.map { it.objectInstance as MessageTag }.associateBy { it.name }
 }

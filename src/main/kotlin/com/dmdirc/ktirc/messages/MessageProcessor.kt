@@ -3,7 +3,7 @@ package com.dmdirc.ktirc.messages
 import com.dmdirc.ktirc.events.IrcEvent
 import com.dmdirc.ktirc.model.IrcMessage
 
-interface MessageProcessor {
+internal interface MessageProcessor {
 
     /**
      * The messages which this handler can process.
@@ -17,7 +17,7 @@ interface MessageProcessor {
 
 }
 
-val messageProcessors = setOf(
+internal val messageProcessors = setOf(
         CapabilityProcessor(),
         ISupportProcessor(),
         JoinProcessor(),

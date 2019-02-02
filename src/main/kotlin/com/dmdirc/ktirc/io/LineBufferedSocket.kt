@@ -19,7 +19,7 @@ import java.net.InetSocketAddress
 import java.security.SecureRandom
 import javax.net.ssl.X509TrustManager
 
-interface LineBufferedSocket {
+internal interface LineBufferedSocket {
 
     suspend fun connect()
     fun disconnect()
@@ -35,7 +35,7 @@ interface LineBufferedSocket {
  * Asynchronous socket that buffers incoming data and emits individual lines.
  */
 // TODO: Expose advanced TLS options
-class KtorLineBufferedSocket(private val host: String, private val port: Int, private val tls: Boolean = false): LineBufferedSocket {
+internal class KtorLineBufferedSocket(private val host: String, private val port: Int, private val tls: Boolean = false): LineBufferedSocket {
 
     companion object {
         const val CARRIAGE_RETURN = '\r'.toByte()

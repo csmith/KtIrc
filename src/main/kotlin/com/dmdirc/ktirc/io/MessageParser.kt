@@ -17,17 +17,21 @@ import com.dmdirc.ktirc.util.logger
  *
  * For example:
  *
+ * ```
  * @aaa=bbb;ccc;example.com/ddd=eee :nick!ident@host.com PRIVMSG #someChannel :This is a test message
  * ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ ^^^^^^^^^^^^^^^^^^^^ ^^^^^^^ ^^^^^^^^^^^^ ^^^^^^^^^^^^^^^^^^^^^^^
  * IRCv3 tags                       Prefix               Cmd     Param #1     Trailing parameter
+ * ```
  *
  * or:
  *
+ * ```
  * PING 12345678
  * ^^^^ ^^^^^^^^
  * Cmd  Param #1
+ * ```
  */
-class MessageParser {
+internal class MessageParser {
 
     companion object {
         private const val AT = '@'.toByte()

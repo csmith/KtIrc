@@ -1,5 +1,6 @@
 vNEXT (in development)
 
+  * Added documentation and reduced visibility of some internal methods/classes
   * (Internal) Enabled Travis, Codacy and Coveralls
 
 v0.2.0

@@ -8,7 +8,7 @@ import com.dmdirc.ktirc.model.CapabilitiesState
 import com.dmdirc.ktirc.model.Capability
 import com.dmdirc.ktirc.util.logger
 
-class CapabilitiesHandler : EventHandler {
+internal class CapabilitiesHandler : EventHandler {
 
     private val log by logger()
 

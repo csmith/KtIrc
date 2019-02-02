@@ -18,9 +18,9 @@ data class User(
     }
 }
 
-fun ByteArray.asUser() = String(this).asUser()
+internal fun ByteArray.asUser() = String(this).asUser()
 
-fun String.asUser(): User {
+internal fun String.asUser(): User {
     val identOffset = indexOf('!')
     return if (identOffset >= 0) {
         val hostOffset = indexOf('@', identOffset)

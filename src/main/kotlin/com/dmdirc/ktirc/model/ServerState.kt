@@ -45,6 +45,6 @@ sealed class ServerFeature<T : Any>(val name: String, val type: KClass<T>, val d
     object WhoxSupport : ServerFeature<Boolean>("WHOX", Boolean::class, false)
 }
 
-val serverFeatures: Map<String, ServerFeature<*>> by lazy {
+internal val serverFeatures: Map<String, ServerFeature<*>> by lazy {
     ServerFeature::class.nestedClasses.map { it.objectInstance as ServerFeature<*> }.associateBy { it.name }
 }

@@ -7,7 +7,7 @@ enum class CaseMapping(private val lowerToUpperMapping: Pair<IntRange, IntRange>
     RfcStrict(97..125 to 65..93);
 
     companion object {
-        fun fromName(name: String) = when(name.toLowerCase()) {
+        internal fun fromName(name: String) = when(name.toLowerCase()) {
             "ascii" -> Ascii
             "rfc1459" -> Rfc
             "rfc1459-strict" -> RfcStrict

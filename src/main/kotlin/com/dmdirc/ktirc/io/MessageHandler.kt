@@ -8,7 +8,7 @@ import com.dmdirc.ktirc.util.logger
 import kotlinx.coroutines.channels.ReceiveChannel
 import kotlinx.coroutines.channels.consumeEach
 
-class MessageHandler(private val processors: List<MessageProcessor>, val handlers: MutableList<EventHandler>) {
+internal class MessageHandler(private val processors: List<MessageProcessor>, val handlers: MutableList<EventHandler>) {
 
     private val log by logger()
 

@@ -8,7 +8,7 @@ import com.dmdirc.ktirc.model.capabilities
 import com.dmdirc.ktirc.util.logger
 import java.time.LocalDateTime
 
-class CapabilityProcessor : MessageProcessor {
+internal class CapabilityProcessor : MessageProcessor {
 
     private val log by logger()
 

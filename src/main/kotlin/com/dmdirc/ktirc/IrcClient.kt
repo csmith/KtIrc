@@ -10,30 +10,79 @@ import java.util.concurrent.atomic.AtomicBoolean
 import java.util.logging.Level
 import java.util.logging.LogManager
 
-
+/**
+ * Primary interface for interacting with KtIrc.
+ */
 interface IrcClient {
-
-    fun send(message: String)
 
     val serverState: ServerState
     val channelState: ChannelStateMap
     val userState: UserState
 
-    fun onEvent(handler: (IrcEvent) -> Unit)
-
     val caseMapping: CaseMapping
         get() = serverState.features[ServerFeature.ServerCaseMapping] ?: CaseMapping.Rfc
 
-    fun isLocalUser(user: User): Boolean = caseMapping.areEquivalent(user.nickname, serverState.localNickname)
+    /**
+     * Begins a connection attempt to the IRC server.
+     *
+     * This method will return immediately, and the attempt to connect will be executed in a coroutine on the
+     * IO scheduler. To check the status of the connection, monitor events using [onEvent].
+     */
+    fun connect()
+
+    /**
+     * Disconnect immediately from the IRC server, without sending a QUIT.
+     */
+    fun disconnect()
+
+    /**
+     * Sends the given raw line to the IRC server, followed by a carriage return and line feed.
+     *
+     * Standard IRC messages can be constructed using the methods in [com.dmdirc.ktirc.messages]
+     * such as [joinMessage].
+     *
+     * @param message The line to be sent to the IRC server.
+     */
+    fun send(message: String)
+
+    /**
+     * Registers a new handler for all events on this connection.
+     *
+     * All events are subclasses of [IrcEvent]; the idomatic way to handle them is using a `when` statement:
+     *
+     * ```
+     * client.onEvent {
+     *     when(it) {
+     *         is MessageReceived -> println(it.message)
+     *     }
+     * }
+     * ```
+     *
+     * *Note*: at present handlers cannot be removed; they last the lifetime of the [IrcClient].
+     *
+     * @param handler The method to call when a new event occurs.
+     */
+    fun onEvent(handler: (IrcEvent) -> Unit)
+
+    /**
+     * Utility method to determine if the given user is the one we are connected to IRC as.
+     */
+    fun isLocalUser(user: User) = caseMapping.areEquivalent(user.nickname, serverState.localNickname)
 
 }
 
+/**
+ * Concrete implementation of an [IrcClient].
+ *
+ * @param server The server to connect to.
+ * @param profile The user details to use when connecting.
+ */
 // TODO: How should alternative nicknames work?
 // TODO: Should IRC Client take a pool of servers and rotate through, or make the caller do that?
 // TODO: Should there be a default profile?
 class IrcClientImpl(private val server: Server, private val profile: Profile) : IrcClient {
 
-    var socketFactory: (String, Int, Boolean) -> LineBufferedSocket = ::KtorLineBufferedSocket
+    internal var socketFactory: (String, Int, Boolean) -> LineBufferedSocket = ::KtorLineBufferedSocket
 
     override val serverState = ServerState(profile.initialNick)
     override val channelState = ChannelStateMap { caseMapping }
@@ -55,7 +104,7 @@ class IrcClientImpl(private val server: Server, private val profile: Profile) : 
         }
     }
 
-    fun connect() {
+    override fun connect() {
         check(!connecting.getAndSet(true))
         connectionJob = scope.launch {
             with(socketFactory(server.host, server.port, server.tls)) {
@@ -72,7 +121,7 @@ class IrcClientImpl(private val server: Server, private val profile: Profile) : 
         }
     }
 
-    fun disconnect() {
+    override fun disconnect() {
         socket?.disconnect()
     }
 
@@ -89,7 +138,7 @@ class IrcClientImpl(private val server: Server, private val profile: Profile) : 
     }
 }
 
-fun main() {
+internal fun main() {
     val rootLogger = LogManager.getLogManager().getLogger("")
     rootLogger.level = Level.FINEST
     for (h in rootLogger.handlers) {

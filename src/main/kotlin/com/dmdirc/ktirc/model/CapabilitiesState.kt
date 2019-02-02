@@ -35,6 +35,6 @@ sealed class Capability(val name: String) {
     object HostChangeMessages : Capability("chghost") // TODO: Add processor
 }
 
-val capabilities: Map<String, Capability> by lazy {
+internal val capabilities: Map<String, Capability> by lazy {
     Capability::class.nestedClasses.map { it.objectInstance as Capability }.associateBy { it.name }
 }

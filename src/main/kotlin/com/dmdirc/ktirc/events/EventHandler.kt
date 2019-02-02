@@ -3,13 +3,13 @@ package com.dmdirc.ktirc.events
 import com.dmdirc.ktirc.IrcClient
 
 @FunctionalInterface
-interface EventHandler {
+internal interface EventHandler {
 
     fun processEvent(client: IrcClient, event: IrcEvent)
 
 }
 
-val eventHandlers = listOf(
+internal val eventHandlers = listOf(
         CapabilitiesHandler(),
         ChannelStateHandler(),
         PingHandler(),

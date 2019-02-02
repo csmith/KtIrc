@@ -2,7 +2,7 @@ package com.dmdirc.ktirc.events
 
 import com.dmdirc.ktirc.IrcClient
 
-class ServerStateHandler : EventHandler {
+internal class ServerStateHandler : EventHandler {
 
     override fun processEvent(client: IrcClient, event: IrcEvent) {
         when (event) {

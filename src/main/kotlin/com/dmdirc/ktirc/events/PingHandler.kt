@@ -3,7 +3,7 @@ package com.dmdirc.ktirc.events
 import com.dmdirc.ktirc.IrcClient
 import com.dmdirc.ktirc.messages.pongMessage
 
-class PingHandler : EventHandler {
+internal class PingHandler : EventHandler {
 
     override fun processEvent(client: IrcClient, event: IrcEvent) {
         when (event) {

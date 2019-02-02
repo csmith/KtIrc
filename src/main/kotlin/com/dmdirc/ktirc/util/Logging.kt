@@ -7,6 +7,6 @@ private fun <T: Any> logger(forClass: KClass<T>): Logger {
     return Logger.getLogger(forClass.qualifiedName)
 }
 
-fun <R : Any> R.logger(): Lazy<Logger> {
+internal fun <R : Any> R.logger(): Lazy<Logger> {
     return lazy { logger(this::class) }
 }

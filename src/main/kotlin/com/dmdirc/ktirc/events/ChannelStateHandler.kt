@@ -5,7 +5,7 @@ import com.dmdirc.ktirc.model.ChannelState
 import com.dmdirc.ktirc.model.ChannelUser
 import com.dmdirc.ktirc.util.logger
 
-class ChannelStateHandler : EventHandler {
+internal class ChannelStateHandler : EventHandler {
 
     private val log by logger()
 
