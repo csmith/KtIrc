@@ -101,7 +101,9 @@ fun main() {
         client.onEvent { event ->
             when (event) {
                 is ServerWelcome -> client.send(joinMessage("#ktirc"))
-                is MessageReceived -> if (event.message == "!test") client.send(privmsgMessage(event.target, "Test successful!"))
+                is MessageReceived ->
+                    if (event.message == "!test")
+                        client.send(privmsgMessage(event.target, "Test successful!"))
             }
         }
         client.connect()
