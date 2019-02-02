@@ -2,6 +2,7 @@
 
 [![Build Status](https://travis-ci.org/csmith/KtIrc.svg?branch=master)](https://travis-ci.org/csmith/KtIrc)
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/c01221cbf9cf413ba4d94cb8c80e334a)](https://www.codacy.com/app/csmith/KtIrc?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=csmith/KtIrc&amp;utm_campaign=Badge_Grade)
+[![codecov](https://codecov.io/gh/csmith/KtIrc/branch/master/graph/badge.svg)](https://codecov.io/gh/csmith/KtIrc)
 [![Download](https://api.bintray.com/packages/dmdirc/releases/ktirc/images/download.svg)](https://bintray.com/dmdirc/releases/ktirc/_latestVersion)
 
 KtIrc is a Kotlin JVM library for connecting to and interacting with IRC servers.

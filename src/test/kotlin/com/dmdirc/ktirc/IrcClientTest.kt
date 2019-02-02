@@ -175,4 +175,33 @@ internal class IrcClientImplTest {
         }
     }
 
+    @Test
+    fun `IrcClientImpl sends text to socket`() = runBlocking {
+        val client = IrcClientImpl(Server(HOST, PORT), Profile(NICK, REAL_NAME, USER_NAME))
+        client.socketFactory = mockSocketFactory
+        client.connect()
+
+        // Wait for it to connect
+        verify(mockSocket, timeout(500)).sendLine("CAP LS 302")
+
+        client.send("testing 123")
+
+        verify(mockSocket, timeout(500)).sendLine("testing 123")
+    }
+
+    @Test
+    fun `IrcClientImpl disconnects the socket`() = runBlocking {
+        val client = IrcClientImpl(Server(HOST, PORT), Profile(NICK, REAL_NAME, USER_NAME))
+        client.socketFactory = mockSocketFactory
+        client.connect()
+
+        // Wait for it to connect
+        verify(mockSocket, timeout(500)).sendLine("CAP LS 302")
+
+        client.disconnect()
+
+        verify(mockSocket, timeout(500)).disconnect()
+    }
+
+
 }
