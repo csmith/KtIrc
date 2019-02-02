@@ -9,10 +9,10 @@ import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.parallel.Execution
 import org.junit.jupiter.api.parallel.ExecutionMode
-import sun.security.validator.ValidatorException
 import java.io.File
 import java.net.ServerSocket
 import java.security.KeyStore
+import java.security.cert.CertificateException
 import java.security.cert.X509Certificate
 import javax.net.ssl.KeyManagerFactory
 import javax.net.ssl.SSLContext
@@ -43,7 +43,7 @@ internal class KtorLineBufferedSocketTest {
                 socket.connect()
                 assertNotNull(clientSocketAsync.await())
                 fail<Unit>()
-            } catch (ex : ValidatorException) {
+            } catch (ex : CertificateException) {
                 // Expected
             }
         }
