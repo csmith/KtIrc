@@ -12,12 +12,13 @@ internal class CapabilitiesHandler : EventHandler {
 
     private val log by logger()
 
-    override fun processEvent(client: IrcClient, event: IrcEvent) {
+    override fun processEvent(client: IrcClient, event: IrcEvent): List<IrcEvent> {
         when (event) {
             is ServerCapabilitiesReceived -> handleCapabilitiesReceived(client.serverState.capabilities, event.capabilities)
             is ServerCapabilitiesFinished -> handleCapabilitiesFinished(client)
             is ServerCapabilitiesAcknowledged -> handleCapabilitiesAcknowledged(client, event.capabilities)
         }
+        return emptyList()
     }
 
     private fun handleCapabilitiesReceived(state: CapabilitiesState, capabilities: Map<Capability, String>) {

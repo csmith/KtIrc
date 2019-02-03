@@ -9,7 +9,7 @@ internal class ChannelStateHandler : EventHandler {
 
     private val log by logger()
 
-    override fun processEvent(client: IrcClient, event: IrcEvent) {
+    override fun processEvent(client: IrcClient, event: IrcEvent): List<IrcEvent> {
         when (event) {
             is ChannelJoined -> handleJoin(client, event)
             is ChannelParted -> handlePart(client, event)
@@ -17,6 +17,7 @@ internal class ChannelStateHandler : EventHandler {
             is ChannelNamesFinished -> handleNamesFinished(client, event)
             is UserQuit -> handleQuit(client, event)
         }
+        return emptyList()
     }
 
     private fun handleJoin(client: IrcClient, event: ChannelJoined) {

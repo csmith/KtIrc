@@ -30,6 +30,7 @@ class IrcLibraryTests {
             val clientInput = BufferedReader(InputStreamReader(clientSocket.getInputStream()))
             val clientOutput = BufferedWriter(OutputStreamWriter(clientSocket.getOutputStream()))
             for (step in test.steps) {
+                println(step)
                 when (step) {
                     is SimpleExpectStep -> {
                         while (true) {
@@ -49,6 +50,8 @@ class IrcLibraryTests {
                     }
                 }
             }
+
+            library.terminate()
         }
     }
 

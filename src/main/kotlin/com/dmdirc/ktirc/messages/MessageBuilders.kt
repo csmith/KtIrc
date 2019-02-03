@@ -2,6 +2,8 @@ package com.dmdirc.ktirc.messages
 
 import com.dmdirc.ktirc.IrcClient
 
+/** Sends a message to ask the server to list capabilities. */
+internal fun IrcClient.sendCapabilityList() = send("CAP LS 302")
 /** Sends a message indicating the end of capability negotiation. */
 internal fun IrcClient.sendCapabilityEnd() = send("CAP END")
 /** Sends a message requesting the specified caps are enabled. */

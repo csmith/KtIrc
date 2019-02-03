@@ -5,13 +5,14 @@ import com.dmdirc.ktirc.model.UserState
 
 internal class UserStateHandler : EventHandler {
 
-    override fun processEvent(client: IrcClient, event: IrcEvent) {
+    override fun processEvent(client: IrcClient, event: IrcEvent): List<IrcEvent> {
         when (event) {
             is ChannelJoined -> handleJoin(client.userState, event)
             is ChannelParted -> handlePart(client, event)
             is ChannelNamesReceived  -> handleNamesReceived(client, event)
             is UserQuit -> handleQuit(client.userState, event)
         }
+        return emptyList()
     }
 
     private fun handleJoin(state: UserState, event: ChannelJoined) {

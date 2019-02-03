@@ -11,6 +11,9 @@ sealed class IrcEvent(val time: LocalDateTime)
 /** Raised when the connection to the server has been established. The server will not be ready for use yet. */
 class ServerConnected(time: LocalDateTime) : IrcEvent(time)
 
+/** Raised when the server is ready for use. */
+class ServerReady(time: LocalDateTime) : IrcEvent(time)
+
 /** Raised when the server initially welcomes us to the IRC network. */
 class ServerWelcome(time: LocalDateTime, val localNick: String) : IrcEvent(time)
 

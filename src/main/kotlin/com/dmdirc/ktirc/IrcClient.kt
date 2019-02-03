@@ -100,6 +100,7 @@ class IrcClientImpl(private val server: Server, private val profile: Profile) : 
     private var connectionJob: Job? = null
 
     override fun send(message: String) {
+        // TODO: What happens if sending fails?
         scope.launch {
             socket?.sendLine(message)
         }
@@ -112,9 +113,9 @@ class IrcClientImpl(private val server: Server, private val profile: Profile) : 
                 // TODO: Proper error handling - what if connect() fails?
                 socket = this
                 connect()
-                messageHandler.emitEvent(this@IrcClientImpl, ServerConnected(currentTimeProvider()))
-                sendLine("CAP LS 302") // TODO: Stick this in a builder
-                server.password?.let { pass -> sendPassword(pass) }
+                emitEvent(ServerConnected(currentTimeProvider()))
+                sendCapabilityList()
+                sendPasswordIfPresent()
                 sendNickChange(profile.initialNick)
                 // TODO: Send correct host
                 sendUser(profile.userName, "localhost", server.host, profile.realName)
@@ -133,11 +134,16 @@ class IrcClientImpl(private val server: Server, private val profile: Profile) : 
 
     override fun onEvent(handler: (IrcEvent) -> Unit) {
         messageHandler.handlers.add(object : EventHandler {
-            override fun processEvent(client: IrcClient, event: IrcEvent) {
+            override fun processEvent(client: IrcClient, event: IrcEvent): List<IrcEvent> {
                 handler(event)
+                return emptyList()
             }
         })
     }
+
+    private fun emitEvent(event: IrcEvent) = messageHandler.emitEvent(this, event)
+    private fun sendPasswordIfPresent() = server.password?.let(this::sendPassword)
+
 }
 
 internal fun main() {

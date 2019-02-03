@@ -8,6 +8,9 @@ import kotlin.reflect.KClass
  */
 class ServerState internal constructor(initialNickname: String) {
 
+    /** Whether we've received the 'Welcome to IRC' (001) message. */
+    internal var receivedWelcome = false
+
     /** The current status of the server. */
     var status = ServerStatus.Connecting
         internal set

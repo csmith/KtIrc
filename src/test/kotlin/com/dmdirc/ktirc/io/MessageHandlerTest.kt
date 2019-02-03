@@ -4,6 +4,7 @@ import com.dmdirc.ktirc.IrcClient
 import com.dmdirc.ktirc.TestConstants
 import com.dmdirc.ktirc.events.EventHandler
 import com.dmdirc.ktirc.events.ServerConnected
+import com.dmdirc.ktirc.events.ServerReady
 import com.dmdirc.ktirc.events.ServerWelcome
 import com.dmdirc.ktirc.messages.MessageProcessor
 import com.dmdirc.ktirc.model.IrcMessage
@@ -60,7 +61,7 @@ internal class MessageHandlerTest {
     }
 
     @Test
-    fun `MessageHandler invokes all event handler with all returned events`() = runBlocking {
+    fun `MessageHandler invokes all event handler with all returned events`() = runBlocking<Unit> {
         val eventHandler1 = mock<EventHandler>()
         val eventHandler2 = mock<EventHandler>()
         val handler = MessageHandler(listOf(joinProcessor, nickProcessor), mutableListOf(eventHandler1, eventHandler2))
@@ -80,7 +81,7 @@ internal class MessageHandlerTest {
     }
 
     @Test
-    fun `MessageHandler emits custom events to all handlers`() = runBlocking {
+    fun `MessageHandler emits custom events to all handlers`() = runBlocking<Unit> {
         val eventHandler1 = mock<EventHandler>()
         val eventHandler2 = mock<EventHandler>()
         val handler = MessageHandler(emptyList(), mutableListOf(eventHandler1, eventHandler2))
@@ -88,6 +89,19 @@ internal class MessageHandlerTest {
 
         verify(eventHandler1).processEvent(same(ircClient), isA<ServerWelcome>())
         verify(eventHandler2).processEvent(same(ircClient), isA<ServerWelcome>())
+    }
+
+    @Test
+    fun `MessageHandler emits events returned from handler`() = runBlocking<Unit> {
+        val eventHandler1 = mock<EventHandler> {
+            on { processEvent(any(), isA<ServerWelcome>()) } doReturn listOf(ServerReady(TestConstants.time))
+        }
+        val eventHandler2 = mock<EventHandler>()
+        val handler = MessageHandler(emptyList(), mutableListOf(eventHandler1, eventHandler2))
+        handler.emitEvent(ircClient, ServerWelcome(TestConstants.time, "abc"))
+
+        verify(eventHandler1).processEvent(same(ircClient), isA<ServerReady>())
+        verify(eventHandler2).processEvent(same(ircClient), isA<ServerReady>())
     }
 
 }

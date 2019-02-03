@@ -3,6 +3,8 @@ package com.dmdirc.ktirc
 import com.dmdirc.irctest.IrcLibraryTests
 import com.dmdirc.ktirc.model.Profile
 import com.dmdirc.ktirc.model.Server
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.TestFactory
 
 class KtIrcIntegrationTest {
@@ -18,7 +20,11 @@ class KtIrcIntegrationTest {
         }
 
         override fun terminate() {
-            ircClient.disconnect()
+            runBlocking {
+                delay(100)
+                ircClient.disconnect()
+                ircClient.join()
+            }
         }
 
     })

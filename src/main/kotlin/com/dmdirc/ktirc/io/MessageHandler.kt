@@ -20,7 +20,9 @@ internal class MessageHandler(private val processors: List<MessageProcessor>, va
 
     fun emitEvent(ircClient: IrcClient, ircEvent: IrcEvent) {
         handlers.forEach { handler ->
-            handler.processEvent(ircClient, ircEvent)
+            handler.processEvent(ircClient, ircEvent).forEach {
+                emitEvent(ircClient, it)
+            }
         }
     }
 
