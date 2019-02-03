@@ -8,15 +8,14 @@ import java.time.LocalDateTime
 /** Base class for all events. */
 sealed class IrcEvent(val time: LocalDateTime)
 
+/** Raised when the connection to the server has been established. The server will not be ready for use yet. */
+class ServerConnected(time: LocalDateTime) : IrcEvent(time)
+
 /** Raised when the server initially welcomes us to the IRC network. */
 class ServerWelcome(time: LocalDateTime, val localNick: String) : IrcEvent(time)
 
 /** Raised when the features supported by the server have changed. This may occur numerous times. */
 class ServerFeaturesUpdated(time: LocalDateTime, val serverFeatures: ServerFeatureMap) : IrcEvent(time)
-
-/** Raised when the connection to the server has been established, configuration information has been received, etc. */
-// TODO: Implement
-class ServerConnected(time: LocalDateTime) : IrcEvent(time)
 
 /** Raised whenever a PING is received from the server. */
 class PingReceived(time: LocalDateTime, val nonce: ByteArray) : IrcEvent(time)

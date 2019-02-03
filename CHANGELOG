@@ -4,6 +4,9 @@ vNEXT (in development)
     Instead of: client.send(joinMessage("#channel"))
     Now use: client.sendJoin("#channel")
   * Added reply utility to easily send replies to message events
+  * Server state improvements:
+    * Added status field to ServerState
+    * ServerConnected event is emitted as soon as the socket is connected
 
 v0.2.1
 

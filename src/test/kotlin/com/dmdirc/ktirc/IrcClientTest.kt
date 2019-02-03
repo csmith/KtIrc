@@ -1,10 +1,15 @@
 package com.dmdirc.ktirc
 
 import com.dmdirc.ktirc.events.IrcEvent
+import com.dmdirc.ktirc.events.ServerConnected
 import com.dmdirc.ktirc.events.ServerWelcome
 import com.dmdirc.ktirc.io.CaseMapping
 import com.dmdirc.ktirc.io.LineBufferedSocket
-import com.dmdirc.ktirc.model.*
+import com.dmdirc.ktirc.model.Profile
+import com.dmdirc.ktirc.model.Server
+import com.dmdirc.ktirc.model.ServerFeature
+import com.dmdirc.ktirc.model.User
+import com.dmdirc.ktirc.util.currentTimeProvider
 import com.nhaarman.mockitokotlin2.*
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.channels.Channel
@@ -41,7 +46,7 @@ internal class IrcClientImplTest {
 
     @BeforeEach
     fun setUp() {
-        IrcMessage.currentTimeProvider = { TestConstants.time }
+        currentTimeProvider = { TestConstants.time }
     }
 
     @Test
@@ -71,6 +76,19 @@ internal class IrcClientImplTest {
         assertThrows<IllegalStateException> {
             client.connect()
         }
+    }
+
+    @Test
+    fun `IrcClientImpl emits connected event with local time`() = runBlocking {
+        currentTimeProvider = { TestConstants.time }
+        val client = IrcClientImpl(Server(HOST, PORT), Profile(NICK, REAL_NAME, USER_NAME))
+        client.socketFactory = mockSocketFactory
+        client.onEvent(mockEventHandler)
+        client.connect()
+
+        val captor = argumentCaptor<ServerConnected>()
+        verify(mockEventHandler, timeout(500)).invoke(captor.capture())
+        assertEquals(TestConstants.time, captor.firstValue.time)
     }
 
     @Test

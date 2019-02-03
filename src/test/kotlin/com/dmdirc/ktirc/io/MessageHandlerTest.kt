@@ -25,7 +25,7 @@ internal class MessageHandlerTest {
     }
 
     @Test
-    fun `MessageHandler passes message on to correct processor`() = runBlocking {
+    fun `MessageHandler passes message on to correct processor`() = runBlocking<Unit> {
         val handler = MessageHandler(listOf(joinProcessor, nickProcessor), mutableListOf())
         val message = IrcMessage(emptyMap(), null, "JOIN", emptyList())
 
@@ -36,11 +36,10 @@ internal class MessageHandlerTest {
         }
 
         verify(joinProcessor).process(message)
-        Unit
     }
 
     @Test
-    fun `MessageHandler reads multiple messages`() = runBlocking {
+    fun `MessageHandler reads multiple messages`() = runBlocking<Unit> {
         val handler = MessageHandler(listOf(joinProcessor, nickProcessor), mutableListOf())
         val joinMessage = IrcMessage(emptyMap(), null, "JOIN", emptyList())
         val nickMessage = IrcMessage(emptyMap(), null, "NICK", emptyList())
@@ -58,7 +57,6 @@ internal class MessageHandlerTest {
             verify(joinProcessor).process(joinMessage)
             verify(nickProcessor).process(nickMessage)
         }
-        Unit
     }
 
     @Test
@@ -78,6 +76,17 @@ internal class MessageHandlerTest {
         verify(eventHandler1).processEvent(same(ircClient), isA<ServerConnected>())
         verify(eventHandler1).processEvent(same(ircClient), isA<ServerWelcome>())
         verify(eventHandler2).processEvent(same(ircClient), isA<ServerConnected>())
+        verify(eventHandler2).processEvent(same(ircClient), isA<ServerWelcome>())
+    }
+
+    @Test
+    fun `MessageHandler emits custom events to all handlers`() = runBlocking {
+        val eventHandler1 = mock<EventHandler>()
+        val eventHandler2 = mock<EventHandler>()
+        val handler = MessageHandler(emptyList(), mutableListOf(eventHandler1, eventHandler2))
+        handler.emitEvent(ircClient, ServerWelcome(TestConstants.time, "abc"))
+
+        verify(eventHandler1).processEvent(same(ircClient), isA<ServerWelcome>())
         verify(eventHandler2).processEvent(same(ircClient), isA<ServerWelcome>())
     }
 

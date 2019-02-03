@@ -4,6 +4,7 @@ import com.dmdirc.ktirc.events.*
 import com.dmdirc.ktirc.io.*
 import com.dmdirc.ktirc.messages.*
 import com.dmdirc.ktirc.model.*
+import com.dmdirc.ktirc.util.currentTimeProvider
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.map
 import java.util.concurrent.atomic.AtomicBoolean
@@ -108,14 +109,15 @@ class IrcClientImpl(private val server: Server, private val profile: Profile) : 
         check(!connecting.getAndSet(true))
         connectionJob = scope.launch {
             with(socketFactory(server.host, server.port, server.tls)) {
+                // TODO: Proper error handling - what if connect() fails?
                 socket = this
                 connect()
-                sendLine("CAP LS 302")
+                messageHandler.emitEvent(this@IrcClientImpl, ServerConnected(currentTimeProvider()))
+                sendLine("CAP LS 302") // TODO: Stick this in a builder
                 server.password?.let { pass -> sendPassword(pass) }
                 sendNickChange(profile.initialNick)
                 // TODO: Send correct host
                 sendUser(profile.userName, "localhost", server.host, profile.realName)
-                // TODO: This should be elsewhere
                 messageHandler.processMessages(this@IrcClientImpl, readLines(scope).map { parser.parse(it) })
             }
         }

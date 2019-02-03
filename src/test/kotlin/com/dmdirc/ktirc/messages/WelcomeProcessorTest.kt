@@ -2,6 +2,7 @@ package com.dmdirc.ktirc.messages
 
 import com.dmdirc.ktirc.TestConstants
 import com.dmdirc.ktirc.model.IrcMessage
+import com.dmdirc.ktirc.util.currentTimeProvider
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
@@ -13,7 +14,7 @@ internal class WelcomeProcessorTest {
 
     @BeforeEach
     fun setUp() {
-        IrcMessage.currentTimeProvider = { TestConstants.time }
+        currentTimeProvider = { TestConstants.time }
     }
 
     @Test

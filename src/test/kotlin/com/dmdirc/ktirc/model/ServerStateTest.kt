@@ -6,9 +6,15 @@ import org.junit.jupiter.api.Test
 internal class ServerStateTest {
 
     @Test
-    fun `IrcServerState should use the initial nickname as local nickname`() {
+    fun `ServerState should use the initial nickname as local nickname`() {
         val serverState = ServerState("acidBurn")
         assertEquals("acidBurn", serverState.localNickname)
+    }
+
+    @Test
+    fun `ServerState should default status to connecting`() {
+        val serverState = ServerState("acidBurn")
+        assertEquals(ServerStatus.Connecting, serverState.status)
     }
 
 }

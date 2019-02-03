@@ -3,10 +3,23 @@ package com.dmdirc.ktirc.model
 import com.dmdirc.ktirc.io.CaseMapping
 import kotlin.reflect.KClass
 
-class ServerState(initialNickname: String) {
+/**
+ * Contains the current state of a single IRC server.
+ */
+class ServerState internal constructor(initialNickname: String) {
 
+    /** The current status of the server. */
+    var status = ServerStatus.Connecting
+        internal set
+
+    /** Our present nickname on the server. */
     var localNickname: String = initialNickname
+        internal set
+
+    /** The features that the server has declared it supports (from the 005 header). */
     val features = ServerFeatureMap()
+
+    /** The capabilities we have negotiated with the server (from IRCv3). */
     val capabilities = CapabilitiesState()
 
 }
@@ -47,4 +60,16 @@ sealed class ServerFeature<T : Any>(val name: String, val type: KClass<T>, val d
 
 internal val serverFeatures: Map<String, ServerFeature<*>> by lazy {
     ServerFeature::class.nestedClasses.map { it.objectInstance as ServerFeature<*> }.associateBy { it.name }
+}
+
+/**
+ * Enumeration of the possible states of a server.
+ */
+enum class ServerStatus {
+    /** We are attempting to connect to the server. It is not yet ready for use. */
+    Connecting,
+    /** We are logging in, dealing with capabilities, etc. The server is not yet ready for use. */
+    Negotiating,
+    /** We are connected and commands can be sent. */
+    Ready,
 }
