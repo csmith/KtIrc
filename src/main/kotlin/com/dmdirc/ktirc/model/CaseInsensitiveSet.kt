@@ -12,19 +12,19 @@ class CaseInsensitiveSet(private val caseMappingProvider: () -> CaseMapping) : I
 
     private val items = HashSet<String>()
 
-    operator fun plusAssign(item: String) {
+    internal operator fun plusAssign(item: String) {
         if (!contains(item)) {
             items += item
         }
     }
 
-    operator fun minusAssign(item: String) {
+    internal operator fun minusAssign(item: String) {
         items.removeIf { caseMappingProvider().areEquivalent(it, item) }
     }
 
     operator fun contains(item: String) = items.any { caseMappingProvider().areEquivalent(it, item) }
 
-    override operator fun iterator() = items.iterator()
+    override operator fun iterator() = items.iterator().iterator()
 
     fun isEmpty() = items.isEmpty()
 

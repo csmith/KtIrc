@@ -18,13 +18,13 @@ class ServerFeatureMap {
     @Suppress("UNCHECKED_CAST")
     operator fun <T : Any> get(feature: ServerFeature<T>) = features.getOrDefault(feature, feature.default) as? T? ?: feature.default
 
-    operator fun set(feature: ServerFeature<*>, value: Any) {
+    internal operator fun set(feature: ServerFeature<*>, value: Any) {
         require(feature.type.isInstance(value))
         features[feature] = value
     }
 
-    fun setAll(featureMap: ServerFeatureMap) = featureMap.features.forEach { feature, value -> features[feature] = value }
-    fun reset(feature: ServerFeature<*>) = features.put(feature, null)
+    internal fun setAll(featureMap: ServerFeatureMap) = featureMap.features.forEach { feature, value -> features[feature] = value }
+    internal fun reset(feature: ServerFeature<*>) = features.put(feature, null)
 
 }
 

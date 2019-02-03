@@ -8,22 +8,22 @@ abstract class CaseInsensitiveMap<T>(private val caseMappingProvider: () -> Case
 
     operator fun get(name: String) = values.find { caseMappingProvider().areEquivalent(nameOf(it), name) }
 
-    operator fun plusAssign(value: T) {
+    internal operator fun plusAssign(value: T) {
         require(get(nameOf(value)) == null) { "Value already registered: ${nameOf(value)}"}
         values.add(value)
     }
 
-    operator fun minusAssign(name: String) {
+    internal operator fun minusAssign(name: String) {
         values.removeIf { caseMappingProvider().areEquivalent(nameOf(it), name) }
     }
 
     operator fun contains(name: String) = get(name) != null
 
-    override fun iterator() = values.iterator()
+    override fun iterator() = values.iterator().iterator()
 
-    fun clear() = values.clear()
+    internal fun clear() = values.clear()
 
-    fun removeIf(predicate: (T) -> Boolean) = values.removeIf(predicate)
+    internal fun removeIf(predicate: (T) -> Boolean) = values.removeIf(predicate)
 
 }
 
