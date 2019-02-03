@@ -19,6 +19,7 @@ internal class MessageHandler(private val processors: List<MessageProcessor>, va
     }
 
     fun emitEvent(ircClient: IrcClient, ircEvent: IrcEvent) {
+        log.fine { "Dispatching event of type ${ircEvent::class}" }
         handlers.forEach { handler ->
             handler.processEvent(ircClient, ircEvent).forEach {
                 emitEvent(ircClient, it)

@@ -41,6 +41,23 @@ with(IrcClientImpl(Server("my.server.com", 6667), Profile("nick", "realName", "u
 }
 ```
 
+## Known issues / FAQ
+
+### `java.lang.IllegalStateException: Check failed` when connecting to some servers
+
+This happens when the IRC server requests an optional client certificate (for use
+in SASL auth, usually). At present there is no support for client certificates in
+the networking library used by KtIrc. This is tracked upstream in
+[ktor#641](https://github.com/ktorio/ktor/issues/641). There is no workaround
+other than using an insecure connection.
+
+### KtIrc connects over IPv4 even when host has IPv6
+
+This is an issue with the Java standard library. You can change its behaviour by
+defining the system property `java.net.preferIPv6Addresses` to `true`, e.g. by
+running Java with `-Djava.net.preferIPv6Addresses=true` or calling
+`System.setProperty("java.net.preferIPv6Addresses","true");` in code. 
+
 ## Contributing
 
 Contributing is welcomed and encouraged! Please try to add unit tests for new features,

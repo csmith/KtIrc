@@ -8,6 +8,7 @@ vNEXT (in development)
     * Added status field to ServerState
     * ServerConnected event is emitted as soon as the socket is connected
     * ServerReady event is emitted after logging in, negotiating, etc
+  * Added extra debugging to show what type of events are being dispatched
   * (Internal) Event handlers can now return more events to emit
 
 v0.2.1
