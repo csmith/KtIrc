@@ -28,17 +28,17 @@ The main interface for interacting with KtIrc is the `IrcClientImpl` class. A
 simple bot might look like:
 
 ```kotlin
-val client = IrcClientImpl(Server("my.server.com", 6667), Profile("nick", "realName", "userName"))
-client.onEvent { event ->
-    when (event) {
-        is ServerWelcome ->
-            client.send(joinMessage("#ktirc"))
-        is MessageReceived ->
-            if (event.message == "!test")
-                client.send(privmsgMessage(event.target, "Test successful!"))
+with(IrcClientImpl(Server("my.server.com", 6667), Profile("nick", "realName", "userName"))) {
+    onEvent { event ->
+        when (event) {
+            is ServerWelcome -> sendJoin("#ktirc")
+            is MessageReceived ->
+                if (event.message == "!test")
+                    reply(event, "Test successful!")
+        }
     }
+    connect()
 }
-client.connect()
 ```
 
 ## Contributing

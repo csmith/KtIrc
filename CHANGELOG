@@ -1,6 +1,9 @@
 vNEXT (in development)
 
-  *
+  * Simplified how messages are constructed.
+    Instead of: client.send(joinMessage("#channel"))
+    Now use: client.sendJoin("#channel")
+  * Added reply utility to easily send replies to message events
 
 v0.2.1
 

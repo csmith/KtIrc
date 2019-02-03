@@ -1,8 +1,8 @@
 package com.dmdirc.ktirc.events
 
 import com.dmdirc.ktirc.IrcClient
-import com.dmdirc.ktirc.messages.capabilityEndMessage
-import com.dmdirc.ktirc.messages.capabilityRequestMessage
+import com.dmdirc.ktirc.messages.sendCapabilityEnd
+import com.dmdirc.ktirc.messages.sendCapabilityRequest
 import com.dmdirc.ktirc.model.CapabilitiesNegotiationState
 import com.dmdirc.ktirc.model.CapabilitiesState
 import com.dmdirc.ktirc.model.Capability
@@ -30,12 +30,12 @@ internal class CapabilitiesHandler : EventHandler {
         with (client.serverState.capabilities) {
             if (advertisedCapabilities.keys.isEmpty()) {
                 negotiationState = CapabilitiesNegotiationState.FINISHED
-                client.send(capabilityEndMessage())
+                client.sendCapabilityEnd()
             } else {
                 negotiationState = CapabilitiesNegotiationState.AWAITING_ACK
                 advertisedCapabilities.keys.map { it.name }.let {
                     log.info { "Requesting capabilities: ${it.toList()}" }
-                    client.send(capabilityRequestMessage(it))
+                    client.sendCapabilityRequest(it)
                 }
             }
         }
@@ -47,7 +47,7 @@ internal class CapabilitiesHandler : EventHandler {
             log.info { "Acknowledged capabilities: ${capabilities.keys.map { it.name }.toList()}" }
             negotiationState = CapabilitiesNegotiationState.FINISHED
             enabledCapabilities.putAll(capabilities)
-            client.send(capabilityEndMessage())
+            client.sendCapabilityEnd()
         }
     }
 

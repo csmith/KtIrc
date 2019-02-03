@@ -1,32 +1,60 @@
 package com.dmdirc.ktirc.messages
 
-import org.junit.jupiter.api.Assertions.assertEquals
+import com.dmdirc.ktirc.IrcClient
+import com.nhaarman.mockitokotlin2.mock
+import com.nhaarman.mockitokotlin2.verify
 import org.junit.jupiter.api.Test
 
 internal class MessageBuildersTest {
 
-    @Test
-    fun `CapabilityRequestMessage creates CAP REQ message with single argument`() = assertEquals("CAP REQ :a", capabilityRequestMessage(listOf("a")))
+    private val mockClient = mock<IrcClient>()
 
     @Test
-    fun `CapabilityRequestMessage creates CAP REQ message with multiple args`() = assertEquals("CAP REQ :a b c", capabilityRequestMessage(listOf("a b c")))
+    fun `CapabilityRequestMessage creates CAP REQ message with single argument`() {
+        mockClient.sendCapabilityRequest(listOf("a"))
+        verify(mockClient).send("CAP REQ :a")
+    }
 
     @Test
-    fun `JoinMessage creates correct JOIN message`() = assertEquals("JOIN :#Test123", joinMessage("#Test123"))
+    fun `CapabilityRequestMessage creates CAP REQ message with multiple args`() {
+        mockClient.sendCapabilityRequest(listOf("a b c"))
+        verify(mockClient).send("CAP REQ :a b c")
+    }
 
     @Test
-    fun `NickMessage creates correct NICK message`() = assertEquals("NICK :AcidBurn", nickMessage("AcidBurn"))
+    fun `JoinMessage creates correct JOIN message`() {
+        mockClient.sendJoin("#TheGibson")
+        verify(mockClient).send("JOIN :#TheGibson")
+    }
 
     @Test
-    fun `PasswordMessage creates correct PASS message`() = assertEquals("PASS :abcdef", passwordMessage("abcdef"))
+    fun `NickMessage creates correct NICK message`() {
+        mockClient.sendNickChange("AcidBurn")
+        verify(mockClient).send("NICK :AcidBurn")
+    }
 
     @Test
-    fun `PongMessage creates correct PONG message`() = assertEquals("PONG :abcdef", pongMessage("abcdef".toByteArray()))
+    fun `PasswordMessage creates correct PASS message`() {
+        mockClient.sendPassword("hacktheplanet")
+        verify(mockClient).send("PASS :hacktheplanet")
+    }
 
     @Test
-    fun `PrivmsgMessage creates correct PRIVMSG message`() = assertEquals("PRIVMSG acidBurn :Hack the planet!", privmsgMessage("acidBurn", "Hack the planet!"))
+    fun `PongMessage creates correct PONG message`() {
+        mockClient.sendPong("abcdef".toByteArray())
+        verify(mockClient).send("PONG :abcdef")
+    }
 
     @Test
-    fun `UserMessage creates correct USER message`() = assertEquals("USER AcidBurn localhost gibson :Kate", userMessage("AcidBurn", "localhost", "gibson", "Kate"))
+    fun `PrivmsgMessage creates correct PRIVMSG message`() {
+        mockClient.sendMessage("acidBurn", "Hack the planet!")
+        verify(mockClient).send("PRIVMSG acidBurn :Hack the planet!")
+    }
+
+    @Test
+    fun `UserMessage creates correct USER message`() {
+        mockClient.sendUser("AcidBurn", "localhost", "gibson", "Kate")
+        verify(mockClient).send("USER AcidBurn localhost gibson :Kate")
+    }
 
 }

@@ -111,10 +111,10 @@ class IrcClientImpl(private val server: Server, private val profile: Profile) : 
                 socket = this
                 connect()
                 sendLine("CAP LS 302")
-                server.password?.let { pass -> sendLine(passwordMessage(pass)) }
-                sendLine(nickMessage(profile.initialNick))
+                server.password?.let { pass -> sendPassword(pass) }
+                sendNickChange(profile.initialNick)
                 // TODO: Send correct host
-                sendLine(userMessage(profile.userName, "localhost", server.host, profile.realName))
+                sendUser(profile.userName, "localhost", server.host, profile.realName)
                 // TODO: This should be elsewhere
                 messageHandler.processMessages(this@IrcClientImpl, readLines(scope).map { parser.parse(it) })
             }
@@ -146,16 +146,17 @@ internal fun main() {
     }
 
     runBlocking {
-        val client = IrcClientImpl(Server("testnet.inspircd.org", 6667), Profile("KtIrc", "Kotlin!", "kotlin"))
-        client.onEvent { event ->
-            when (event) {
-                is ServerWelcome -> client.send(joinMessage("#ktirc"))
-                is MessageReceived ->
-                    if (event.message == "!test")
-                        client.send(privmsgMessage(event.target, "Test successful!"))
+        with(IrcClientImpl(Server("testnet.inspircd.org", 6667), Profile("KtIrc", "Kotlin!", "kotlin"))) {
+            onEvent { event ->
+                when (event) {
+                    is ServerWelcome -> sendJoin("#ktirc")
+                    is MessageReceived ->
+                        if (event.message == "!test")
+                            reply(event, "Test successful!")
+                }
             }
+            connect()
+            join()
         }
-        client.connect()
-        client.join()
     }
 }
