@@ -1,5 +1,7 @@
 vNEXT (in development)
 
+v0.3.0
+
   * Simplified how messages are constructed.
     Instead of: client.send(joinMessage("#channel"))
     Now use: client.sendJoin("#channel")

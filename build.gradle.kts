@@ -1,6 +1,6 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
-version = "0.2.1"
+version = "0.3.0"
 group = "com.dmdirc.ktirc"
 
 plugins {
