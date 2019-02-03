@@ -27,10 +27,16 @@ class ServerState internal constructor(initialNickname: String) {
 
 }
 
+/**
+ * Maps known features onto their values, enforcing type safety.
+ */
 class ServerFeatureMap {
 
     private val features = HashMap<ServerFeature<*>, Any?>()
 
+    /**
+     * Gets the value, or the default value, of the given feature.
+     */
     @Suppress("UNCHECKED_CAST")
     operator fun <T : Any> get(feature: ServerFeature<T>) = features.getOrDefault(feature, feature.default) as? T? ?: feature.default
 
@@ -44,20 +50,35 @@ class ServerFeatureMap {
 
 }
 
+/**
+ * Stores the mapping of mode prefixes received from the server.
+ */
 data class ModePrefixMapping(val modes: String, val prefixes: String) {
 
+    /** Determines whether the given character is a mode prefix (e.g. "@", "+"). */
     fun isPrefix(char: Char) = prefixes.contains(char)
+    /** Gets the mode corresponding to the given prefix (e.g. "@" -> "o"). */
     fun getMode(prefix: Char) = modes[prefixes.indexOf(prefix)]
+    /** Gets the modes corresponding to the given prefixes (e.g. "@+" -> "ov"). */
     fun getModes(prefixes: String) = String(prefixes.map(this::getMode).toCharArray())
 
 }
 
+/**
+ * Describes a server feature determined from the 005 response.
+ */
 sealed class ServerFeature<T : Any>(val name: String, val type: KClass<T>, val default: T? = null) {
+    /** The case mapping the server uses, defaulting to RFC. */
     object ServerCaseMapping : ServerFeature<CaseMapping>("CASEMAPPING", CaseMapping::class, CaseMapping.Rfc)
+    /** The mode prefixes the server uses, defaulting to ov/@+. */
     object ModePrefixes : ServerFeature<ModePrefixMapping>("PREFIX", ModePrefixMapping::class, ModePrefixMapping("ov", "@+"))
+    /** The maximum number of channels a client may join. */
     object MaximumChannels : ServerFeature<Int>("MAXCHANNELS", Int::class) // TODO: CHANLIMIT also exists
+    /** The modes supported in channels. */
     object ChannelModes : ServerFeature<String>("CHANMODES", String::class)
+    /** The maximum length of a channel name, defaulting to 200. */
     object MaximumChannelNameLength : ServerFeature<Int>("CHANNELLEN", Int::class, 200)
+    /** Whether or not the server supports extended who. */
     object WhoxSupport : ServerFeature<Boolean>("WHOX", Boolean::class, false)
 }
 

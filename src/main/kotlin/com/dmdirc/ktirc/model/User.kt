@@ -1,5 +1,8 @@
 package com.dmdirc.ktirc.model
 
+/**
+ * Describes a user on IRC.
+ */
 data class User(
         var nickname: String,
         var ident: String? = null,
@@ -8,7 +11,7 @@ data class User(
         var realName: String? = null,
         var awayMessage: String? = null
 ) {
-    fun updateFrom(other: User) {
+    internal fun updateFrom(other: User) {
         nickname = other.nickname
         other.ident?.let { ident = it }
         other.hostname?.let { hostname = it }

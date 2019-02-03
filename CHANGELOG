@@ -1,5 +1,7 @@
 vNEXT (in development)
 
+  * Added more documentation to public methods/classes
+
 v0.3.0
 
   * Simplified how messages are constructed.

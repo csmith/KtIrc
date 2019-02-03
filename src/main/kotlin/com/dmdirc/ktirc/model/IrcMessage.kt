@@ -5,14 +5,19 @@ import com.dmdirc.ktirc.util.currentTimeZoneProvider
 import java.time.Instant
 import java.time.LocalDateTime
 
+/**
+ * Represents an IRC protocol message.
+ */
 class IrcMessage(val tags: Map<MessageTag, String>, val prefix: ByteArray?, val command: String, val params: List<ByteArray>) {
 
+    /** The time at which the message was sent, or our best guess at it. */
     val time: LocalDateTime = if (MessageTag.ServerTime in tags) {
         LocalDateTime.ofInstant(Instant.parse(tags[MessageTag.ServerTime]), currentTimeZoneProvider())
     } else {
         currentTimeProvider()
     }
 
+    /** The user that generated the message, if any. */
     val sourceUser by lazy {
         prefix?.asUser()?.apply {
             tags[MessageTag.AccountName]?.let { account = it }
@@ -21,8 +26,13 @@ class IrcMessage(val tags: Map<MessageTag, String>, val prefix: ByteArray?, val 
 
 }
 
+/**
+ * Supported tags that may be applied to messages
+ */
 sealed class MessageTag(val name: String) {
+    /** Specifies the account name of the user, if the `account-tag` capability is negotiated. */
     object AccountName : MessageTag("account")
+    /** Specifies the time the server received the message, if the `server-time` capability is negotiated. */
     object ServerTime : MessageTag("time")
 }
 

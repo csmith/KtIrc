@@ -22,10 +22,19 @@ class CaseInsensitiveSet(private val caseMappingProvider: () -> CaseMapping) : I
         items.removeIf { caseMappingProvider().areEquivalent(it, item) }
     }
 
+    /**
+     * Determines if this set contains the given item, case-insensitively.
+     */
     operator fun contains(item: String) = items.any { caseMappingProvider().areEquivalent(it, item) }
 
+    /**
+     * Returns a read-only iterator over items in this set.
+     */
     override operator fun iterator() = items.iterator().iterator()
 
+    /**
+     * Returns true if this set is empty.
+     */
     fun isEmpty() = items.isEmpty()
 
 }
