@@ -9,6 +9,7 @@ vNEXT (in development)
     * ServerConnected event is emitted as soon as the socket is connected
     * ServerReady event is emitted after logging in, negotiating, etc
   * Added extra debugging to show what type of events are being dispatched
+  * Added ChannelQuit event, raised for each channel a user is in when they quit
   * (Internal) Event handlers can now return more events to emit
 
 v0.2.1

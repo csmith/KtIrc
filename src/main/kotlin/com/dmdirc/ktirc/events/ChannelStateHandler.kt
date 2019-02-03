@@ -15,7 +15,7 @@ internal class ChannelStateHandler : EventHandler {
             is ChannelParted -> handlePart(client, event)
             is ChannelNamesReceived -> handleNamesReceived(client, event)
             is ChannelNamesFinished -> handleNamesFinished(client, event)
-            is UserQuit -> handleQuit(client, event)
+            is UserQuit -> return handleQuit(client, event)
         }
         return emptyList()
     }
@@ -61,8 +61,13 @@ internal class ChannelStateHandler : EventHandler {
         }
     }
 
-    private fun handleQuit(client: IrcClient, event: UserQuit) {
-        client.channelState.forEach { it.users -= event.user.nickname }
-    }
+    private fun handleQuit(client: IrcClient, event: UserQuit) = sequence {
+        client.channelState.forEach {
+            if (it.users.contains(event.user.nickname)) {
+                it.users -= event.user.nickname
+                yield(ChannelQuit(event.time, event.user, it.name, event.reason))
+            }
+        }
+    }.toList()
 
 }

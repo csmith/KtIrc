@@ -161,4 +161,39 @@ internal class ChannelStateHandlerTest {
         assertTrue("acidburn" in channelStateMap["#chat"]!!.users)
     }
 
+
+    @Test
+    fun `ChannelStateHandler raises ChannelQuit event for each channel a user quits from`() = runBlocking {
+        with (ChannelState("#thegibson") { CaseMapping.Rfc }) {
+            users += ChannelUser("ZeroCool")
+            channelStateMap += this
+        }
+
+        with (ChannelState("#dumpsterdiving") { CaseMapping.Rfc }) {
+            users += ChannelUser("ZeroCool")
+            channelStateMap += this
+        }
+
+        with (ChannelState("#chat") { CaseMapping.Rfc }) {
+            users += ChannelUser("AcidBurn")
+            channelStateMap += this
+        }
+
+        val events = handler.processEvent(ircClient, UserQuit(TestConstants.time, User("zerocool", "dade", "root.localhost"), "Hack the planet!"))
+
+        val names = mutableListOf<String>()
+        assertEquals(2, events.size)
+        events.forEach { event ->
+            (event as ChannelQuit).let {
+                assertEquals(TestConstants.time, it.time)
+                assertEquals("zerocool", it.user.nickname)
+                assertEquals("Hack the planet!", it.reason)
+                names.add(it.channel)
+            }
+        }
+
+        assertTrue("#thegibson" in names)
+        assertTrue("#dumpsterdiving" in names)
+    }
+
 }

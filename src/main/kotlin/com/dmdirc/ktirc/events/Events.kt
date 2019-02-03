@@ -29,6 +29,9 @@ class ChannelJoined(time: LocalDateTime, val user: User, val channel: String) : 
 /** Raised when a user leaves a channel. */
 class ChannelParted(time: LocalDateTime, val user: User, val channel: String, val reason: String = "") : IrcEvent(time)
 
+/** Raised when a user quits, and is in a channel. */
+class ChannelQuit(time: LocalDateTime, val user: User, val channel: String, val reason: String = "") : IrcEvent(time)
+
 /** Raised when a batch of the channel's member list has been received. More batches may follow. */
 class ChannelNamesReceived(time: LocalDateTime, val channel: String, val names: List<String>) : IrcEvent(time)
 
