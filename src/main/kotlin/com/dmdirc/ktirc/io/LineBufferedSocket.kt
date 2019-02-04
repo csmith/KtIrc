@@ -15,6 +15,7 @@ import kotlinx.coroutines.channels.ReceiveChannel
 import kotlinx.coroutines.channels.produce
 import kotlinx.coroutines.io.ByteReadChannel
 import kotlinx.coroutines.io.ByteWriteChannel
+import kotlinx.coroutines.sync.Mutex
 import java.net.InetSocketAddress
 import java.security.SecureRandom
 import javax.net.ssl.X509TrustManager
@@ -45,6 +46,7 @@ internal class KtorLineBufferedSocket(private val host: String, private val port
     var tlsTrustManager: X509TrustManager? = null
 
     private val log by logger()
+    private val writeLock = Mutex()
 
     private lateinit var socket: Socket
     private lateinit var readChannel: ByteReadChannel
@@ -68,12 +70,17 @@ internal class KtorLineBufferedSocket(private val host: String, private val port
     }
 
     override suspend fun sendLine(line: ByteArray, offset: Int, length: Int) {
-        with (writeChannel) {
-            log.fine { ">>> ${String(line, offset, length)}" }
-            writeAvailable(line, offset, length)
-            writeByte(CARRIAGE_RETURN)
-            writeByte(LINE_FEED)
-            flush()
+        writeLock.lock()
+        try {
+            with(writeChannel) {
+                log.fine { ">>> ${String(line, offset, length)}" }
+                writeAvailable(line, offset, length)
+                writeByte(CARRIAGE_RETURN)
+                writeByte(LINE_FEED)
+                flush()
+            }
+        } finally {
+            writeLock.unlock()
         }
     }
 
