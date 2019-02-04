@@ -31,7 +31,7 @@ simple bot might look like:
 with(IrcClientImpl(Server("my.server.com", 6667), Profile("nick", "realName", "userName"))) {
     onEvent { event ->
         when (event) {
-            is ServerWelcome -> sendJoin("#ktirc")
+            is ServerReady -> sendJoin("#ktirc")
             is MessageReceived ->
                 if (event.message == "!test")
                     reply(event, "Test successful!")

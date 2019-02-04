@@ -21,6 +21,7 @@ internal val messageProcessors = setOf(
         CapabilityProcessor(),
         ISupportProcessor(),
         JoinProcessor(),
+        MotdProcessor(),
         NamesProcessor(),
         PartProcessor(),
         PingProcessor(),

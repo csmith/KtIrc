@@ -1,5 +1,8 @@
 vNEXT (in development)
 
+ * Added MotdFinished event
+ * Improved some documentation
+
 v0.4.0
 
  * Added CtcpReceived and ActionReceived events

@@ -41,7 +41,7 @@ interface IrcClient {
      * Sends the given raw line to the IRC server, followed by a carriage return and line feed.
      *
      * Standard IRC messages can be constructed using the methods in [com.dmdirc.ktirc.messages]
-     * such as [joinMessage].
+     * such as [sendJoin].
      *
      * @param message The line to be sent to the IRC server.
      */
@@ -50,7 +50,7 @@ interface IrcClient {
     /**
      * Registers a new handler for all events on this connection.
      *
-     * All events are subclasses of [IrcEvent]; the idomatic way to handle them is using a `when` statement:
+     * All events are subclasses of [IrcEvent]; the idiomatic way to handle them is using a `when` statement:
      *
      * ```
      * client.onEvent {
@@ -114,9 +114,13 @@ class IrcClientImpl(private val server: Server, private val profile: Profile) : 
 
                 connect()
 
-                with (Channel<ByteArray>(Channel.UNLIMITED)) {
+                with(Channel<ByteArray>(Channel.UNLIMITED)) {
                     writeChannel = this
-                    scope.launch { writeLines(this@with) }
+                    scope.launch {
+                        writeChannel?.let {
+                            writeLines(it)
+                        }
+                    }
                 }
 
                 emitEvent(ServerConnected(currentTimeProvider()))

@@ -15,11 +15,23 @@ class ServerState internal constructor(initialNickname: String, initialServerNam
     var status = ServerStatus.Connecting
         internal set
 
-    /** Our present nickname on the server. */
+    /**
+     * What we believe our current nickname to be on the server.
+     *
+     * Initially this will be the nickname provided in the [Profile]. It will be updated to the actual nickname
+     * in use when connecting. Once you have received a [com.dmdirc.ktirc.events.ServerWelcome] event you can
+     * rely on this value being current.
+     * */
     var localNickname: String = initialNickname
         internal set
 
-    /** The server's name, as reported by it. */
+    /**
+     * The name of the server we are connected to.
+     *
+     * Initially this will be the hostname or IP address provided in the [Server]. It will be updated to the server's
+     * self-reported hostname when connecting. Once you have received a [com.dmdirc.ktirc.events.ServerWelcome] event
+     * you can rely on this value being current.
+     */
     var serverName: String = initialServerName
         internal set
 
