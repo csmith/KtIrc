@@ -1,0 +1,20 @@
+title KtIrc internal structure
+
+participant KtIrc User
+participant IrcClient
+participant LineBufferedSocket
+participant IRC Server
+
+IRC Server->LineBufferedSocket: Byte*
+LineBufferedSocket->IrcClient: ByteArray
+IrcClient->+MessageParser: ByteArray
+MessageParser-->-IrcClient: IrcMessage
+IrcClient->MessageHandler: IrcMessage
+MessageHandler->+Processors: IrcMessage
+Processors-->-MessageHandler: IrcEvent*
+MessageHandler->+Handlers: IrcEvent
+Handlers->IrcClient: Update state
+note right of Handlers: Handlers update the state held by the client,\nand may raise additional events themselves
+Handlers-->-MessageHandler: IrcEvent*
+MessageHandler->IrcClient: IrcEvent
+IrcClient->KtIrc User: onEvent(IrcEvent)

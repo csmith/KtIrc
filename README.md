@@ -56,14 +56,46 @@ other than using an insecure connection.
 This is an issue with the Java standard library. You can change its behaviour by
 defining the system property `java.net.preferIPv6Addresses` to `true`, e.g. by
 running Java with `-Djava.net.preferIPv6Addresses=true` or calling
-`System.setProperty("java.net.preferIPv6Addresses","true");` in code. 
+`System.setProperty("java.net.preferIPv6Addresses","true");` in code.
 
-## Contributing
+## Developing KtIrc
+
+### Lifecycle of a message
+
+![architecture diagram](docs/sequence.png) 
+
+The `LineBufferedSocket` class receives bytes from the IRC server. Whenever it
+encounters a complete line (terminated by a `CR`, `LF` or `CRLF`), it passes it
+to the `IrcClient` as a `ByteArray`. The `MessageParser` breaks up the line
+into its component parts (tags, prefixes, commands, and parameters) and returns
+them as an `IrcMessage`.
+ 
+The `IrcMessage` is given to the `MessageHandler`, which tries to find a
+processor that can handle the command in the message. The processor's job is
+to convert the message into an `IrcEvent` subclass. Processors do not get
+given any contextual information or state, their job is simply to convert
+the message as received into an event.
+
+The events are returned to the `MessageHandler` which then passes them on
+to all registered event handlers. The job of the event handlers is twofold:
+firstly, use the events to update the state of KtIrc (for example, after
+receiving a `JOIN` message, the `ChannelStateHandler` will add the user
+to the list of users in the channel, while the `UserStateHandler` may update
+the user's hostname if we hadn't previously seen it). Secondly, the event
+handlers may themselves raise events. This is useful for higher-order
+events such as `ServerReady` that depend on a variety of factors and
+states.
+
+All the generated events (from processors or from event handlers) are
+passed to the `IrcClient`, which in turn passes them to the library
+user via the delegates passed to the `onEvent` method. 
+
+### Contributing
 
 Contributing is welcomed and encouraged! Please try to add unit tests for new features,
 and maintain a code style consistent with the existing code.
 
-## Licence
+### Licence
 
 The code in this repository is released under the MIT licence. See the
 [LICENCE](LICENCE) file for more info.
