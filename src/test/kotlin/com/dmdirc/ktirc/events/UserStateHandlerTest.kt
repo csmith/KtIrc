@@ -158,4 +158,16 @@ internal class UserStateHandlerTest {
             assertEquals("root.localhost", details.hostname)
         }
     }
+
+    @Test
+    fun `updates user info on account change`() {
+        runBlocking {
+            userState += User("acidBurn")
+
+            handler.processEvent(ircClient, UserAccountChanged(TestConstants.time, User("acidBurn", "libby", "root.localhost"), "acidBurn"))
+
+            val details = userState["acidBurn"]?.details!!
+            assertEquals("acidBurn", details.account)
+        }
+    }
 }

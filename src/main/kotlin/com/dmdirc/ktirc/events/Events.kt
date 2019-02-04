@@ -50,6 +50,13 @@ class CtcpReceived(time: LocalDateTime, val user: User, val target: String, val 
 /** Raised when a user quits. */
 class UserQuit(time: LocalDateTime, val user: User, val reason: String = "") : IrcEvent(time)
 
+/**
+ * Raised when a user's account changes (i.e., they auth'd or deauth'd with services).
+ *
+ * This event is only raised if the server supports the `account-notify` capability.
+ */
+class UserAccountChanged(time: LocalDateTime, val user: User, val newAccount: String?): IrcEvent(time)
+
 /** Raised when available server capabilities are received. More batches may follow. */
 class ServerCapabilitiesReceived(time: LocalDateTime, val capabilities: Map<Capability, String>) : IrcEvent(time)
 

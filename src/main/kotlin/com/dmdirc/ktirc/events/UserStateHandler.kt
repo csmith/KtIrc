@@ -10,6 +10,7 @@ internal class UserStateHandler : EventHandler {
             is ChannelJoined -> handleJoin(client.userState, event)
             is ChannelParted -> handlePart(client, event)
             is ChannelNamesReceived  -> handleNamesReceived(client, event)
+            is UserAccountChanged -> handleAccountChanged(client, event)
             is UserQuit -> handleQuit(client.userState, event)
         }
         return emptyList()
@@ -40,6 +41,10 @@ internal class UserStateHandler : EventHandler {
             client.userState.addToChannel(user, event.channel)
             client.userState.update(user)
         }
+    }
+
+    private fun handleAccountChanged(client: IrcClient, event: UserAccountChanged) {
+        client.userState[event.user]?.details?.account = event.newAccount
     }
 
     private fun handleQuit(state: UserState, event: UserQuit) {

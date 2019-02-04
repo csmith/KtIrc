@@ -41,7 +41,7 @@ internal class PartProcessorTest {
 
     @Test
     fun `PartProcessor does nothing if prefix missing`() {
-        val events = JoinProcessor().process(
+        val events = PartProcessor().process(
                 IrcMessage(emptyMap(), null, "PART", listOf("#crashandburn".toByteArray())))
         assertEquals(0, events.size)
     }
