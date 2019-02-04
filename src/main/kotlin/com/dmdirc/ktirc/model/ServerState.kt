@@ -68,6 +68,8 @@ data class ModePrefixMapping(val modes: String, val prefixes: String) {
  * Describes a server feature determined from the 005 response.
  */
 sealed class ServerFeature<T : Any>(val name: String, val type: KClass<T>, val default: T? = null) {
+    /** The network the server says it belongs to. */
+    object Network : ServerFeature<String>("NETWORK", String::class)
     /** The case mapping the server uses, defaulting to RFC. */
     object ServerCaseMapping : ServerFeature<CaseMapping>("CASEMAPPING", CaseMapping::class, CaseMapping.Rfc)
     /** The mode prefixes the server uses, defaulting to ov/@+. */

@@ -62,6 +62,14 @@ internal class ISupportProcessorTest {
     }
 
     @Test
+    fun `ISupportProcessor handles network arguments`() {
+        val events = processor.process(IrcMessage(emptyMap(), "server.com".toByteArray(), "005",
+                listOf("nickname", "NETWORK=gibson", "are supported blah blah").map { it.toByteArray() }))
+
+        assertEquals("gibson", events[0].serverFeatures[ServerFeature.Network])
+    }
+
+    @Test
     fun `ISupportProcessor handles boolean features with no arguments`() {
         val events = processor.process(IrcMessage(emptyMap(), "server.com".toByteArray(), "005",
                 listOf("nickname", "WHOX", "are supported blah blah").map { it.toByteArray() }))

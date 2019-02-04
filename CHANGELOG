@@ -3,6 +3,7 @@ vNEXT (in development)
  * Added CtcpReceived and ActionReceived events
  * Added sendCtcp and sendAction message builders
  * Fix issue with messages being sent out of order, which sometimes caused problems connecting to passworded servers
+ * Added 'network' server feature
 
 v0.3.1
 
