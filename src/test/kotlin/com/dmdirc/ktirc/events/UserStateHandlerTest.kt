@@ -14,7 +14,7 @@ import org.junit.jupiter.api.Test
 
 internal class UserStateHandlerTest {
 
-    private val serverState = ServerState("")
+    private val serverState = ServerState("", "")
     private val userState = UserState { CaseMapping.Rfc }
 
     private val ircClient = mock<IrcClient> {

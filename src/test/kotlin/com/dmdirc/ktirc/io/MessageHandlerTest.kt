@@ -66,7 +66,7 @@ internal class MessageHandlerTest {
         val eventHandler2 = mock<EventHandler>()
         val handler = MessageHandler(listOf(joinProcessor, nickProcessor), mutableListOf(eventHandler1, eventHandler2))
         val joinMessage = IrcMessage(emptyMap(), null, "JOIN", emptyList())
-        whenever(joinProcessor.process(any())).thenReturn(listOf(ServerConnected(TestConstants.time), ServerWelcome(TestConstants.time, "abc")))
+        whenever(joinProcessor.process(any())).thenReturn(listOf(ServerConnected(TestConstants.time), ServerWelcome(TestConstants.time, "the.gibson", "acidBurn")))
 
         with(Channel<IrcMessage>(1)) {
             send(joinMessage)
@@ -85,7 +85,7 @@ internal class MessageHandlerTest {
         val eventHandler1 = mock<EventHandler>()
         val eventHandler2 = mock<EventHandler>()
         val handler = MessageHandler(emptyList(), mutableListOf(eventHandler1, eventHandler2))
-        handler.emitEvent(ircClient, ServerWelcome(TestConstants.time, "abc"))
+        handler.emitEvent(ircClient, ServerWelcome(TestConstants.time, "the.gibson", "acidBurn"))
 
         verify(eventHandler1).processEvent(same(ircClient), isA<ServerWelcome>())
         verify(eventHandler2).processEvent(same(ircClient), isA<ServerWelcome>())
@@ -98,7 +98,7 @@ internal class MessageHandlerTest {
         }
         val eventHandler2 = mock<EventHandler>()
         val handler = MessageHandler(emptyList(), mutableListOf(eventHandler1, eventHandler2))
-        handler.emitEvent(ircClient, ServerWelcome(TestConstants.time, "abc"))
+        handler.emitEvent(ircClient, ServerWelcome(TestConstants.time, "the.gibson", "acidBurn"))
 
         verify(eventHandler1).processEvent(same(ircClient), isA<ServerReady>())
         verify(eventHandler2).processEvent(same(ircClient), isA<ServerReady>())

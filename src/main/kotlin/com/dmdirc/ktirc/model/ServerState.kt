@@ -6,7 +6,7 @@ import kotlin.reflect.KClass
 /**
  * Contains the current state of a single IRC server.
  */
-class ServerState internal constructor(initialNickname: String) {
+class ServerState internal constructor(initialNickname: String, initialServerName: String) {
 
     /** Whether we've received the 'Welcome to IRC' (001) message. */
     internal var receivedWelcome = false
@@ -17,6 +17,10 @@ class ServerState internal constructor(initialNickname: String) {
 
     /** Our present nickname on the server. */
     var localNickname: String = initialNickname
+        internal set
+
+    /** The server's name, as reported by it. */
+    var serverName: String = initialServerName
         internal set
 
     /** The features that the server has declared it supports (from the 005 header). */

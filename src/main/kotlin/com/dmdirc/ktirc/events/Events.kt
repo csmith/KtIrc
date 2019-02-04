@@ -15,7 +15,7 @@ class ServerConnected(time: LocalDateTime) : IrcEvent(time)
 class ServerReady(time: LocalDateTime) : IrcEvent(time)
 
 /** Raised when the server initially welcomes us to the IRC network. */
-class ServerWelcome(time: LocalDateTime, val localNick: String) : IrcEvent(time)
+class ServerWelcome(time: LocalDateTime, val server: String, val localNick: String) : IrcEvent(time)
 
 /** Raised when the features supported by the server have changed. This may occur numerous times. */
 class ServerFeaturesUpdated(time: LocalDateTime, val serverFeatures: ServerFeatureMap) : IrcEvent(time)

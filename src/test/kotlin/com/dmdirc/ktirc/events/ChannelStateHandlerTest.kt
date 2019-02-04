@@ -14,7 +14,7 @@ internal class ChannelStateHandlerTest {
 
     private val handler = ChannelStateHandler()
     private val channelStateMap = ChannelStateMap { CaseMapping.Rfc }
-    private val serverState = ServerState("")
+    private val serverState = ServerState("", "")
     private val ircClient = mock<IrcClient> {
         on { serverState } doReturn serverState
         on { channelState } doReturn channelStateMap

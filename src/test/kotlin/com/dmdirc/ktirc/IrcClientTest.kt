@@ -249,6 +249,18 @@ internal class IrcClientImplTest {
         })
     }
 
+    @Test
+    fun `IrcClientImpl defaults local nickname to profile`() = runBlocking {
+        val client = IrcClientImpl(Server(HOST, PORT), Profile(NICK, REAL_NAME, USER_NAME))
+        assertEquals(NICK, client.serverState.localNickname)
+    }
+
+    @Test
+    fun `IrcClientImpl defaults server name to host name`() = runBlocking {
+        val client = IrcClientImpl(Server(HOST, PORT), Profile(NICK, REAL_NAME, USER_NAME))
+        assertEquals(HOST, client.serverState.serverName)
+    }
+
     private suspend fun IrcClientImpl.blockUntilConnected() {
         // Yuck. Maybe connect should be asynchronous?
         while (writeChannel == null) {

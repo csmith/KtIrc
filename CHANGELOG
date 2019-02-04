@@ -4,6 +4,7 @@ vNEXT (in development)
  * Added sendCtcp and sendAction message builders
  * Fix issue with messages being sent out of order, which sometimes caused problems connecting to passworded servers
  * Added 'network' server feature
+ * Added serverName field to ServerState
 
 v0.3.1
 

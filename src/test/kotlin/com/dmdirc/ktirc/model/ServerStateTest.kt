@@ -7,13 +7,19 @@ internal class ServerStateTest {
 
     @Test
     fun `ServerState should use the initial nickname as local nickname`() {
-        val serverState = ServerState("acidBurn")
+        val serverState = ServerState("acidBurn", "")
         assertEquals("acidBurn", serverState.localNickname)
     }
 
     @Test
+    fun `ServerState should use the initial name as server name`() {
+        val serverState = ServerState("", "the.gibson")
+        assertEquals("the.gibson", serverState.serverName)
+    }
+
+    @Test
     fun `ServerState should default status to connecting`() {
-        val serverState = ServerState("acidBurn")
+        val serverState = ServerState("acidBurn", "")
         assertEquals(ServerStatus.Connecting, serverState.status)
     }
 

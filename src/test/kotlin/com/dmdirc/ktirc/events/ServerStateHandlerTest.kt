@@ -12,7 +12,7 @@ import org.junit.jupiter.api.Test
 
 internal class ServerStateHandlerTest {
 
-    private val serverState = ServerState("")
+    private val serverState = ServerState("", "")
     private val ircClient = mock<IrcClient> {
         on { serverState } doReturn serverState
     }
@@ -21,13 +21,19 @@ internal class ServerStateHandlerTest {
 
     @Test
     fun `ServerStateHandler sets local nickname on welcome event`() = runBlocking {
-        handler.processEvent(ircClient, ServerWelcome(TestConstants.time, "acidBurn"))
+        handler.processEvent(ircClient, ServerWelcome(TestConstants.time, "the.gibson", "acidBurn"))
         assertEquals("acidBurn", serverState.localNickname)
     }
 
     @Test
+    fun `ServerStateHandler sets server name on welcome event`() = runBlocking {
+        handler.processEvent(ircClient, ServerWelcome(TestConstants.time, "the.gibson", "acidBurn"))
+        assertEquals("the.gibson", serverState.serverName)
+    }
+
+    @Test
     fun `ServerStateHandler sets receivedWelcome on welcome event`() = runBlocking {
-        handler.processEvent(ircClient, ServerWelcome(TestConstants.time, "acidBurn"))
+        handler.processEvent(ircClient, ServerWelcome(TestConstants.time, "the.gibson", "acidBurn"))
         assertTrue(serverState.receivedWelcome)
     }
 
@@ -42,7 +48,7 @@ internal class ServerStateHandlerTest {
         ircClient.serverState.status = ServerStatus.Negotiating
 
         listOf(
-                ServerWelcome(TestConstants.time, "acidBurn"),
+                ServerWelcome(TestConstants.time, "the.gibson", "acidBurn"),
                 PingReceived(TestConstants.time, "1234".toByteArray()),
                 ServerCapabilitiesReceived(TestConstants.time, emptyMap()),
                 ServerCapabilitiesAcknowledged(TestConstants.time, emptyMap()),
@@ -61,7 +67,7 @@ internal class ServerStateHandlerTest {
         ircClient.serverState.status = ServerStatus.Negotiating
 
         listOf(
-                ServerWelcome(TestConstants.time, "acidBurn"),
+                ServerWelcome(TestConstants.time, "the.gibson", "acidBurn"),
                 PingReceived(TestConstants.time, "1234".toByteArray()),
                 ServerCapabilitiesReceived(TestConstants.time, emptyMap()),
                 ServerCapabilitiesAcknowledged(TestConstants.time, emptyMap()),

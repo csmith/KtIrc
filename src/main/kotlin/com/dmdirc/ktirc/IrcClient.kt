@@ -86,7 +86,7 @@ class IrcClientImpl(private val server: Server, private val profile: Profile) : 
 
     internal var socketFactory: (String, Int, Boolean) -> LineBufferedSocket = ::KtorLineBufferedSocket
 
-    override val serverState = ServerState(profile.initialNick)
+    override val serverState = ServerState(profile.initialNick, server.host)
     override val channelState = ChannelStateMap { caseMapping }
     override val userState = UserState { caseMapping }
 

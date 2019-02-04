@@ -10,7 +10,7 @@ internal class ServerStateHandler : EventHandler {
     override fun processEvent(client: IrcClient, event: IrcEvent): List<IrcEvent> {
         when (event) {
             is ServerConnected -> client.serverState.status = ServerStatus.Negotiating
-            is ServerWelcome -> handleWelcome(client.serverState, event.localNick)
+            is ServerWelcome -> handleWelcome(client.serverState, event.server, event.localNick)
             is ServerFeaturesUpdated -> client.serverState.features.setAll(event.serverFeatures)
 
             // Events that won't trigger a server ready event
@@ -24,8 +24,9 @@ internal class ServerStateHandler : EventHandler {
         return emptyList()
     }
 
-    private fun handleWelcome(serverState: ServerState, localNick: String) {
+    private fun handleWelcome(serverState: ServerState, server: String, localNick: String) {
         serverState.receivedWelcome = true
+        serverState.serverName = server
         serverState.localNickname = localNick
     }
 
