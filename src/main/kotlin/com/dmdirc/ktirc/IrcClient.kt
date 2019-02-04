@@ -128,6 +128,9 @@ class IrcClientImpl(private val server: Server, private val profile: Profile) : 
         socket?.disconnect()
     }
 
+    /**
+     * Joins the coroutine running the message loop, and blocks until it is completed.
+     */
     suspend fun join() {
         connectionJob?.join()
     }

@@ -1,5 +1,7 @@
 vNEXT (in development)
 
+ * Added CtcpReceived and ActionReceived events
+
 v0.3.1
 
   * Added more documentation to public methods/classes

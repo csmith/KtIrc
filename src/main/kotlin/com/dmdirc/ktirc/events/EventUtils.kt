@@ -14,6 +14,13 @@ internal fun ChannelNamesReceived.toModesAndUsers(client: IrcClient) = sequence 
     }
 }.toList()
 
+/**
+ * Replies in the appropriate place to a message received.
+ *
+ * Messages sent direct to the client will be responded to in direct message back; messages sent to a channel
+ * will be replied to in the channel. If [prefixWithNickname] is `true`, channel messages will be prefixed
+ * with the other user's nickname (separated from the message by a colon and space).
+ */
 fun IrcClient.reply(message: MessageReceived, response: String, prefixWithNickname: Boolean = false) {
     if (caseMapping.areEquivalent(message.target, serverState.localNickname)) {
         sendMessage(message.user.nickname, response)

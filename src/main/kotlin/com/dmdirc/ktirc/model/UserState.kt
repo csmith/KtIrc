@@ -9,7 +9,9 @@ class UserState(private val caseMappingProvider: () -> CaseMapping): Iterable<Kn
 
     private val users = UserMap(caseMappingProvider)
 
+    /** Gets the [KnownUser] with the given nickname. */
     operator fun get(nickname: String) = users[nickname]
+    /** Gets the [KnownUser] for a given user. */
     operator fun get(user: User) = users[user.nickname]
 
     internal operator fun plusAssign(details: User) { users += KnownUser(caseMappingProvider, details) }

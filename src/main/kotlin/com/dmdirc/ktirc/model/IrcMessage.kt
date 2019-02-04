@@ -27,7 +27,7 @@ class IrcMessage(val tags: Map<MessageTag, String>, val prefix: ByteArray?, val 
 }
 
 /**
- * Supported tags that may be applied to messages
+ * Supported tags that may be applied to messages.
  */
 sealed class MessageTag(val name: String) {
     /** Specifies the account name of the user, if the `account-tag` capability is negotiated. */
