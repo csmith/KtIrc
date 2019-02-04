@@ -15,7 +15,6 @@ import kotlinx.coroutines.channels.ReceiveChannel
 import kotlinx.coroutines.channels.produce
 import kotlinx.coroutines.io.ByteReadChannel
 import kotlinx.coroutines.io.ByteWriteChannel
-import kotlinx.coroutines.sync.Mutex
 import java.net.InetSocketAddress
 import java.security.SecureRandom
 import javax.net.ssl.X509TrustManager
@@ -25,10 +24,8 @@ internal interface LineBufferedSocket {
     suspend fun connect()
     fun disconnect()
 
-    suspend fun sendLine(line: ByteArray, offset: Int = 0, length: Int = line.size)
-    suspend fun sendLine(line: String)
-
     fun readLines(coroutineScope: CoroutineScope): ReceiveChannel<ByteArray>
+    suspend fun writeLines(channel: ReceiveChannel<ByteArray>)
 
 }
 
@@ -46,7 +43,6 @@ internal class KtorLineBufferedSocket(private val host: String, private val port
     var tlsTrustManager: X509TrustManager? = null
 
     private val log by logger()
-    private val writeLock = Mutex()
 
     private lateinit var socket: Socket
     private lateinit var readChannel: ByteReadChannel
@@ -69,23 +65,6 @@ internal class KtorLineBufferedSocket(private val host: String, private val port
         socket.close()
     }
 
-    override suspend fun sendLine(line: ByteArray, offset: Int, length: Int) {
-        writeLock.lock()
-        try {
-            with(writeChannel) {
-                log.fine { ">>> ${String(line, offset, length)}" }
-                writeAvailable(line, offset, length)
-                writeByte(CARRIAGE_RETURN)
-                writeByte(LINE_FEED)
-                flush()
-            }
-        } finally {
-            writeLock.unlock()
-        }
-    }
-
-    override suspend fun sendLine(line: String) = sendLine(line.toByteArray())
-
     @ExperimentalCoroutinesApi
     override fun readLines(coroutineScope: CoroutineScope) = coroutineScope.produce {
         val lineBuffer = ByteArray(4096)
@@ -105,6 +84,18 @@ internal class KtorLineBufferedSocket(private val host: String, private val port
             }
             lineBuffer.copyInto(lineBuffer, 0, start)
             index = count + index - start
+        }
+    }
+
+    override suspend fun writeLines(channel: ReceiveChannel<ByteArray>) {
+        for (line in channel) {
+            with(writeChannel) {
+                log.fine { ">>> ${String(line)}" }
+                writeAvailable(line, 0, line.size)
+                writeByte(CARRIAGE_RETURN)
+                writeByte(LINE_FEED)
+                flush()
+            }
         }
     }
 }

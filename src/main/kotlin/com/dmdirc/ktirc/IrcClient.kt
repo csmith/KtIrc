@@ -6,6 +6,7 @@ import com.dmdirc.ktirc.messages.*
 import com.dmdirc.ktirc.model.*
 import com.dmdirc.ktirc.util.currentTimeProvider
 import kotlinx.coroutines.*
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.map
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.logging.Level
@@ -98,12 +99,10 @@ class IrcClientImpl(private val server: Server, private val profile: Profile) : 
     private val connecting = AtomicBoolean(false)
 
     private var connectionJob: Job? = null
+    internal var writeChannel: Channel<ByteArray>? = null
 
     override fun send(message: String) {
-        // TODO: What happens if sending fails?
-        scope.launch {
-            socket?.sendLine(message)
-        }
+        writeChannel?.offer(message.toByteArray())
     }
 
     override fun connect() {
@@ -112,7 +111,14 @@ class IrcClientImpl(private val server: Server, private val profile: Profile) : 
             with(socketFactory(server.host, server.port, server.tls)) {
                 // TODO: Proper error handling - what if connect() fails?
                 socket = this
+
                 connect()
+
+                with (Channel<ByteArray>(Channel.UNLIMITED)) {
+                    writeChannel = this
+                    scope.launch { writeLines(this@with) }
+                }
+
                 emitEvent(ServerConnected(currentTimeProvider()))
                 sendCapabilityList()
                 sendPasswordIfPresent()

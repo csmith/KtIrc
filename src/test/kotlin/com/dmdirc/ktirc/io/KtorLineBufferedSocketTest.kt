@@ -3,16 +3,17 @@ package com.dmdirc.ktirc.io
 import io.ktor.network.tls.certificates.generateCertificate
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.async
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
-import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.parallel.Execution
 import org.junit.jupiter.api.parallel.ExecutionMode
 import java.io.File
 import java.net.ServerSocket
 import java.security.KeyStore
-import java.security.cert.CertificateException
 import java.security.cert.X509Certificate
 import javax.net.ssl.KeyManagerFactory
 import javax.net.ssl.SSLContext
@@ -20,6 +21,8 @@ import javax.net.ssl.X509TrustManager
 
 @Execution(ExecutionMode.SAME_THREAD)
 internal class KtorLineBufferedSocketTest {
+
+    private val writeChannel = Channel<ByteArray>(Channel.UNLIMITED)
 
     @Test
     fun `KtorLineBufferedSocket can connect to a server`() = runBlocking {
@@ -34,23 +37,7 @@ internal class KtorLineBufferedSocketTest {
     }
 
     @Test
-    fun `KtorLineBufferedSocket throws trying to connect to a server with a bad TLS cert`() = runBlocking {
-        tlsServerSocket(12321).use { serverSocket ->
-            try {
-                val socket = KtorLineBufferedSocket("localhost", 12321)
-                val clientSocketAsync = GlobalScope.async { serverSocket.accept() }
-
-                socket.connect()
-                assertNotNull(clientSocketAsync.await())
-                fail<Unit>()
-            } catch (ex : CertificateException) {
-                // Expected
-            }
-        }
-    }
-
-    @Test
-    fun `KtorLineBufferedSocket can send a whole byte array to a server`() = runBlocking {
+    fun `KtorLineBufferedSocket can send a byte array to a server`() = runBlocking {
         ServerSocket(12321).use { serverSocket ->
             val socket = KtorLineBufferedSocket("localhost", 12321)
             val clientBytesAsync = GlobalScope.async {
@@ -60,26 +47,8 @@ internal class KtorLineBufferedSocketTest {
             }
 
             socket.connect()
-            socket.sendLine("Hello World".toByteArray())
-
-            val bytes = clientBytesAsync.await()
-            assertNotNull(bytes)
-            assertEquals("Hello World\r\n", String(bytes))
-        }
-    }
-
-    @Test
-    fun `KtorLineBufferedSocket can send a string to a server`() = runBlocking {
-        ServerSocket(12321).use { serverSocket ->
-            val socket = KtorLineBufferedSocket("localhost", 12321)
-            val clientBytesAsync = GlobalScope.async {
-                ByteArray(13).apply {
-                    serverSocket.accept().getInputStream().read(this)
-                }
-            }
-
-            socket.connect()
-            socket.sendLine("Hello World")
+            GlobalScope.launch { socket.writeLines(writeChannel) }
+            writeChannel.send("Hello World".toByteArray())
 
             val bytes = clientBytesAsync.await()
             assertNotNull(bytes)
@@ -99,30 +68,12 @@ internal class KtorLineBufferedSocketTest {
             }
 
             socket.connect()
-            socket.sendLine("Hello World")
+            GlobalScope.launch { socket.writeLines(writeChannel) }
+            writeChannel.send("Hello World".toByteArray())
 
             val bytes = clientBytesAsync.await()
             assertNotNull(bytes)
             assertEquals("Hello World\r\n", String(bytes))
-        }
-    }
-
-    @Test
-    fun `KtorLineBufferedSocket can send a partial byte array to a server`() = runBlocking {
-        ServerSocket(12321).use { serverSocket ->
-            val socket = KtorLineBufferedSocket("localhost", 12321)
-            val clientBytesAsync = GlobalScope.async {
-                ByteArray(7).apply {
-                    serverSocket.accept().getInputStream().read(this)
-                }
-            }
-
-            socket.connect()
-            socket.sendLine("Hello World".toByteArray(), 6, 5)
-
-            val bytes = clientBytesAsync.await()
-            assertNotNull(bytes)
-            assertEquals("World\r\n", String(bytes))
         }
     }
 

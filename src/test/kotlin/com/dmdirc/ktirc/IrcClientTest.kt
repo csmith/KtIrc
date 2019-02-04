@@ -11,11 +11,8 @@ import com.dmdirc.ktirc.model.ServerFeature
 import com.dmdirc.ktirc.model.User
 import com.dmdirc.ktirc.util.currentTimeProvider
 import com.nhaarman.mockitokotlin2.*
-import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.withTimeoutOrNull
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -97,11 +94,11 @@ internal class IrcClientImplTest {
         client.socketFactory = mockSocketFactory
         client.connect()
 
-        with(inOrder(mockSocket).verify(mockSocket, timeout(500))) {
-            sendLine("CAP LS 302")
-            sendLine("NICK :$NICK")
-            sendLine("USER $USER_NAME localhost $HOST :$REAL_NAME")
-        }
+        client.blockUntilConnected()
+
+        assertEquals("CAP LS 302", String(client.writeChannel!!.receive()))
+        assertEquals("NICK :$NICK", String(client.writeChannel!!.receive()))
+        assertEquals("USER $USER_NAME localhost $HOST :$REAL_NAME", String(client.writeChannel!!.receive()))
     }
 
     @Test
@@ -110,11 +107,10 @@ internal class IrcClientImplTest {
         client.socketFactory = mockSocketFactory
         client.connect()
 
-        with(inOrder(mockSocket).verify(mockSocket, timeout(500))) {
-            sendLine("CAP LS 302")
-            sendLine("PASS :$PASSWORD")
-            sendLine("NICK :$NICK")
-        }
+        client.blockUntilConnected()
+
+        assertEquals("CAP LS 302", String(client.writeChannel!!.receive()))
+        assertEquals("PASS :$PASSWORD", String(client.writeChannel!!.receive()))
     }
 
     @Test
@@ -199,12 +195,20 @@ internal class IrcClientImplTest {
         client.socketFactory = mockSocketFactory
         client.connect()
 
-        // Wait for it to connect
-        verify(mockSocket, timeout(500)).sendLine("CAP LS 302")
+        client.blockUntilConnected()
 
         client.send("testing 123")
 
-        verify(mockSocket, timeout(500)).sendLine("testing 123")
+        assertEquals(true, withTimeoutOrNull(500) {
+            var found = false
+            for (line in client.writeChannel!!) {
+                if (String(line) == "testing 123") {
+                    found = true
+                    break
+                }
+            }
+            found
+        })
     }
 
     @Test
@@ -213,12 +217,43 @@ internal class IrcClientImplTest {
         client.socketFactory = mockSocketFactory
         client.connect()
 
-        // Wait for it to connect
-        verify(mockSocket, timeout(500)).sendLine("CAP LS 302")
+        client.blockUntilConnected()
 
         client.disconnect()
 
         verify(mockSocket, timeout(500)).disconnect()
+    }
+
+    @Test
+    fun `IrcClientImpl sends messages in order`() = runBlocking {
+        val client = IrcClientImpl(Server(HOST, PORT), Profile(NICK, REAL_NAME, USER_NAME))
+        client.socketFactory = mockSocketFactory
+        client.connect()
+
+        client.blockUntilConnected()
+
+        (0..100).forEach { client.send("TEST $it") }
+
+        assertEquals(100, withTimeoutOrNull(500) {
+            var next = 0
+            for (line in client.writeChannel!!) {
+                val stringy = String(line)
+                if (stringy.startsWith("TEST ")) {
+                    assertEquals("TEST $next", stringy)
+                    if (++next == 100) {
+                        break
+                    }
+                }
+            }
+            next
+        })
+    }
+
+    private suspend fun IrcClientImpl.blockUntilConnected() {
+        // Yuck. Maybe connect should be asynchronous?
+        while (writeChannel == null) {
+            delay(50)
+        }
     }
 
 
