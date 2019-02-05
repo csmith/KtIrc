@@ -26,6 +26,7 @@ internal val messageProcessors = setOf(
         ModeProcessor(),
         MotdProcessor(),
         NamesProcessor(),
+        NoticeProcessor(),
         PartProcessor(),
         PingProcessor(),
         PrivmsgProcessor(),

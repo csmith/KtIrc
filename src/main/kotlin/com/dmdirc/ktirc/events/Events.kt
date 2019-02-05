@@ -50,11 +50,21 @@ class ChannelNamesFinished(time: LocalDateTime, val channel: String) : IrcEvent(
 /** Raised when a message is received. */
 class MessageReceived(time: LocalDateTime, val user: User, val target: String, val message: String) : IrcEvent(time)
 
+/**
+ * Raised when a notice is received.
+ *
+ * The [user] may in fact be a server, or have a nickname of `*` while connecting.
+ */
+class NoticeReceived(time: LocalDateTime, val user: User, val target: String, val message: String) : IrcEvent(time)
+
 /** Raised when an action is received. */
 class ActionReceived(time: LocalDateTime, val user: User, val target: String, val action: String) : IrcEvent(time)
 
 /** Raised when a CTCP is received. */
 class CtcpReceived(time: LocalDateTime, val user: User, val target: String, val type: String, val content: String) : IrcEvent(time)
+
+/** Raised when a CTCP reply is received. */
+class CtcpReplyReceived(time: LocalDateTime, val user: User, val target: String, val type: String, val content: String) : IrcEvent(time)
 
 /** Raised when a user quits. */
 class UserQuit(time: LocalDateTime, val user: User, val reason: String = "") : IrcEvent(time)

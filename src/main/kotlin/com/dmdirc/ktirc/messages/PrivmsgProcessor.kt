@@ -7,8 +7,6 @@ import com.dmdirc.ktirc.events.MessageReceived
 import com.dmdirc.ktirc.model.IrcMessage
 import com.dmdirc.ktirc.model.User
 
-private const val CTCP_BYTE : Byte = 1
-
 internal class PrivmsgProcessor : MessageProcessor {
 
     override val commands = arrayOf("PRIVMSG")

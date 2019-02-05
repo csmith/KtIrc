@@ -1,5 +1,7 @@
 package com.dmdirc.ktirc.messages
 
+internal const val CTCP_BYTE : Byte = 1
+
 internal const val RPL_WELCOME = "001"
 internal const val RPL_ISUPPORT = "005"
 
