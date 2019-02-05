@@ -46,11 +46,11 @@ internal class ServerFeatureMapTest {
         val featureMap1 = ServerFeatureMap()
         val featureMap2 = ServerFeatureMap()
         featureMap2[ServerFeature.WhoxSupport] = true
-        featureMap2[ServerFeature.ChannelModes] = "abc"
+        featureMap2[ServerFeature.ChannelModes] = arrayOf("abc", "def")
         featureMap1.setAll(featureMap2)
 
         assertEquals(true, featureMap1[ServerFeature.WhoxSupport])
-        assertEquals("abc", featureMap1[ServerFeature.ChannelModes])
+        assertArrayEquals(arrayOf("abc", "def"), featureMap1[ServerFeature.ChannelModes])
     }
 
 

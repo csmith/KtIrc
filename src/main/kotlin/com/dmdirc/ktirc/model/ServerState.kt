@@ -57,7 +57,10 @@ class ServerFeatureMap {
     operator fun <T : Any> get(feature: ServerFeature<T>) = features.getOrDefault(feature, feature.default) as? T? ?: feature.default
 
     internal operator fun set(feature: ServerFeature<*>, value: Any) {
-        require(feature.type.isInstance(value))
+        require(feature.type.isInstance(value)) {
+            "Value given for feature ${feature::class} must be type ${feature.type} but was ${value::class}"
+        }
+
         features[feature] = value
     }
 
@@ -93,7 +96,7 @@ sealed class ServerFeature<T : Any>(val name: String, val type: KClass<T>, val d
     /** The maximum number of channels a client may join. */
     object MaximumChannels : ServerFeature<Int>("MAXCHANNELS", Int::class) // TODO: CHANLIMIT also exists
     /** The modes supported in channels. */
-    object ChannelModes : ServerFeature<String>("CHANMODES", String::class)
+    object ChannelModes : ServerFeature<Array<String>>("CHANMODES", Array<String>::class)
     /** The maximum length of a channel name, defaulting to 200. */
     object MaximumChannelNameLength : ServerFeature<Int>("CHANNELLEN", Int::class, 200)
     /** Whether or not the server supports extended who. */

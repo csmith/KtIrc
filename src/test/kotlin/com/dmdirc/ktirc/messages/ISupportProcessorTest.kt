@@ -29,9 +29,21 @@ internal class ISupportProcessorTest {
     @Test
     fun `ISupportProcessor handles string arguments`() {
         val events = processor.process(IrcMessage(emptyMap(), "server.com".toByteArray(), "005",
-                listOf("nickname", "CHANMODES=abcd", "are supported blah blah").map { it.toByteArray() }))
+                listOf("nickname", "NETWORK=abcd", "are supported blah blah").map { it.toByteArray() }))
 
-        assertEquals("abcd", events[0].serverFeatures[ServerFeature.ChannelModes])
+        assertEquals("abcd", events[0].serverFeatures[ServerFeature.Network])
+    }
+
+    @Test
+    fun `ISupportProcessor handles string array arguments`() {
+        val events = processor.process(IrcMessage(emptyMap(), "server.com".toByteArray(), "005",
+                listOf("nickname", "CHANMODES=abcd,efg,,hij", "are supported blah blah").map { it.toByteArray() }))
+
+        val modes = events[0].serverFeatures[ServerFeature.ChannelModes]!!
+        assertEquals("abcd", modes[0])
+        assertEquals("efg", modes[1])
+        assertEquals("", modes[2])
+        assertEquals("hij", modes[3])
     }
 
     @Test
@@ -40,7 +52,7 @@ internal class ISupportProcessorTest {
                 listOf("nickname", "-CHANMODES", "are supported blah blah").map { it.toByteArray() }))
 
         val oldFeatures = ServerFeatureMap()
-        oldFeatures[ServerFeature.ChannelModes] = "abc"
+        oldFeatures[ServerFeature.ChannelModes] = arrayOf("abc")
         oldFeatures.setAll(events[0].serverFeatures)
         assertNull(oldFeatures[ServerFeature.ChannelModes])
     }

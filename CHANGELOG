@@ -5,6 +5,8 @@ vNEXT (in development)
  * Improved some documentation
  * Added ServerConnecting and ServerDisconnected events
  * Server status now starts as Disconnected rather than Connecting
+ * CHANMODES feature is now stored as an array, not a single comma-separated string
+ * Improved error message when features are of an unexpected type
 
 v0.4.0
 

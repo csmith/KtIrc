@@ -64,6 +64,7 @@ internal class ISupportProcessor : MessageProcessor {
             String::class -> this
             CaseMapping::class -> CaseMapping.fromName(this)
             ModePrefixMapping::class -> indexOf(')').let { ModePrefixMapping(substring(1 until it), substring(it + 1)) }
+            Array<String>::class -> split(',').toTypedArray()
             else -> TODO("not implemented")
         }
     }

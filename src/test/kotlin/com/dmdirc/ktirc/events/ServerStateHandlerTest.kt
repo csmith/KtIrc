@@ -6,8 +6,7 @@ import com.dmdirc.ktirc.model.*
 import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.mock
 import kotlinx.coroutines.runBlocking
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 
 internal class ServerStateHandlerTest {
@@ -97,12 +96,12 @@ internal class ServerStateHandlerTest {
     @Test
     fun `ServerStateHandler updates features on features event`() = runBlocking {
         val features = ServerFeatureMap()
-        features[ServerFeature.ChannelModes] = "abc"
+        features[ServerFeature.ChannelModes] = arrayOf("abc", "def")
         features[ServerFeature.WhoxSupport] = true
 
         handler.processEvent(ircClient, ServerFeaturesUpdated(TestConstants.time, features))
 
-        assertEquals("abc", serverState.features[ServerFeature.ChannelModes])
+        assertArrayEquals(arrayOf("abc", "def"), serverState.features[ServerFeature.ChannelModes])
         assertEquals(true, serverState.features[ServerFeature.WhoxSupport])
     }
 
