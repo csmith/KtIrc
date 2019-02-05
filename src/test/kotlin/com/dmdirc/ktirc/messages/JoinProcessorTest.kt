@@ -3,6 +3,7 @@ package com.dmdirc.ktirc.messages
 import com.dmdirc.ktirc.TestConstants
 import com.dmdirc.ktirc.model.IrcMessage
 import com.dmdirc.ktirc.model.User
+import com.dmdirc.ktirc.params
 import com.dmdirc.ktirc.util.currentTimeProvider
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
@@ -18,7 +19,7 @@ internal class JoinProcessorTest {
     @Test
     fun `JoinProcessor raises join event`() {
         val events = JoinProcessor().process(
-                IrcMessage(emptyMap(), "acidburn!libby@root.localhost".toByteArray(), "JOIN", listOf("#crashandburn".toByteArray())))
+                IrcMessage(emptyMap(), "acidburn!libby@root.localhost".toByteArray(), "JOIN", params("#crashandburn")))
         assertEquals(1, events.size)
 
         assertEquals(TestConstants.time, events[0].time)
@@ -29,14 +30,14 @@ internal class JoinProcessorTest {
     @Test
     fun `JoinProcessor does nothing if prefix missing`() {
         val events = JoinProcessor().process(
-                IrcMessage(emptyMap(), null, "JOIN", listOf("#crashandburn".toByteArray())))
+                IrcMessage(emptyMap(), null, "JOIN", params("#crashandburn")))
         assertEquals(0, events.size)
     }
 
     @Test
     fun `JoinProcessor adds real name and account from extended join`() {
         val events = JoinProcessor().process(
-                IrcMessage(emptyMap(), "acidburn!libby@root.localhost".toByteArray(), "JOIN", listOf("#crashandburn", "acidBurn", "Libby").map { it.toByteArray() }))
+                IrcMessage(emptyMap(), "acidburn!libby@root.localhost".toByteArray(), "JOIN", params("#crashandburn", "acidBurn", "Libby")))
         assertEquals(1, events.size)
 
         assertEquals(TestConstants.time, events[0].time)
@@ -47,7 +48,7 @@ internal class JoinProcessorTest {
     @Test
     fun `JoinProcessor ignores account if the user is not authed`() {
         val events = JoinProcessor().process(
-                IrcMessage(emptyMap(), "acidburn!libby@root.localhost".toByteArray(), "JOIN", listOf("#crashandburn", "*", "Libby").map { it.toByteArray() }))
+                IrcMessage(emptyMap(), "acidburn!libby@root.localhost".toByteArray(), "JOIN", params("#crashandburn", "*", "Libby")))
         assertEquals(1, events.size)
 
         assertEquals(TestConstants.time, events[0].time)

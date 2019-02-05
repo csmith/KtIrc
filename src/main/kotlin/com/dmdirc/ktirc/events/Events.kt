@@ -74,3 +74,12 @@ class ServerCapabilitiesFinished(time: LocalDateTime) : IrcEvent(time)
 
 /** Raised when a Message Of the Day has completed. */
 class MotdFinished(time: LocalDateTime, val missing: Boolean = false): IrcEvent(time)
+
+/**
+ * Raised when a mode change occurs.
+ *
+ * If [discovered] is true then the event is in response to the server providing the full set of modes on the target,
+ * and the given modes are thus exhaustive. Otherwise, the modes are a sequence of changes to apply to the existing
+ * state.
+ */
+class ModeChanged(time: LocalDateTime, val target: String, val modes: String, val arguments: Array<String>, val discovered: Boolean = false): IrcEvent(time)

@@ -5,9 +5,10 @@ import com.dmdirc.ktirc.model.IrcMessage
 
 internal class WelcomeProcessor : MessageProcessor {
 
-    override val commands = arrayOf("001")
+    override val commands = arrayOf(RPL_WELCOME)
 
     override fun process(message: IrcMessage) = listOf(ServerWelcome(message.time, message.serverName(), String(message.params[0])))
 
     private fun IrcMessage.serverName() = prefix?.let { String(it) } ?: ""
+
 }

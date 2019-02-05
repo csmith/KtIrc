@@ -5,12 +5,12 @@ import com.dmdirc.ktirc.model.IrcMessage
 
 internal class MotdProcessor : MessageProcessor {
 
-    override val commands = arrayOf("422", "376")
+    override val commands = arrayOf(ERR_NOMOTD, RPL_ENDOFMOTD)
 
     override fun process(message: IrcMessage) = sequence {
         when (message.command) {
-            "422" -> yield(MotdFinished(message.time, missing = true))
-            "376" -> yield(MotdFinished(message.time))
+            ERR_NOMOTD -> yield(MotdFinished(message.time, missing = true))
+            RPL_ENDOFMOTD -> yield(MotdFinished(message.time))
         }
     }.toList()
 

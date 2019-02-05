@@ -3,6 +3,7 @@ package com.dmdirc.ktirc.messages
 import com.dmdirc.ktirc.TestConstants
 import com.dmdirc.ktirc.events.MotdFinished
 import com.dmdirc.ktirc.model.IrcMessage
+import com.dmdirc.ktirc.params
 import com.dmdirc.ktirc.util.currentTimeProvider
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
@@ -18,7 +19,7 @@ internal class MotdProcessorTest {
     @Test
     fun `MotdProcessor raises motdFinished when not found numeric received`() {
         val events = MotdProcessor().process(
-                IrcMessage(emptyMap(), "the.gibson".toByteArray(), "422", listOf("MOTD missing".toByteArray())))
+                IrcMessage(emptyMap(), "the.gibson".toByteArray(), "422", params("MOTD missing")))
         assertEquals(1, events.size)
 
         val event = events[0] as MotdFinished
@@ -29,7 +30,7 @@ internal class MotdProcessorTest {
     @Test
     fun `MotdProcessor raises motdFinished when MOTD finishes normally`() {
         val events = MotdProcessor().process(
-                IrcMessage(emptyMap(), "the.gibson".toByteArray(), "376", listOf("acidBurn".toByteArray(), "End of /MOTD command.".toByteArray())))
+                IrcMessage(emptyMap(), "the.gibson".toByteArray(), "376", params("acidBurn", "End of /MOTD command.")))
         assertEquals(1, events.size)
 
         val event = events[0] as MotdFinished

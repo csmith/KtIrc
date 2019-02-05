@@ -13,7 +13,7 @@ internal class ISupportProcessor : MessageProcessor {
 
     private val log by logger()
 
-    override val commands = arrayOf("005")
+    override val commands = arrayOf(RPL_ISUPPORT)
 
     override fun process(message: IrcMessage) = listOf(ServerFeaturesUpdated(message.time, ServerFeatureMap().apply {
         // Ignore the first (nickname) and last ("are supported by this server") params

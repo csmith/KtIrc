@@ -1,12 +1,17 @@
 vNEXT (in development)
 
- * Added MotdFinished event
- * Added UserAccountChanged event
+ * Server state:
+    * Added ServerConnecting and ServerDisconnected events
+    * Server status now starts as Disconnected rather than Connecting
+    * Improved error message when features are of an unexpected type
+ * Channel modes:
+    * CHANMODES feature is now stored as an array, not a single comma-separated string
+    * Added ChanModeType enum, and method in ServerState to get the type of a mode
+    * Added ModeChanged event, for user and channel mode changes and discovery
+ * Other new events:
+    * Added MotdFinished event
+    * Added UserAccountChanged event
  * Improved some documentation
- * Added ServerConnecting and ServerDisconnected events
- * Server status now starts as Disconnected rather than Connecting
- * CHANMODES feature is now stored as an array, not a single comma-separated string
- * Improved error message when features are of an unexpected type
 
 v0.4.0
 

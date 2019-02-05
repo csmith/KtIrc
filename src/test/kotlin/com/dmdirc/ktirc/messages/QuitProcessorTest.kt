@@ -3,6 +3,7 @@ package com.dmdirc.ktirc.messages
 import com.dmdirc.ktirc.TestConstants
 import com.dmdirc.ktirc.model.IrcMessage
 import com.dmdirc.ktirc.model.User
+import com.dmdirc.ktirc.params
 import com.dmdirc.ktirc.util.currentTimeProvider
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
@@ -29,7 +30,7 @@ internal class QuitProcessorTest {
     @Test
     fun `QuitProcessor raises quit event with message`() {
         val events = QuitProcessor().process(
-                IrcMessage(emptyMap(), "acidburn!libby@root.localhost".toByteArray(), "QUIT", listOf("Hack the planet!".toByteArray())))
+                IrcMessage(emptyMap(), "acidburn!libby@root.localhost".toByteArray(), "QUIT", params("Hack the planet!")))
         assertEquals(1, events.size)
 
         assertEquals(TestConstants.time, events[0].time)
@@ -40,7 +41,7 @@ internal class QuitProcessorTest {
     @Test
     fun `QuitProcessor does nothing if prefix missing`() {
         val events = QuitProcessor().process(
-                IrcMessage(emptyMap(), null, "QUIT", listOf("Hack the planet!".toByteArray())))
+                IrcMessage(emptyMap(), null, "QUIT", params("Hack the planet!")))
         assertEquals(0, events.size)
     }
 
