@@ -6,7 +6,6 @@ import com.dmdirc.ktirc.io.CaseMapping
 import com.dmdirc.ktirc.model.*
 import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.mock
-import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 
@@ -22,19 +21,19 @@ internal class ChannelStateHandlerTest {
     }
 
     @Test
-    fun `ChannelStateHandler creates new state object for local joins`() = runBlocking {
+    fun `ChannelStateHandler creates new state object for local joins`() {
         handler.processEvent(ircClient, ChannelJoined(TestConstants.time, User("acidburn", "libby", "root.localhost"), "#thegibson"))
         assertTrue("#thegibson" in channelStateMap)
     }
 
     @Test
-    fun `ChannelStateHandler does not create new state object for remote joins`() = runBlocking {
+    fun `ChannelStateHandler does not create new state object for remote joins`() {
         handler.processEvent(ircClient, ChannelJoined(TestConstants.time, User("zerocool", "dade", "root.localhost"), "#thegibson"))
         assertFalse("#thegibson" in channelStateMap)
     }
 
     @Test
-    fun `ChannelStateHandler adds joiners to channel state`() = runBlocking {
+    fun `ChannelStateHandler adds joiners to channel state`() {
         channelStateMap += ChannelState("#thegibson") { CaseMapping.Rfc }
 
         handler.processEvent(ircClient, ChannelJoined(TestConstants.time, User("zerocool", "dade", "root.localhost"), "#thegibson"))
@@ -43,7 +42,7 @@ internal class ChannelStateHandlerTest {
     }
 
     @Test
-    fun `ChannelStateHandler clears existing users when getting a new list`() = runBlocking {
+    fun `ChannelStateHandler clears existing users when getting a new list`() {
         val channel = ChannelState("#thegibson") { CaseMapping.Rfc }
         channel.users += ChannelUser("acidBurn")
         channel.users += ChannelUser("thePlague")
@@ -56,7 +55,7 @@ internal class ChannelStateHandlerTest {
     }
 
     @Test
-    fun `ChannelStateHandler adds users from multiple name received events`() = runBlocking {
+    fun `ChannelStateHandler adds users from multiple name received events`() {
         val channel = ChannelState("#thegibson") { CaseMapping.Rfc }
         channelStateMap += channel
 
@@ -71,7 +70,7 @@ internal class ChannelStateHandlerTest {
     }
 
     @Test
-    fun `ChannelStateHandler clears and readds users on additional names received`() = runBlocking {
+    fun `ChannelStateHandler clears and readds users on additional names received`() {
         val channel = ChannelState("#thegibson") { CaseMapping.Rfc }
         channelStateMap += channel
 
@@ -86,7 +85,7 @@ internal class ChannelStateHandlerTest {
     }
 
     @Test
-    fun `ChannelStateHandler adds users with mode prefixes`() = runBlocking {
+    fun `ChannelStateHandler adds users with mode prefixes`() {
         val channel = ChannelState("#thegibson") { CaseMapping.Rfc }
         channelStateMap += channel
         serverState.features[ServerFeature.ModePrefixes] = ModePrefixMapping("ov", "@+")
@@ -102,7 +101,7 @@ internal class ChannelStateHandlerTest {
     }
 
     @Test
-    fun `ChannelStateHandler adds users with full hosts`() = runBlocking {
+    fun `ChannelStateHandler adds users with full hosts`() {
         val channel = ChannelState("#thegibson") { CaseMapping.Rfc }
         channelStateMap += channel
         serverState.features[ServerFeature.ModePrefixes] = ModePrefixMapping("ov", "@+")
@@ -116,7 +115,7 @@ internal class ChannelStateHandlerTest {
     }
 
     @Test
-    fun `ChannelStateHandler removes state object for local parts`() = runBlocking {
+    fun `ChannelStateHandler removes state object for local parts`() {
         val channel = ChannelState("#thegibson") { CaseMapping.Rfc }
         channelStateMap += channel
 
@@ -126,7 +125,7 @@ internal class ChannelStateHandlerTest {
     }
 
     @Test
-    fun `ChannelStateHandler removes user from channel member list for remote parts`() = runBlocking {
+    fun `ChannelStateHandler removes user from channel member list for remote parts`() {
         val channel = ChannelState("#thegibson") { CaseMapping.Rfc }
         channel.users += ChannelUser("ZeroCool")
         channelStateMap += channel
@@ -137,7 +136,7 @@ internal class ChannelStateHandlerTest {
     }
 
     @Test
-    fun `ChannelStateHandler removes user from all channel member lists for quits`() = runBlocking {
+    fun `ChannelStateHandler removes user from all channel member lists for quits`() {
         with (ChannelState("#thegibson") { CaseMapping.Rfc }) {
             users += ChannelUser("ZeroCool")
             channelStateMap += this
@@ -163,7 +162,7 @@ internal class ChannelStateHandlerTest {
 
 
     @Test
-    fun `ChannelStateHandler raises ChannelQuit event for each channel a user quits from`() = runBlocking {
+    fun `ChannelStateHandler raises ChannelQuit event for each channel a user quits from`() {
         with (ChannelState("#thegibson") { CaseMapping.Rfc }) {
             users += ChannelUser("ZeroCool")
             channelStateMap += this
@@ -195,5 +194,49 @@ internal class ChannelStateHandlerTest {
         assertTrue("#thegibson" in names)
         assertTrue("#dumpsterdiving" in names)
     }
+
+    @Test
+    fun `sets mode discovered flag when discovered mode event received`() {
+        val channel = ChannelState("#thegibson") { CaseMapping.Rfc }
+        channelStateMap += channel
+        serverState.features[ServerFeature.ChannelModes] = arrayOf("ab", "cd", "ef", "gh")
+
+        handler.processEvent(ircClient, ModeChanged(TestConstants.time, "#thegibson", "+", emptyArray(), true))
+
+        assertTrue(channel.modesDiscovered)
+    }
+
+    @Test
+    fun `adds modes when discovered mode event received`() {
+        val channel = ChannelState("#thegibson") { CaseMapping.Rfc }
+        channelStateMap += channel
+        serverState.features[ServerFeature.ChannelModes] = arrayOf("ab", "cd", "ef", "gh")
+
+        handler.processEvent(ircClient, ModeChanged(TestConstants.time, "#thegibson", "+ceg", arrayOf("CCC", "EEE"), true))
+
+        assertEquals("CCC", channel.modes['c'])
+        assertEquals("EEE", channel.modes['e'])
+        assertEquals("", channel.modes['g'])
+    }
+
+    @Test
+    fun `adjusts complex modes when mode change event received`() {
+        val channel = ChannelState("#thegibson") { CaseMapping.Rfc }
+        channel.modes['c'] = "CCC"
+        channel.modes['e'] = "EEE"
+        channel.modes['h'] = ""
+        channelStateMap += channel
+        serverState.features[ServerFeature.ChannelModes] = arrayOf("ab", "cd", "ef", "gh")
+
+        handler.processEvent(ircClient, ModeChanged(TestConstants.time, "#thegibson", "-c+d-eh+fg", arrayOf("CCC", "DDD", "FFF"), true))
+
+        assertNull(channel.modes['c'])
+        assertEquals("DDD", channel.modes['d'])
+        assertNull(channel.modes['e'])
+        assertEquals("FFF", channel.modes['f'])
+        assertEquals("", channel.modes['g'])
+        assertNull(channel.modes['h'])
+    }
+
 
 }

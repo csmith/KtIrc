@@ -14,10 +14,22 @@ class ChannelState(val name: String, caseMappingProvider: () -> CaseMapping) {
         internal set
 
     /**
+     * Whether or not we have discovered the full set of modes for the channel.
+     */
+    var modesDiscovered = false
+        internal set
+
+    /**
      * A map of all users in the channel to their current modes.
      */
     val users = ChannelUserMap(caseMappingProvider)
 
+    /**
+     * A map of modes set on the channel, and their values (if any).
+     *
+     * If [modesDiscovered] is false, this map may be missing modes that the server hasn't told us about.
+     */
+    var modes = HashMap<Char, String>()
 }
 
 /**

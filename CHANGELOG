@@ -8,6 +8,7 @@ vNEXT (in development)
     * CHANMODES feature is now stored as an array, not a single comma-separated string
     * Added ChanModeType enum, and method in ServerState to get the type of a mode
     * Added ModeChanged event, for user and channel mode changes and discovery
+    * Added modes and modesDiscovered to ChannelState
  * Other new events:
     * Added MotdFinished event
     * Added UserAccountChanged event

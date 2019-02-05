@@ -15,6 +15,7 @@ internal class ChannelStateHandler : EventHandler {
             is ChannelParted -> handlePart(client, event)
             is ChannelNamesReceived -> handleNamesReceived(client, event)
             is ChannelNamesFinished -> handleNamesFinished(client, event)
+            is ModeChanged -> handleModeChanged(client, event)
             is UserQuit -> return handleQuit(client, event)
         }
         return emptyList()
@@ -59,6 +60,36 @@ internal class ChannelStateHandler : EventHandler {
             it.receivingUserList = false
             log.finest { "Finished receiving names in ${event.channel}. Users: ${it.users.toList()}" }
         }
+    }
+
+    private fun handleModeChanged(client: IrcClient, event: ModeChanged) {
+        val chan =  client.channelState[event.target] ?: return
+        if (event.discovered) {
+            chan.modesDiscovered = true
+            chan.modes.clear()
+        }
+
+        var adding = true
+        var argumentOffset = 0
+        for (char in event.modes) {
+            when (char) {
+                '+' -> adding = true
+                '-' -> adding = false
+                else -> argumentOffset += adjustMode(client, chan, char, event.arguments, argumentOffset, adding)
+            }
+        }
+    }
+
+    private fun adjustMode(client: IrcClient, chan: ChannelState, mode: Char, arguments: Array<String>, argumentOffset: Int, adding: Boolean): Int {
+        val type = client.serverState.channelModeType(mode)
+        val takesParam = if (adding) type.needsParameterToSet else type.needsParameterToUnset
+        val param = if (takesParam) arguments[argumentOffset] else ""
+        if (adding) {
+            chan.modes[mode] = param
+        } else {
+            chan.modes.remove(mode)
+        }
+        return if (takesParam) 1 else 0
     }
 
     private fun handleQuit(client: IrcClient, event: UserQuit) = sequence {
