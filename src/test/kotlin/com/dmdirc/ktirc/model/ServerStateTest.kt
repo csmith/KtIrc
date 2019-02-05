@@ -18,9 +18,9 @@ internal class ServerStateTest {
     }
 
     @Test
-    fun `ServerState should default status to connecting`() {
+    fun `ServerState should default status to disconnected`() {
         val serverState = ServerState("acidBurn", "")
-        assertEquals(ServerStatus.Connecting, serverState.status)
+        assertEquals(ServerStatus.Disconnected, serverState.status)
     }
 
 }

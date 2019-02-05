@@ -38,6 +38,19 @@ internal class ServerStateHandlerTest {
     }
 
     @Test
+    fun `ServerStateHandler sets state to connecting on event`() = runBlocking {
+        handler.processEvent(ircClient, ServerConnecting(TestConstants.time))
+        assertEquals(ServerStatus.Connecting, serverState.status)
+    }
+
+    @Test
+    fun `ServerStateHandler sets state to disconnected on event`() = runBlocking {
+        serverState.status = ServerStatus.Ready
+        handler.processEvent(ircClient, ServerDisconnected(TestConstants.time))
+        assertEquals(ServerStatus.Disconnected, serverState.status)
+    }
+
+    @Test
     fun `ServerStateHandler sets state to negotiating on connected`() = runBlocking {
         handler.processEvent(ircClient, ServerConnected(TestConstants.time))
         assertEquals(ServerStatus.Negotiating, serverState.status)

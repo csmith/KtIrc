@@ -112,6 +112,8 @@ class IrcClientImpl(private val server: Server, private val profile: Profile) : 
                 // TODO: Proper error handling - what if connect() fails?
                 socket = this
 
+                emitEvent(ServerConnecting(currentTimeProvider()))
+
                 connect()
 
                 with(Channel<ByteArray>(Channel.UNLIMITED)) {
@@ -130,6 +132,7 @@ class IrcClientImpl(private val server: Server, private val profile: Profile) : 
                 // TODO: Send correct host
                 sendUser(profile.userName, "localhost", server.host, profile.realName)
                 messageHandler.processMessages(this@IrcClientImpl, readLines(scope).map { parser.parse(it) })
+                emitEvent(ServerDisconnected(currentTimeProvider()))
             }
         }
     }

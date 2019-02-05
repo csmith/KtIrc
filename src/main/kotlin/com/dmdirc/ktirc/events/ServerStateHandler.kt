@@ -9,7 +9,9 @@ internal class ServerStateHandler : EventHandler {
 
     override fun processEvent(client: IrcClient, event: IrcEvent): List<IrcEvent> {
         when (event) {
+            is ServerConnecting -> client.serverState.status = ServerStatus.Connecting
             is ServerConnected -> client.serverState.status = ServerStatus.Negotiating
+            is ServerDisconnected -> client.serverState.status = ServerStatus.Disconnected
             is ServerWelcome -> handleWelcome(client.serverState, event.server, event.localNick)
             is ServerFeaturesUpdated -> client.serverState.features.setAll(event.serverFeatures)
 

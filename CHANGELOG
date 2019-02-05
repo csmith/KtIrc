@@ -3,6 +3,8 @@ vNEXT (in development)
  * Added MotdFinished event
  * Added UserAccountChanged event
  * Improved some documentation
+ * Added ServerConnecting and ServerDisconnected events
+ * Server status now starts as Disconnected rather than Connecting
 
 v0.4.0
 

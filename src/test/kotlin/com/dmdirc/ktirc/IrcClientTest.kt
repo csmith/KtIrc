@@ -1,8 +1,6 @@
 package com.dmdirc.ktirc
 
-import com.dmdirc.ktirc.events.IrcEvent
-import com.dmdirc.ktirc.events.ServerConnected
-import com.dmdirc.ktirc.events.ServerWelcome
+import com.dmdirc.ktirc.events.*
 import com.dmdirc.ktirc.io.CaseMapping
 import com.dmdirc.ktirc.io.LineBufferedSocket
 import com.dmdirc.ktirc.model.Profile
@@ -76,16 +74,37 @@ internal class IrcClientImplTest {
     }
 
     @Test
-    fun `IrcClientImpl emits connected event with local time`() = runBlocking {
+    fun `IrcClientImpl emits connection events with local time`() = runBlocking {
         currentTimeProvider = { TestConstants.time }
         val client = IrcClientImpl(Server(HOST, PORT), Profile(NICK, REAL_NAME, USER_NAME))
         client.socketFactory = mockSocketFactory
         client.onEvent(mockEventHandler)
         client.connect()
 
-        val captor = argumentCaptor<ServerConnected>()
-        verify(mockEventHandler, timeout(500)).invoke(captor.capture())
+        val captor = argumentCaptor<IrcEvent>()
+        verify(mockEventHandler, timeout(500).atLeast(2)).invoke(captor.capture())
+
+        assertTrue(captor.firstValue is ServerConnecting)
         assertEquals(TestConstants.time, captor.firstValue.time)
+
+        assertTrue(captor.secondValue is ServerConnected)
+        assertEquals(TestConstants.time, captor.secondValue.time)
+    }
+
+    @Test
+    fun `IrcClientImpl emits disconnected event with local time when read channel closed`() = runBlocking {
+        currentTimeProvider = { TestConstants.time }
+        val client = IrcClientImpl(Server(HOST, PORT), Profile(NICK, REAL_NAME, USER_NAME))
+        client.socketFactory = mockSocketFactory
+        client.connect()
+        client.blockUntilConnected()
+
+        client.onEvent(mockEventHandler)
+        readLineChannel.close()
+
+        val captor = argumentCaptor<ServerDisconnected>()
+        verify(mockEventHandler, timeout(500)).invoke(captor.capture())
+        assertEquals(TestConstants.time, captor.lastValue.time)
     }
 
     @Test

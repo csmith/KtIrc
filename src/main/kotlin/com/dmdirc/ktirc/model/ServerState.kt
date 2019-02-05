@@ -12,7 +12,7 @@ class ServerState internal constructor(initialNickname: String, initialServerNam
     internal var receivedWelcome = false
 
     /** The current status of the server. */
-    var status = ServerStatus.Connecting
+    var status = ServerStatus.Disconnected
         internal set
 
     /**
@@ -108,6 +108,8 @@ internal val serverFeatures: Map<String, ServerFeature<*>> by lazy {
  * Enumeration of the possible states of a server.
  */
 enum class ServerStatus {
+    /** The server is not connected. */
+    Disconnected,
     /** We are attempting to connect to the server. It is not yet ready for use. */
     Connecting,
     /** We are logging in, dealing with capabilities, etc. The server is not yet ready for use. */
