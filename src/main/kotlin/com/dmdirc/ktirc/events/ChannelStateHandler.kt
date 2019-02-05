@@ -15,6 +15,7 @@ internal class ChannelStateHandler : EventHandler {
             is ChannelParted -> handlePart(client, event)
             is ChannelNamesReceived -> handleNamesReceived(client, event)
             is ChannelNamesFinished -> handleNamesFinished(client, event)
+            is ChannelUserKicked -> handleKick(client, event)
             is ModeChanged -> handleModeChanged(client, event)
             is UserQuit -> return handleQuit(client, event)
         }
@@ -37,6 +38,17 @@ internal class ChannelStateHandler : EventHandler {
         } else {
             client.channelState[event.channel]?.let {
                 it.users -= event.user.nickname
+            }
+        }
+    }
+
+    private fun handleKick(client: IrcClient, event: ChannelUserKicked) {
+        if (client.isLocalUser(event.victim)) {
+            log.info { "Kicked from channel: ${event.channel}" }
+            client.channelState -= event.channel
+        } else {
+            client.channelState[event.channel]?.let {
+                it.users -= event.victim
             }
         }
     }

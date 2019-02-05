@@ -26,6 +26,13 @@ internal class UserStateTest {
     }
 
     @Test
+    fun `UserState removes users by nickname`() {
+        userState += User("acidBurn", "libby", "root.localhost")
+        userState -= "ACIDBURN"
+        assertNull(userState["acidburn"])
+    }
+
+    @Test
     fun `UserState updates existing user with same nickname`() {
         userState += User("acidBurn", "libby", "root.localhost")
         userState.update(User("acidBurn", realName = "Libby", awayMessage = "Hacking"))

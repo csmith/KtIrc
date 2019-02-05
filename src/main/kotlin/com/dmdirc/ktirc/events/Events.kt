@@ -35,6 +35,9 @@ class ChannelJoined(time: LocalDateTime, val user: User, val channel: String) : 
 /** Raised when a user leaves a channel. */
 class ChannelParted(time: LocalDateTime, val user: User, val channel: String, val reason: String = "") : IrcEvent(time)
 
+/** Raised when a [victim] is kicked from a channel. */
+class ChannelUserKicked(time: LocalDateTime, val user: User, val channel: String, val victim: String, val reason: String = ""): IrcEvent(time)
+
 /** Raised when a user quits, and is in a channel. */
 class ChannelQuit(time: LocalDateTime, val user: User, val channel: String, val reason: String = "") : IrcEvent(time)
 

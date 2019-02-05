@@ -20,7 +20,8 @@ internal class UserStateHandlerTest {
     private val ircClient = mock<IrcClient> {
         on { serverState } doReturn serverState
         on { userState } doReturn userState
-        on { isLocalUser(argForWhich { nickname == "zeroCool" }) } doReturn true
+        on { isLocalUser(argForWhich<User> { nickname == "zeroCool" }) } doReturn true
+        on { isLocalUser("zeroCool") } doReturn true
     }
 
     private val handler = UserStateHandler()
@@ -116,6 +117,74 @@ internal class UserStateHandlerTest {
             userState.addToChannel(User("zeroCool"), "#dumpsterdiving")
 
             handler.processEvent(ircClient, ChannelParted(TestConstants.time, User("zeroCool", "dade", "root.localhost"), "#dumpsterdiving"))
+
+            assertNotNull(userState["zeroCool"])
+        }
+    }
+
+
+    @Test
+    fun `removes channel from user on kick`() {
+        runBlocking {
+            userState += User("acidBurn")
+            userState.addToChannel(User("acidBurn"), "#thegibson")
+            userState.addToChannel(User("acidBurn"), "#dumpsterdiving")
+
+            handler.processEvent(ircClient, ChannelUserKicked(TestConstants.time, User("thePlague"), "#dumpsterdiving", "acidBurn"))
+
+            assertEquals(listOf("#thegibson"), userState["acidBurn"]?.channels?.toList())
+        }
+    }
+
+    @Test
+    fun `removes user on kick from last channel`() {
+        runBlocking {
+            userState += User("acidBurn")
+            userState.addToChannel(User("acidBurn"), "#dumpsterdiving")
+
+            handler.processEvent(ircClient, ChannelUserKicked(TestConstants.time, User("thePlague"), "#dumpsterdiving", "acidBurn"))
+
+            assertNull(userState["acidBurn"])
+        }
+    }
+
+    @Test
+    fun `removes channel from all users on local kick`() {
+        runBlocking {
+            userState += User("acidBurn")
+            userState.addToChannel(User("acidBurn"), "#dumpsterdiving")
+            userState.addToChannel(User("acidBurn"), "#thegibson")
+
+            userState += User("zeroCool")
+            userState.addToChannel(User("zeroCool"), "#dumpsterdiving")
+            userState.addToChannel(User("zeroCool"), "#thegibson")
+
+            handler.processEvent(ircClient, ChannelUserKicked(TestConstants.time, User("thePlague"), "#dumpsterdiving", "zeroCool"))
+
+            assertEquals(listOf("#thegibson"), userState["acidBurn"]?.channels?.toList())
+            assertEquals(listOf("#thegibson"), userState["zeroCool"]?.channels?.toList())
+        }
+    }
+
+    @Test
+    fun `removes remote users with no remaining channels on local kick`() {
+        runBlocking {
+            userState += User("acidBurn")
+            userState.addToChannel(User("acidBurn"), "#dumpsterdiving")
+
+            handler.processEvent(ircClient, ChannelUserKicked(TestConstants.time, User("thePlague"), "#dumpsterdiving", "zeroCool"))
+
+            assertNull(userState["acidBurn"])
+        }
+    }
+
+    @Test
+    fun `keeps local user with no remaining channels after local kick`() {
+        runBlocking {
+            userState += User("zeroCool")
+            userState.addToChannel(User("zeroCool"), "#dumpsterdiving")
+
+            handler.processEvent(ircClient, ChannelUserKicked(TestConstants.time, User("thePlague"), "#dumpsterdiving", "zeroCool"))
 
             assertNotNull(userState["zeroCool"])
         }

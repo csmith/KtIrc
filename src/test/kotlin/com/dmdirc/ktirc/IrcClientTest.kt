@@ -164,6 +164,15 @@ internal class IrcClientImplTest {
     }
 
     @Test
+    fun `IrcClient indicates if nickname is local user or not`() {
+        val client = IrcClientImpl(Server(HOST, PORT), Profile(NICK, REAL_NAME, USER_NAME))
+        client.serverState.localNickname = "[acidBurn]"
+
+        assertTrue(client.isLocalUser("{acidBurn}"))
+        assertFalse(client.isLocalUser("acid-Burn"))
+    }
+
+    @Test
     fun `IrcClient uses current case mapping to check local user`() {
         val client = IrcClientImpl(Server(HOST, PORT), Profile(NICK, REAL_NAME, USER_NAME))
         client.serverState.localNickname = "[acidBurn]"

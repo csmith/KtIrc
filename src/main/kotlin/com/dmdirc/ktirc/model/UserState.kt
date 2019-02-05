@@ -16,6 +16,7 @@ class UserState(private val caseMappingProvider: () -> CaseMapping): Iterable<Kn
 
     internal operator fun plusAssign(details: User) { users += KnownUser(caseMappingProvider, details) }
     internal operator fun minusAssign(details: User) { users -= details.nickname }
+    internal operator fun minusAssign(nickname: String) { users -= nickname }
 
     /** Provides a read-only iterator of all users. */
     override operator fun iterator() = users.iterator().iterator()

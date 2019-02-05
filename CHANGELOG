@@ -12,6 +12,7 @@ vNEXT (in development)
  * Other new events:
     * Added MotdFinished event
     * Added UserAccountChanged event
+    * Added ChannelUserKicked event
  * Improved some documentation
 
 v0.4.0

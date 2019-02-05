@@ -69,7 +69,12 @@ interface IrcClient {
     /**
      * Utility method to determine if the given user is the one we are connected to IRC as.
      */
-    fun isLocalUser(user: User) = caseMapping.areEquivalent(user.nickname, serverState.localNickname)
+    fun isLocalUser(user: User) = isLocalUser(user.nickname)
+
+    /**
+     * Utility method to determine if the given user is the one we are connected to IRC as.
+     */
+    fun isLocalUser(nickname: String) = caseMapping.areEquivalent(nickname, serverState.localNickname)
 
 }
 

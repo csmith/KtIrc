@@ -18,22 +18,23 @@ internal class ChannelStateHandlerTest {
         on { serverState } doReturn serverState
         on { channelState } doReturn channelStateMap
         on { isLocalUser(User("acidburn", "libby", "root.localhost")) } doReturn true
+        on { isLocalUser("acidburn") } doReturn  true
     }
 
     @Test
-    fun `ChannelStateHandler creates new state object for local joins`() {
+    fun `creates new state object for local joins`() {
         handler.processEvent(ircClient, ChannelJoined(TestConstants.time, User("acidburn", "libby", "root.localhost"), "#thegibson"))
         assertTrue("#thegibson" in channelStateMap)
     }
 
     @Test
-    fun `ChannelStateHandler does not create new state object for remote joins`() {
+    fun `does not create new state object for remote joins`() {
         handler.processEvent(ircClient, ChannelJoined(TestConstants.time, User("zerocool", "dade", "root.localhost"), "#thegibson"))
         assertFalse("#thegibson" in channelStateMap)
     }
 
     @Test
-    fun `ChannelStateHandler adds joiners to channel state`() {
+    fun `adds joiners to channel state`() {
         channelStateMap += ChannelState("#thegibson") { CaseMapping.Rfc }
 
         handler.processEvent(ircClient, ChannelJoined(TestConstants.time, User("zerocool", "dade", "root.localhost"), "#thegibson"))
@@ -42,7 +43,7 @@ internal class ChannelStateHandlerTest {
     }
 
     @Test
-    fun `ChannelStateHandler clears existing users when getting a new list`() {
+    fun `clears existing users when getting a new list`() {
         val channel = ChannelState("#thegibson") { CaseMapping.Rfc }
         channel.users += ChannelUser("acidBurn")
         channel.users += ChannelUser("thePlague")
@@ -55,7 +56,7 @@ internal class ChannelStateHandlerTest {
     }
 
     @Test
-    fun `ChannelStateHandler adds users from multiple name received events`() {
+    fun `adds users from multiple name received events`() {
         val channel = ChannelState("#thegibson") { CaseMapping.Rfc }
         channelStateMap += channel
 
@@ -70,7 +71,7 @@ internal class ChannelStateHandlerTest {
     }
 
     @Test
-    fun `ChannelStateHandler clears and readds users on additional names received`() {
+    fun `clears and readds users on additional names received`() {
         val channel = ChannelState("#thegibson") { CaseMapping.Rfc }
         channelStateMap += channel
 
@@ -85,7 +86,7 @@ internal class ChannelStateHandlerTest {
     }
 
     @Test
-    fun `ChannelStateHandler adds users with mode prefixes`() {
+    fun `adds users with mode prefixes`() {
         val channel = ChannelState("#thegibson") { CaseMapping.Rfc }
         channelStateMap += channel
         serverState.features[ServerFeature.ModePrefixes] = ModePrefixMapping("ov", "@+")
@@ -101,7 +102,7 @@ internal class ChannelStateHandlerTest {
     }
 
     @Test
-    fun `ChannelStateHandler adds users with full hosts`() {
+    fun `adds users with full hosts`() {
         val channel = ChannelState("#thegibson") { CaseMapping.Rfc }
         channelStateMap += channel
         serverState.features[ServerFeature.ModePrefixes] = ModePrefixMapping("ov", "@+")
@@ -115,7 +116,7 @@ internal class ChannelStateHandlerTest {
     }
 
     @Test
-    fun `ChannelStateHandler removes state object for local parts`() {
+    fun `removes state object for local parts`() {
         val channel = ChannelState("#thegibson") { CaseMapping.Rfc }
         channelStateMap += channel
 
@@ -125,7 +126,7 @@ internal class ChannelStateHandlerTest {
     }
 
     @Test
-    fun `ChannelStateHandler removes user from channel member list for remote parts`() {
+    fun `removes user from channel member list for remote parts`() {
         val channel = ChannelState("#thegibson") { CaseMapping.Rfc }
         channel.users += ChannelUser("ZeroCool")
         channelStateMap += channel
@@ -136,7 +137,28 @@ internal class ChannelStateHandlerTest {
     }
 
     @Test
-    fun `ChannelStateHandler removes user from all channel member lists for quits`() {
+    fun `removes state object for local kicks`() {
+        val channel = ChannelState("#thegibson") { CaseMapping.Rfc }
+        channelStateMap += channel
+
+        handler.processEvent(ircClient, ChannelUserKicked(TestConstants.time, User("zerocool", "dade", "root.localhost"), "#thegibson", "acidburn", "Bye!"))
+
+        assertFalse("#thegibson" in channelStateMap)
+    }
+
+    @Test
+    fun `removes user from channel member list for remote kicks`() {
+        val channel = ChannelState("#thegibson") { CaseMapping.Rfc }
+        channel.users += ChannelUser("ZeroCool")
+        channelStateMap += channel
+
+        handler.processEvent(ircClient, ChannelUserKicked(TestConstants.time, User("acidburn", "libby", "root.localhost"), "#thegibson", "zerocool", "Bye!"))
+
+        assertFalse("zerocool" in channel.users)
+    }
+
+    @Test
+    fun `removes user from all channel member lists for quits`() {
         with (ChannelState("#thegibson") { CaseMapping.Rfc }) {
             users += ChannelUser("ZeroCool")
             channelStateMap += this
@@ -162,7 +184,7 @@ internal class ChannelStateHandlerTest {
 
 
     @Test
-    fun `ChannelStateHandler raises ChannelQuit event for each channel a user quits from`() {
+    fun `raises ChannelQuit event for each channel a user quits from`() {
         with (ChannelState("#thegibson") { CaseMapping.Rfc }) {
             users += ChannelUser("ZeroCool")
             channelStateMap += this

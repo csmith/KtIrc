@@ -9,6 +9,7 @@ internal class UserStateHandler : EventHandler {
         when (event) {
             is ChannelJoined -> handleJoin(client.userState, event)
             is ChannelParted -> handlePart(client, event)
+            is ChannelUserKicked -> handleKick(client, event)
             is ChannelNamesReceived  -> handleNamesReceived(client, event)
             is UserAccountChanged -> handleAccountChanged(client, event)
             is UserQuit -> handleQuit(client.userState, event)
@@ -31,6 +32,21 @@ internal class UserStateHandler : EventHandler {
                 it -= event.channel
                 if (it.isEmpty()) {
                     client.userState -= event.user
+                }
+            }
+        }
+    }
+
+    private fun handleKick(client: IrcClient, event: ChannelUserKicked) {
+        if (client.isLocalUser(event.victim)) {
+            // Remove channel from all users
+            client.userState.forEach { it.channels -= event.channel }
+            client.userState.removeIf { it.channels.isEmpty() && !client.isLocalUser(it.details) }
+        } else {
+            client.userState[event.victim]?.channels?.let {
+                it -= event.channel
+                if (it.isEmpty()) {
+                    client.userState -= event.victim
                 }
             }
         }
