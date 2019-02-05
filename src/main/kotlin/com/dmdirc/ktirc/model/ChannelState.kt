@@ -24,3 +24,32 @@ class ChannelState(val name: String, caseMappingProvider: () -> CaseMapping) {
  * Describes a user in a channel, and their modes.
  */
 data class ChannelUser(var nickname: String, var modes: String = "")
+
+/**
+ * The types of supported channel modes, and what parameters they require.
+ *
+ * These must be sorted according to the order they are sent in the CHANMODES server feature.
+ */
+enum class ChannelModeType {
+    /** The mode adds or removes an entry for a list. It must have a param to add or remove. */
+    List,
+    /** The mode has a parameter that must be present to set it or unset it. */
+    SetUnsetParameter,
+    /** The mode has a parameter that must be present to set it, but is unset without one. */
+    SetParameter,
+    /** The mode does not take parameters in any case. */
+    NoParameter;
+
+    /**
+     * Whether this mode requires a parameter to be set or not.
+     */
+    val needsParameterToSet: Boolean
+        get() = this != NoParameter
+
+    /**
+     * Whether this mode requires a parameter to be unset or not.
+     */
+    val needsParameterToUnset: Boolean
+        get() = this != NoParameter && this != SetParameter
+
+}

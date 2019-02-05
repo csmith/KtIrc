@@ -23,6 +23,29 @@ internal class ServerStateTest {
         assertEquals(ServerStatus.Disconnected, serverState.status)
     }
 
+    @Test
+    fun `returns mode type for known channel mode`() {
+        val serverState = ServerState("acidBurn", "")
+        serverState.features[ServerFeature.ChannelModes] = arrayOf("ab", "cd", "ef", "gh")
+        assertEquals(ChannelModeType.List, serverState.channelModeType('a'))
+        assertEquals(ChannelModeType.SetUnsetParameter, serverState.channelModeType('d'))
+        assertEquals(ChannelModeType.SetParameter, serverState.channelModeType('e'))
+        assertEquals(ChannelModeType.NoParameter, serverState.channelModeType('g'))
+    }
+
+    @Test
+    fun `returns NoParameter for unknown channel mode`() {
+        val serverState = ServerState("acidBurn", "")
+        serverState.features[ServerFeature.ChannelModes] = arrayOf("ab", "cd", "ef", "gh")
+        assertEquals(ChannelModeType.NoParameter, serverState.channelModeType('z'))
+    }
+
+    @Test
+    fun `returns NoParameter for channel modes if feature doesn't exist`() {
+        val serverState = ServerState("acidBurn", "")
+        assertEquals(ChannelModeType.NoParameter, serverState.channelModeType('b'))
+    }
+
 }
 
 internal class ModePrefixMappingTest {

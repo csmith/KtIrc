@@ -1,12 +1,15 @@
 package com.dmdirc.ktirc.model
 
 import com.dmdirc.ktirc.io.CaseMapping
+import com.dmdirc.ktirc.util.logger
 import kotlin.reflect.KClass
 
 /**
  * Contains the current state of a single IRC server.
  */
 class ServerState internal constructor(initialNickname: String, initialServerName: String) {
+
+    private val log by logger()
 
     /** Whether we've received the 'Welcome to IRC' (001) message. */
     internal var receivedWelcome = false
@@ -40,6 +43,22 @@ class ServerState internal constructor(initialNickname: String, initialServerNam
 
     /** The capabilities we have negotiated with the server (from IRCv3). */
     val capabilities = CapabilitiesState()
+
+    /**
+     * Determines what type of channel mode the given character is, based on the server features.
+     *
+     * If the mode isn't found, or the server hasn't provided modes, it is presumed to be [ChannelModeType.NoParameter].
+     */
+    fun channelModeType(mode: Char): ChannelModeType {
+        features[ServerFeature.ChannelModes]?.forEachIndexed { index, modes ->
+            if (mode in modes) {
+                return ChannelModeType.values()[index]
+            }
+        }
+
+        log.warning { "Unknown channel mode $mode, assuming it's boolean" }
+        return ChannelModeType.NoParameter
+    }
 
 }
 
