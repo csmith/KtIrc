@@ -1,5 +1,7 @@
 vNEXT (in development)
 
+v0.6.0
+
  * Changed USER command to not send the server name, per modern standards
  * Added support for SASL authentication (with PLAIN mechanism)
  * Removed some unused test code

@@ -1,6 +1,9 @@
 package com.dmdirc.ktirc
 
-import com.dmdirc.ktirc.events.*
+import com.dmdirc.ktirc.events.IrcEvent
+import com.dmdirc.ktirc.events.ServerConnected
+import com.dmdirc.ktirc.events.ServerConnecting
+import com.dmdirc.ktirc.events.ServerWelcome
 import com.dmdirc.ktirc.io.CaseMapping
 import com.dmdirc.ktirc.io.LineBufferedSocket
 import com.dmdirc.ktirc.model.*
