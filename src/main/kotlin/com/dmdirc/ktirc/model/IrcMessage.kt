@@ -38,6 +38,8 @@ sealed class MessageTag(val name: String) {
     object MessageId : MessageTag("draft/msgid")
     /** Used to identify a message ID that was replied to, to enable threaded conversations. */
     object Reply : MessageTag("+draft/reply")
+    /** Used to specify a slack-like reaction to another message. */
+    object React : MessageTag("+draft/react")
 }
 
 internal val messageTags: Map<String, MessageTag> by lazy {

@@ -1,8 +1,10 @@
 package com.dmdirc.ktirc.messages
 
 import com.dmdirc.ktirc.IrcClient
+import com.dmdirc.ktirc.model.MessageTag
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.verify
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 
 internal class MessageBuildersTest {
@@ -91,6 +93,47 @@ internal class MessageBuildersTest {
     fun `sendUser sends correct blank AUTHENTICATE message`() {
         mockClient.sendAuthenticationMessage()
         verify(mockClient).send("AUTHENTICATE +")
+    }
+
+    @Test
+    fun `sendWithTag sends message without tags`() {
+        mockClient.sendWithTags(emptyMap(), "PING")
+        verify(mockClient).send("PING")
+    }
+
+    @Test
+    fun `sendWithTag sends message with single tag`() {
+        mockClient.sendWithTags(mapOf(MessageTag.MessageId to "abc"), "PING")
+        verify(mockClient).send("@draft/msgid=abc PING")
+    }
+
+    @Test
+    fun `sendWithTag sends message with multiple tag`() {
+        mockClient.sendWithTags(mapOf(MessageTag.MessageId to "abc", MessageTag.AccountName to "foo"), "PING")
+        verify(mockClient).send("@draft/msgid=abc;account=foo PING")
+    }
+
+    @Test
+    fun `sendWithTag ignores tags with null values`() {
+        mockClient.sendWithTags(mapOf(MessageTag.MessageId to null, MessageTag.AccountName to "foo"), "PING")
+        verify(mockClient).send("@account=foo PING")
+    }
+
+    @Test
+    fun `sendTagMessage sends tags`() {
+        mockClient.sendTagMessage("#thegibson", mapOf(MessageTag.MessageId to "id", MessageTag.AccountName to "foo"))
+        verify(mockClient).send("@draft/msgid=id;account=foo TAGMSG #thegibson")
+    }
+
+    @Test
+    fun `sendTagMessage sends tags with reply ID`() {
+        mockClient.sendTagMessage("#thegibson", mapOf(MessageTag.MessageId to "id", MessageTag.AccountName to "foo"), "otherid")
+        verify(mockClient).send("@draft/msgid=id;account=foo;+draft/reply=otherid TAGMSG #thegibson")
+    }
+
+    @Test
+    fun `escapes tag values`() {
+        assertEquals("\\\\hack\\sthe\\r\\nplanet\\:", "\\hack the\r\nplanet;".escapeTagValue())
     }
 
 }

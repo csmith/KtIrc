@@ -116,4 +116,22 @@ internal class EventUtilsTest {
         verify(ircClient).send("@+draft/reply=abc123 PRIVMSG #TheGibson :acidBurn: OK")
     }
 
+
+    @Test
+    fun `react sends response to user when message is private`() {
+        serverState.localNickname = "zeroCool"
+        val message = MessageReceived(TestConstants.time, User("acidBurn"), "Zerocool", "Hack the planet!", "msgId")
+
+        ircClient.react(message, ":P")
+        verify(ircClient).send("@+draft/react=:P;+draft/reply=msgId TAGMSG acidBurn")
+    }
+
+    @Test
+    fun `react sends unprefixed response to user when message is in a channel`() {
+        val message = MessageReceived(TestConstants.time, User("acidBurn"), "#TheGibson", "Hack the planet!", "msgId")
+
+        ircClient.react(message, ":P")
+        verify(ircClient).send("@+draft/react=:P;+draft/reply=msgId TAGMSG #TheGibson")
+    }
+
 }

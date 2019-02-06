@@ -33,14 +33,39 @@ fun IrcClient.sendAction(target: String, action: String) = sendCtcp(target, "ACT
 
 /** Sends a private message to a user or channel. */
 fun IrcClient.sendMessage(target: String, message: String, inReplyTo: String? = null) =
-        if (inReplyTo == null)
-            send("PRIVMSG $target :$message")
-        else
-            send("@${MessageTag.Reply.name}=$inReplyTo PRIVMSG $target :$message")
-            // TODO ^ Proper tag building/serializing
+        sendWithTags(mapOf(MessageTag.Reply to inReplyTo), "PRIVMSG $target :$message")
+
+/**
+ * Sends a tag-only message.
+ *
+ * If [inReplyTo] is specified then the [MessageTag.Reply] tag will be automatically added.
+ */
+fun IrcClient.sendTagMessage(target: String, tags: Map<MessageTag, String>, inReplyTo: String? = null) {
+    sendWithTags(inReplyTo?.let { tags + (MessageTag.Reply to inReplyTo) } ?: tags, "TAGMSG $target")
+}
 
 /** Sends a message to register a user with the server. */
 internal fun IrcClient.sendUser(userName: String, realName: String) = send("USER $userName 0 * :$realName")
 
 /** Starts an authentication request. */
 internal fun IrcClient.sendAuthenticationMessage(data: String = "+") = send("AUTHENTICATE $data")
+
+/**
+ * Sends a message prefixed with some IRCv3 tags.
+ *
+ * For convenience, if the value of a tag is `null`, the tag will be omitted. If no tags are present the
+ * message is sent directly with no prefix.
+ */
+internal fun IrcClient.sendWithTags(tags: Map<MessageTag, String?>, message: String) = tags
+        .filterValues { it != null }
+        .map { (key, value) -> "${key.name}=${value?.escapeTagValue()}" }
+        .joinToString(";")
+        .let {
+            if (it.isEmpty()) send(message) else send("@$it $message")
+        }
+
+internal fun String.escapeTagValue() = replace("\\", "\\\\")
+        .replace("\n", "\\n")
+        .replace("\r", "\\r")
+        .replace(";", "\\:")
+        .replace(" ", "\\s")

@@ -2,6 +2,8 @@ package com.dmdirc.ktirc.events
 
 import com.dmdirc.ktirc.IrcClient
 import com.dmdirc.ktirc.messages.sendMessage
+import com.dmdirc.ktirc.messages.sendTagMessage
+import com.dmdirc.ktirc.model.MessageTag
 import com.dmdirc.ktirc.model.ServerFeature
 import com.dmdirc.ktirc.model.asUser
 
@@ -25,9 +27,23 @@ internal fun ChannelNamesReceived.toModesAndUsers(client: IrcClient) = sequence 
  * the message ID to tell other IRCv3 capable clients what message is being replied to.
  */
 fun IrcClient.reply(message: MessageReceived, response: String, prefixWithNickname: Boolean = false) {
-    if (caseMapping.areEquivalent(message.target, serverState.localNickname)) {
+    if (isToMe(message)) {
         sendMessage(message.user.nickname, response, message.messageId)
     } else {
         sendMessage(message.target, if (prefixWithNickname) "${message.user.nickname}: $response" else response, message.messageId)
     }
 }
+
+/**
+ * "React" in the appropriate place to a message received.
+ */
+fun IrcClient.react(message: MessageReceived, reaction: String) = sendTagMessage(
+        if (isToMe(message)) message.user.nickname else message.target,
+        mapOf(MessageTag.React to reaction),
+        message.messageId)
+
+/**
+ * Utility to determine whether the given message is to our local user or not.
+ */
+internal fun IrcClient.isToMe(message: MessageReceived) =
+        caseMapping.areEquivalent(message.target, serverState.localNickname)
