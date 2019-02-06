@@ -96,26 +96,6 @@ internal class IrcClientImplTest {
     }
 
     @Test
-    fun `emits disconnected event with local time when read channel closed`() = runBlocking {
-        currentTimeProvider = { TestConstants.time }
-        val client = IrcClientImpl(Server(HOST, PORT), Profile(NICK, REAL_NAME, USER_NAME))
-        client.socketFactory = mockSocketFactory
-        client.connect()
-
-        client.onEvent(mockEventHandler)
-        readLineChannel.close()
-
-        // Horrible hacks to make sure we've disconnected.
-        while (client.serverState.status != ServerStatus.Disconnected) {
-            delay(10)
-        }
-
-        val captor = argumentCaptor<ServerDisconnected>()
-        verify(mockEventHandler, timeout(500).atLeast(2)).invoke(captor.capture())
-        assertEquals(TestConstants.time, captor.lastValue.time)
-    }
-
-    @Test
     fun `sends basic connection strings`() = runBlocking {
         val client = IrcClientImpl(Server(HOST, PORT), Profile(NICK, REAL_NAME, USER_NAME))
         client.socketFactory = mockSocketFactory
