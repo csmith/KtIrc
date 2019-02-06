@@ -53,6 +53,17 @@ class ServerState internal constructor(
     internal val sasl = SaslState(saslMechanisms)
 
     /**
+     * Convenience accessor for the [ServerFeature.ModePrefixes] feature, which will always have a value.
+     */
+    val channelModePrefixes
+        get() = features[ServerFeature.ModePrefixes] ?: throw IllegalStateException("lost mode prefixes")
+
+    /**
+     * Determines if the given mode is one applied to a user of a channel, such as 'o' for operator.
+     */
+    fun isChannelUserMode(mode: Char) = channelModePrefixes.isMode(mode)
+
+    /**
      * Determines what type of channel mode the given character is, based on the server features.
      *
      * If the mode isn't found, or the server hasn't provided modes, it is presumed to be [ChannelModeType.NoParameter].
@@ -103,6 +114,8 @@ data class ModePrefixMapping(val modes: String, val prefixes: String) {
 
     /** Determines whether the given character is a mode prefix (e.g. "@", "+"). */
     fun isPrefix(char: Char) = prefixes.contains(char)
+    /** Determines whether the given character is a channel user mode (e.g. "o", "v"). */
+    fun isMode(char: Char) = modes.contains(char)
     /** Gets the mode corresponding to the given prefix (e.g. "@" -> "o"). */
     fun getMode(prefix: Char) = modes[prefixes.indexOf(prefix)]
     /** Gets the modes corresponding to the given prefixes (e.g. "@+" -> "ov"). */

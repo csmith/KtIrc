@@ -260,5 +260,79 @@ internal class ChannelStateHandlerTest {
         assertNull(channel.modes['h'])
     }
 
+    @Test
+    fun `handles unprivileged user gaining new mode`() {
+        with (ChannelState("#thegibson") { CaseMapping.Rfc }) {
+            users += ChannelUser("ZeroCool")
+            channelStateMap += this
+        }
+
+        handler.processEvent(ircClient, ModeChanged(TestConstants.time, "#thegibson", "+o", arrayOf("zeroCool")))
+
+        assertEquals("o", channelStateMap["#thegibson"]?.users?.get("zeroCool")?.modes)
+    }
+
+    @Test
+    fun `handles privileged user gaining lesser mode`() {
+        with (ChannelState("#thegibson") { CaseMapping.Rfc }) {
+            users += ChannelUser("ZeroCool", "o")
+            channelStateMap += this
+        }
+
+        handler.processEvent(ircClient, ModeChanged(TestConstants.time, "#thegibson", "+v", arrayOf("zeroCool")))
+
+        assertEquals("ov", channelStateMap["#thegibson"]?.users?.get("zeroCool")?.modes)
+    }
+
+    @Test
+    fun `handles privileged user gaining greater mode`() {
+        with (ChannelState("#thegibson") { CaseMapping.Rfc }) {
+            users += ChannelUser("ZeroCool", "v")
+            channelStateMap += this
+        }
+
+        handler.processEvent(ircClient, ModeChanged(TestConstants.time, "#thegibson", "+o", arrayOf("zeroCool")))
+
+        assertEquals("ov", channelStateMap["#thegibson"]?.users?.get("zeroCool")?.modes)
+    }
+
+    @Test
+    fun `handles user gaining multiple modes`() {
+        with (ChannelState("#thegibson") { CaseMapping.Rfc }) {
+            users += ChannelUser("ZeroCool")
+            channelStateMap += this
+        }
+
+        handler.processEvent(ircClient, ModeChanged(TestConstants.time, "#thegibson", "+vo", arrayOf("zeroCool", "zeroCool")))
+
+        assertEquals("ov", channelStateMap["#thegibson"]?.users?.get("zeroCool")?.modes)
+    }
+
+    @Test
+    fun `handles user losing multiple modes`() {
+        with (ChannelState("#thegibson") { CaseMapping.Rfc }) {
+            users += ChannelUser("ZeroCool", "ov")
+            channelStateMap += this
+        }
+
+        handler.processEvent(ircClient, ModeChanged(TestConstants.time, "#thegibson", "-vo", arrayOf("zeroCool", "zeroCool")))
+
+        assertEquals("", channelStateMap["#thegibson"]?.users?.get("zeroCool")?.modes)
+    }
+
+    @Test
+    fun `handles mixture of user modes and normal modes`() {
+        with (ChannelState("#thegibson") { CaseMapping.Rfc }) {
+            users += ChannelUser("ZeroCool", "v")
+            channelStateMap += this
+        }
+        serverState.features[ServerFeature.ChannelModes] = arrayOf("ab", "cd", "ef", "gh")
+
+        handler.processEvent(ircClient, ModeChanged(TestConstants.time, "#thegibson", "oa-v+b", arrayOf("zeroCool", "aaa", "zeroCool", "bbb")))
+
+        assertEquals("o", channelStateMap["#thegibson"]?.users?.get("zeroCool")?.modes)
+        assertEquals("aaa", channelStateMap["#thegibson"]?.modes?.get('a'))
+        assertEquals("bbb", channelStateMap["#thegibson"]?.modes?.get('b'))
+    }
 
 }

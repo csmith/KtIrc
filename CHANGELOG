@@ -3,6 +3,7 @@ vNEXT (in development)
  * Changed USER command to not send the server name, per modern standards
  * Added support for SASL authentication (with PLAIN mechanism)
  * Removed some unused test code
+ * Fixed handling of user mode changes on channels (op/deop/etc)
  * Message extensions:
     * Added support for IRCv3 message tags v3.3
     * Exposed message IDs in MessageReceived and ActionReceived events

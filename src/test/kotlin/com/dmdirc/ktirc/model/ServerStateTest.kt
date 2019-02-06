@@ -34,6 +34,18 @@ internal class ServerStateTest {
     }
 
     @Test
+    fun `returns whether a mode is a channel user mode or not`() {
+        val serverState = ServerState("acidBurn", "")
+        serverState.features[ServerFeature.ModePrefixes] = ModePrefixMapping("oqv", "@~+")
+        assertTrue(serverState.isChannelUserMode('o'))
+        assertTrue(serverState.isChannelUserMode('q'))
+        assertTrue(serverState.isChannelUserMode('v'))
+        assertFalse(serverState.isChannelUserMode('@'))
+        assertFalse(serverState.isChannelUserMode('!'))
+        assertFalse(serverState.isChannelUserMode('z'))
+    }
+
+    @Test
     fun `returns NoParameter for unknown channel mode`() {
         val serverState = ServerState("acidBurn", "")
         serverState.features[ServerFeature.ChannelModes] = arrayOf("ab", "cd", "ef", "gh")
@@ -57,6 +69,15 @@ internal class ModePrefixMappingTest {
         assertTrue(mapping.isPrefix('@'))
         assertFalse(mapping.isPrefix('!'))
         assertFalse(mapping.isPrefix('o'))
+    }
+
+    @Test
+    fun `ModePrefixMapping identifies which chars are modes`() {
+        val mapping = ModePrefixMapping("oav", "+@-")
+        assertFalse(mapping.isMode('+'))
+        assertFalse(mapping.isMode('@'))
+        assertFalse(mapping.isMode('!'))
+        assertTrue(mapping.isMode('o'))
     }
 
     @Test

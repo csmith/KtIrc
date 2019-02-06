@@ -75,7 +75,7 @@ internal class ChannelStateHandler : EventHandler {
     }
 
     private fun handleModeChanged(client: IrcClient, event: ModeChanged) {
-        val chan =  client.channelState[event.target] ?: return
+        val chan = client.channelState[event.target] ?: return
         if (event.discovered) {
             chan.modesDiscovered = true
             chan.modes.clear()
@@ -93,15 +93,33 @@ internal class ChannelStateHandler : EventHandler {
     }
 
     private fun adjustMode(client: IrcClient, chan: ChannelState, mode: Char, arguments: Array<String>, argumentOffset: Int, adding: Boolean): Int {
-        val type = client.serverState.channelModeType(mode)
-        val takesParam = if (adding) type.needsParameterToSet else type.needsParameterToUnset
-        val param = if (takesParam) arguments[argumentOffset] else ""
-        if (adding) {
-            chan.modes[mode] = param
+        return if (client.serverState.isChannelUserMode(mode)) {
+            adjustUserMode(client, chan, mode, adding, arguments[argumentOffset])
+            1
         } else {
-            chan.modes.remove(mode)
+            val type = client.serverState.channelModeType(mode)
+            val takesParam = if (adding) type.needsParameterToSet else type.needsParameterToUnset
+            val param = if (takesParam) arguments[argumentOffset] else ""
+            if (adding) {
+                chan.modes[mode] = param
+            } else {
+                chan.modes.remove(mode)
+            }
+            if (takesParam) 1 else 0
         }
-        return if (takesParam) 1 else 0
+    }
+
+    private fun adjustUserMode(client: IrcClient, chan: ChannelState, mode: Char, adding: Boolean, user: String) {
+        chan.users[user]?.let { channelUser ->
+            // Filter from the master list of mode prefixes so that ordering is consistent
+            channelUser.modes = client.serverState.channelModePrefixes.modes.filter {
+                if (adding) {
+                    it == mode || it in channelUser.modes
+                } else {
+                    it != mode && it in channelUser.modes
+                }
+            }
+        }
     }
 
     private fun handleQuit(client: IrcClient, event: UserQuit) = sequence {
