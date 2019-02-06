@@ -1,11 +1,8 @@
 package com.dmdirc.ktirc.io
 
 import io.ktor.network.tls.certificates.generateCertificate
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.async
-import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
+import io.ktor.util.KtorExperimentalAPI
+import kotlinx.coroutines.*
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Test
@@ -19,15 +16,15 @@ import javax.net.ssl.KeyManagerFactory
 import javax.net.ssl.SSLContext
 import javax.net.ssl.X509TrustManager
 
+@KtorExperimentalAPI
+@ExperimentalCoroutinesApi
 @Execution(ExecutionMode.SAME_THREAD)
 internal class KtorLineBufferedSocketTest {
-
-    private val writeChannel = Channel<ByteArray>(Channel.UNLIMITED)
 
     @Test
     fun `KtorLineBufferedSocket can connect to a server`() = runBlocking {
         ServerSocket(12321).use { serverSocket ->
-            val socket = KtorLineBufferedSocket("localhost", 12321)
+            val socket = KtorLineBufferedSocket(GlobalScope, "localhost", 12321)
             val clientSocketAsync = GlobalScope.async { serverSocket.accept() }
 
             socket.connect()
@@ -39,7 +36,7 @@ internal class KtorLineBufferedSocketTest {
     @Test
     fun `KtorLineBufferedSocket can send a byte array to a server`() = runBlocking {
         ServerSocket(12321).use { serverSocket ->
-            val socket = KtorLineBufferedSocket("localhost", 12321)
+            val socket = KtorLineBufferedSocket(GlobalScope, "localhost", 12321)
             val clientBytesAsync = GlobalScope.async {
                 ByteArray(13).apply {
                     serverSocket.accept().getInputStream().read(this)
@@ -47,8 +44,7 @@ internal class KtorLineBufferedSocketTest {
             }
 
             socket.connect()
-            GlobalScope.launch { socket.writeLines(writeChannel) }
-            writeChannel.send("Hello World".toByteArray())
+            socket.sendChannel.send("Hello World".toByteArray())
 
             val bytes = clientBytesAsync.await()
             assertNotNull(bytes)
@@ -59,7 +55,7 @@ internal class KtorLineBufferedSocketTest {
     @Test
     fun `KtorLineBufferedSocket can send a string to a server over TLS`() = runBlocking {
         tlsServerSocket(12321).use { serverSocket ->
-            val socket = KtorLineBufferedSocket("localhost", 12321, true)
+            val socket = KtorLineBufferedSocket(GlobalScope, "localhost", 12321, true)
             socket.tlsTrustManager = getTrustingManager()
             val clientBytesAsync = GlobalScope.async {
                 ByteArray(13).apply {
@@ -68,8 +64,7 @@ internal class KtorLineBufferedSocketTest {
             }
 
             socket.connect()
-            GlobalScope.launch { socket.writeLines(writeChannel) }
-            writeChannel.send("Hello World".toByteArray())
+            socket.sendChannel.send("Hello World".toByteArray())
 
             val bytes = clientBytesAsync.await()
             assertNotNull(bytes)
@@ -80,39 +75,39 @@ internal class KtorLineBufferedSocketTest {
     @Test
     fun `KtorLineBufferedSocket can receive a line of CRLF delimited text`() = runBlocking {
         ServerSocket(12321).use { serverSocket ->
-            val socket = KtorLineBufferedSocket("localhost", 12321)
+            val socket = KtorLineBufferedSocket(GlobalScope, "localhost", 12321)
             GlobalScope.launch {
                 serverSocket.accept().getOutputStream().write("Hi there\r\n".toByteArray())
             }
 
             socket.connect()
-            assertEquals("Hi there", String(socket.readLines(GlobalScope).receive()))
+            assertEquals("Hi there", String(socket.receiveChannel.receive()))
         }
     }
 
     @Test
     fun `KtorLineBufferedSocket can receive a line of LF delimited text`() = runBlocking {
         ServerSocket(12321).use { serverSocket ->
-            val socket = KtorLineBufferedSocket("localhost", 12321)
+            val socket = KtorLineBufferedSocket(GlobalScope, "localhost", 12321)
             GlobalScope.launch {
                 serverSocket.accept().getOutputStream().write("Hi there\n".toByteArray())
             }
 
             socket.connect()
-            assertEquals("Hi there", String(socket.readLines(GlobalScope).receive()))
+            assertEquals("Hi there", String(socket.receiveChannel.receive()))
         }
     }
 
     @Test
     fun `KtorLineBufferedSocket can receive multiple lines of text in one packet`() = runBlocking {
         ServerSocket(12321).use { serverSocket ->
-            val socket = KtorLineBufferedSocket("localhost", 12321)
+            val socket = KtorLineBufferedSocket(GlobalScope, "localhost", 12321)
             GlobalScope.launch {
                 serverSocket.accept().getOutputStream().write("Hi there\nThis is a test\r".toByteArray())
             }
 
             socket.connect()
-            val lineProducer = socket.readLines(GlobalScope)
+            val lineProducer = socket.receiveChannel
             assertEquals("Hi there", String(lineProducer.receive()))
             assertEquals("This is a test", String(lineProducer.receive()))
         }
@@ -121,7 +116,7 @@ internal class KtorLineBufferedSocketTest {
     @Test
     fun `KtorLineBufferedSocket can receive one line of text over multiple packets`() = runBlocking {
         ServerSocket(12321).use { serverSocket ->
-            val socket = KtorLineBufferedSocket("localhost", 12321)
+            val socket = KtorLineBufferedSocket(GlobalScope, "localhost", 12321)
             GlobalScope.launch {
                 with(serverSocket.accept().getOutputStream()) {
                     write("Hi".toByteArray())
@@ -134,7 +129,7 @@ internal class KtorLineBufferedSocketTest {
             }
 
             socket.connect()
-            val lineProducer = socket.readLines(GlobalScope)
+            val lineProducer = socket.receiveChannel
             assertEquals("Hi there", String(lineProducer.receive()))
         }
     }
@@ -142,7 +137,7 @@ internal class KtorLineBufferedSocketTest {
     @Test
     fun `KtorLineBufferedSocket returns from readLines when socket is closed`() = runBlocking {
         ServerSocket(12321).use { serverSocket ->
-            val socket = KtorLineBufferedSocket("localhost", 12321)
+            val socket = KtorLineBufferedSocket(GlobalScope, "localhost", 12321)
             GlobalScope.launch {
                 with(serverSocket.accept()) {
                     getOutputStream().write("Hi there\r\n".toByteArray())
@@ -151,7 +146,7 @@ internal class KtorLineBufferedSocketTest {
             }
 
             socket.connect()
-            val lineProducer = socket.readLines(GlobalScope)
+            val lineProducer = socket.receiveChannel
             assertEquals("Hi there", String(lineProducer.receive()))
         }
     }
@@ -159,7 +154,7 @@ internal class KtorLineBufferedSocketTest {
     @Test
     fun `KtorLineBufferedSocket disconnects from server`() = runBlocking {
         ServerSocket(12321).use { serverSocket ->
-            val socket = KtorLineBufferedSocket("localhost", 12321)
+            val socket = KtorLineBufferedSocket(GlobalScope, "localhost", 12321)
             val clientSocketAsync = GlobalScope.async { serverSocket.accept() }
 
             socket.connect()

@@ -5,12 +5,10 @@ import com.dmdirc.ktirc.io.*
 import com.dmdirc.ktirc.messages.*
 import com.dmdirc.ktirc.model.*
 import com.dmdirc.ktirc.util.currentTimeProvider
+import io.ktor.util.KtorExperimentalAPI
 import kotlinx.coroutines.*
-import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.map
 import java.util.concurrent.atomic.AtomicBoolean
-import java.util.logging.Level
-import java.util.logging.LogManager
 
 /**
  * Primary interface for interacting with KtIrc.
@@ -88,9 +86,13 @@ interface IrcClient {
 // TODO: How should alternative nicknames work?
 // TODO: Should IRC Client take a pool of servers and rotate through, or make the caller do that?
 // TODO: Should there be a default profile?
-class IrcClientImpl(private val server: Server, override val profile: Profile) : IrcClient {
+@KtorExperimentalAPI
+@ExperimentalCoroutinesApi
+class IrcClientImpl(private val server: Server, override val profile: Profile) : IrcClient, CoroutineScope {
 
-    internal var socketFactory: (String, Int, Boolean) -> LineBufferedSocket = ::KtorLineBufferedSocket
+    override val coroutineContext = GlobalScope.newCoroutineContext(Dispatchers.IO)
+
+    internal var socketFactory: (CoroutineScope, String, Int, Boolean) -> LineBufferedSocket = ::KtorLineBufferedSocket
 
     override val serverState = ServerState(profile.initialNick, server.host)
     override val channelState = ChannelStateMap { caseMapping }
@@ -101,43 +103,30 @@ class IrcClientImpl(private val server: Server, override val profile: Profile) :
     private val parser = MessageParser()
     private var socket: LineBufferedSocket? = null
 
-    private val scope = CoroutineScope(Dispatchers.IO)
     private val connecting = AtomicBoolean(false)
 
-    private var connectionJob: Job? = null
-    internal var writeChannel: Channel<ByteArray>? = null
-
     override fun send(message: String) {
-        writeChannel?.offer(message.toByteArray())
+        socket?.sendChannel?.offer(message.toByteArray())
     }
 
     override fun connect() {
         check(!connecting.getAndSet(true))
-        connectionJob = scope.launch {
-            with(socketFactory(server.host, server.port, server.tls)) {
-                // TODO: Proper error handling - what if connect() fails?
-                socket = this
 
-                emitEvent(ServerConnecting(currentTimeProvider()))
+        with(socketFactory(this, server.host, server.port, server.tls)) {
+            // TODO: Proper error handling - what if connect() fails?
+            socket = this
 
+            emitEvent(ServerConnecting(currentTimeProvider()))
+
+            launch {
                 connect()
-
-                with(Channel<ByteArray>(Channel.UNLIMITED)) {
-                    writeChannel = this
-                    scope.launch {
-                        writeChannel?.let {
-                            writeLines(it)
-                        }
-                    }
-                }
-
                 emitEvent(ServerConnected(currentTimeProvider()))
                 sendCapabilityList()
                 sendPasswordIfPresent()
                 sendNickChange(profile.initialNick)
                 // TODO: Send correct host
                 sendUser(profile.userName, profile.realName)
-                messageHandler.processMessages(this@IrcClientImpl, readLines(scope).map { parser.parse(it) })
+                messageHandler.processMessages(this@IrcClientImpl, receiveChannel.map { parser.parse(it) })
                 emitEvent(ServerDisconnected(currentTimeProvider()))
             }
         }
@@ -145,13 +134,6 @@ class IrcClientImpl(private val server: Server, override val profile: Profile) :
 
     override fun disconnect() {
         socket?.disconnect()
-    }
-
-    /**
-     * Joins the coroutine running the message loop, and blocks until it is completed.
-     */
-    suspend fun join() {
-        connectionJob?.join()
     }
 
     override fun onEvent(handler: (IrcEvent) -> Unit) {

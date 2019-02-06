@@ -3,19 +3,21 @@ package com.dmdirc.ktirc
 import com.dmdirc.ktirc.events.*
 import com.dmdirc.ktirc.io.CaseMapping
 import com.dmdirc.ktirc.io.LineBufferedSocket
-import com.dmdirc.ktirc.model.Profile
-import com.dmdirc.ktirc.model.Server
-import com.dmdirc.ktirc.model.ServerFeature
-import com.dmdirc.ktirc.model.User
+import com.dmdirc.ktirc.model.*
 import com.dmdirc.ktirc.util.currentTimeProvider
 import com.nhaarman.mockitokotlin2.*
+import io.ktor.util.KtorExperimentalAPI
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.channels.filter
+import kotlinx.coroutines.channels.map
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 
+@KtorExperimentalAPI
+@ExperimentalCoroutinesApi
 internal class IrcClientImplTest {
 
     companion object {
@@ -27,14 +29,16 @@ internal class IrcClientImplTest {
         private const val PASSWORD = "HackThePlanet"
     }
 
-    private val readLineChannel = Channel<ByteArray>(10)
+    private val readLineChannel = Channel<ByteArray>(Channel.UNLIMITED)
+    private val sendLineChannel = Channel<ByteArray>(Channel.UNLIMITED)
 
     private val mockSocket = mock<LineBufferedSocket> {
-        on { readLines(any()) } doReturn readLineChannel
+        on { receiveChannel } doReturn readLineChannel
+        on { sendChannel } doReturn sendLineChannel
     }
 
-    private val mockSocketFactory = mock<(String, Int, Boolean) -> LineBufferedSocket> {
-        on { invoke(eq(HOST), eq(PORT), any()) } doReturn mockSocket
+    private val mockSocketFactory = mock<(CoroutineScope, String, Int, Boolean) -> LineBufferedSocket> {
+        on { invoke(any(), eq(HOST), eq(PORT), any()) } doReturn mockSocket
     }
 
     private val mockEventHandler = mock<(IrcEvent) -> Unit>()
@@ -50,7 +54,7 @@ internal class IrcClientImplTest {
         client.socketFactory = mockSocketFactory
         client.connect()
 
-        verify(mockSocketFactory, timeout(500)).invoke(HOST, PORT, false)
+        verify(mockSocketFactory, timeout(500)).invoke(client, HOST, PORT, false)
     }
 
     @Test
@@ -59,7 +63,7 @@ internal class IrcClientImplTest {
         client.socketFactory = mockSocketFactory
         client.connect()
 
-        verify(mockSocketFactory, timeout(500)).invoke(HOST, PORT, true)
+        verify(mockSocketFactory, timeout(500)).invoke(client, HOST, PORT, true)
     }
 
     @Test
@@ -115,9 +119,9 @@ internal class IrcClientImplTest {
 
         client.blockUntilConnected()
 
-        assertEquals("CAP LS 302", String(client.writeChannel!!.receive()))
-        assertEquals("NICK :$NICK", String(client.writeChannel!!.receive()))
-        assertEquals("USER $USER_NAME 0 * :$REAL_NAME", String(client.writeChannel!!.receive()))
+        assertEquals("CAP LS 302", String(sendLineChannel.receive()))
+        assertEquals("NICK :$NICK", String(sendLineChannel.receive()))
+        assertEquals("USER $USER_NAME 0 * :$REAL_NAME", String(sendLineChannel.receive()))
     }
 
     @Test
@@ -128,8 +132,8 @@ internal class IrcClientImplTest {
 
         client.blockUntilConnected()
 
-        assertEquals("CAP LS 302", String(client.writeChannel!!.receive()))
-        assertEquals("PASS :$PASSWORD", String(client.writeChannel!!.receive()))
+        assertEquals("CAP LS 302", String(sendLineChannel.receive()))
+        assertEquals("PASS :$PASSWORD", String(sendLineChannel.receive()))
     }
 
     @Test
@@ -181,43 +185,6 @@ internal class IrcClientImplTest {
     }
 
     @Test
-    fun `IrcClientImpl join blocks when socket is open`() {
-        val client = IrcClientImpl(Server(HOST, PORT, password = PASSWORD), Profile(NICK, REAL_NAME, USER_NAME))
-        client.socketFactory = mockSocketFactory
-
-        GlobalScope.launch {
-            readLineChannel.send(":the.gibson 001 acidBurn :Welcome to the IRC!".toByteArray())
-        }
-
-        client.connect()
-        runBlocking {
-            assertNull(withTimeoutOrNull(100L) {
-                client.join()
-                true
-            })
-        }
-    }
-
-    @Test
-    fun `IrcClientImpl join returns when socket is closed`() {
-        val client = IrcClientImpl(Server(HOST, PORT, password = PASSWORD), Profile(NICK, REAL_NAME, USER_NAME))
-        client.socketFactory = mockSocketFactory
-
-        GlobalScope.launch {
-            readLineChannel.send(":the.gibson 001 acidBurn :Welcome to the IRC!".toByteArray())
-            readLineChannel.close()
-        }
-
-        client.connect()
-        runBlocking {
-            assertEquals(true, withTimeoutOrNull(500L) {
-                client.join()
-                true
-            })
-        }
-    }
-
-    @Test
     fun `IrcClientImpl sends text to socket`() = runBlocking {
         val client = IrcClientImpl(Server(HOST, PORT), Profile(NICK, REAL_NAME, USER_NAME))
         client.socketFactory = mockSocketFactory
@@ -229,7 +196,7 @@ internal class IrcClientImplTest {
 
         assertEquals(true, withTimeoutOrNull(500) {
             var found = false
-            for (line in client.writeChannel!!) {
+            for (line in sendLineChannel) {
                 if (String(line) == "testing 123") {
                     found = true
                     break
@@ -264,13 +231,10 @@ internal class IrcClientImplTest {
 
         assertEquals(100, withTimeoutOrNull(500) {
             var next = 0
-            for (line in client.writeChannel!!) {
-                val stringy = String(line)
-                if (stringy.startsWith("TEST ")) {
-                    assertEquals("TEST $next", stringy)
-                    if (++next == 100) {
-                        break
-                    }
+            for (line in sendLineChannel.map { String(it) }.filter { it.startsWith("TEST ") }) {
+                assertEquals("TEST $next", line)
+                if (++next == 100) {
+                    break
                 }
             }
             next
@@ -291,7 +255,7 @@ internal class IrcClientImplTest {
 
     private suspend fun IrcClientImpl.blockUntilConnected() {
         // Yuck. Maybe connect should be asynchronous?
-        while (writeChannel == null) {
+        while (serverState.status <= ServerStatus.Connecting) {
             delay(50)
         }
     }

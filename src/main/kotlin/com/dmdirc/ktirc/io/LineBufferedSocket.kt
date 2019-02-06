@@ -7,11 +7,11 @@ import io.ktor.network.sockets.aSocket
 import io.ktor.network.sockets.openReadChannel
 import io.ktor.network.sockets.openWriteChannel
 import io.ktor.network.tls.tls
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.GlobalScope
+import io.ktor.util.KtorExperimentalAPI
+import kotlinx.coroutines.*
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.ReceiveChannel
+import kotlinx.coroutines.channels.SendChannel
 import kotlinx.coroutines.channels.produce
 import kotlinx.coroutines.io.ByteReadChannel
 import kotlinx.coroutines.io.ByteWriteChannel
@@ -21,11 +21,11 @@ import javax.net.ssl.X509TrustManager
 
 internal interface LineBufferedSocket {
 
-    suspend fun connect()
+    fun connect()
     fun disconnect()
 
-    fun readLines(coroutineScope: CoroutineScope): ReceiveChannel<ByteArray>
-    suspend fun writeLines(channel: ReceiveChannel<ByteArray>)
+    val sendChannel: SendChannel<ByteArray>
+    val receiveChannel: ReceiveChannel<ByteArray>
 
 }
 
@@ -33,12 +33,17 @@ internal interface LineBufferedSocket {
  * Asynchronous socket that buffers incoming data and emits individual lines.
  */
 // TODO: Expose advanced TLS options
-internal class KtorLineBufferedSocket(private val host: String, private val port: Int, private val tls: Boolean = false): LineBufferedSocket {
+@KtorExperimentalAPI
+@ExperimentalCoroutinesApi
+internal class KtorLineBufferedSocket(coroutineScope: CoroutineScope, private val host: String, private val port: Int, private val tls: Boolean = false) : CoroutineScope, LineBufferedSocket {
 
     companion object {
         const val CARRIAGE_RETURN = '\r'.toByte()
         const val LINE_FEED = '\n'.toByte()
     }
+
+    override val coroutineContext = coroutineScope.newCoroutineContext(Dispatchers.IO)
+    override val sendChannel: Channel<ByteArray> = Channel(Channel.UNLIMITED)
 
     var tlsTrustManager: X509TrustManager? = null
 
@@ -48,47 +53,52 @@ internal class KtorLineBufferedSocket(private val host: String, private val port
     private lateinit var readChannel: ByteReadChannel
     private lateinit var writeChannel: ByteWriteChannel
 
-    @Suppress("EXPERIMENTAL_API_USAGE")
-    override suspend fun connect() {
-        log.info { "Connecting..." }
-        socket = aSocket(ActorSelectorManager(Dispatchers.IO)).tcp().connect(InetSocketAddress(host, port))
-        if (tls) {
-            // TODO: Figure out how exactly scopes work...
-            socket = socket.tls(GlobalScope.coroutineContext, randomAlgorithm = SecureRandom.getInstanceStrong().algorithm, trustManager = tlsTrustManager)
+    override fun connect() {
+        runBlocking {
+            log.info { "Connecting..." }
+            socket = aSocket(ActorSelectorManager(Dispatchers.IO)).tcp().connect(InetSocketAddress(host, port))
+            if (tls) {
+                socket = socket.tls(
+                        coroutineContext = this@KtorLineBufferedSocket.coroutineContext,
+                        randomAlgorithm = SecureRandom.getInstanceStrong().algorithm,
+                        trustManager = tlsTrustManager)
+            }
+            readChannel = socket.openReadChannel()
+            writeChannel = socket.openWriteChannel()
         }
-        readChannel = socket.openReadChannel()
-        writeChannel = socket.openWriteChannel()
+        launch { writeLines() }
     }
 
     override fun disconnect() {
         log.info { "Disconnecting..." }
         socket.close()
+        coroutineContext.cancel()
     }
 
-    @ExperimentalCoroutinesApi
-    override fun readLines(coroutineScope: CoroutineScope) = coroutineScope.produce {
-        val lineBuffer = ByteArray(4096)
-        var index = 0
-        while (!readChannel.isClosedForRead) {
-            var start = index
-            val count = readChannel.readAvailable(lineBuffer, index, lineBuffer.size - index)
-            for (i in index until index + count) {
-                if (lineBuffer[i] == CARRIAGE_RETURN || lineBuffer[i] == LINE_FEED) {
-                    if (start < i) {
-                        val line = lineBuffer.sliceArray(start until i)
-                        log.fine { "<<< ${String(line)}" }
-                        send(line)
+    override val receiveChannel
+        get() = produce {
+            val lineBuffer = ByteArray(4096)
+            var index = 0
+            while (!readChannel.isClosedForRead) {
+                var start = index
+                val count = readChannel.readAvailable(lineBuffer, index, lineBuffer.size - index)
+                for (i in index until index + count) {
+                    if (lineBuffer[i] == CARRIAGE_RETURN || lineBuffer[i] == LINE_FEED) {
+                        if (start < i) {
+                            val line = lineBuffer.sliceArray(start until i)
+                            log.fine { "<<< ${String(line)}" }
+                            send(line)
+                        }
+                        start = i + 1
                     }
-                    start = i + 1
                 }
+                lineBuffer.copyInto(lineBuffer, 0, start)
+                index = count + index - start
             }
-            lineBuffer.copyInto(lineBuffer, 0, start)
-            index = count + index - start
         }
-    }
 
-    override suspend fun writeLines(channel: ReceiveChannel<ByteArray>) {
-        for (line in channel) {
+    private suspend fun writeLines() {
+        for (line in sendChannel) {
             with(writeChannel) {
                 log.fine { ">>> ${String(line)}" }
                 writeAvailable(line, 0, line.size)
