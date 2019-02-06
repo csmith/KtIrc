@@ -6,8 +6,10 @@ group = "com.dmdirc.ktirc"
 plugins {
     `maven-publish`
     jacoco
-    kotlin("jvm") version "1.3.20"
+    kotlin("jvm") version "1.3.21"
     id("com.jfrog.bintray") version "1.8.4"
+    id("org.jetbrains.dokka") version "0.9.17"
+    id("name.remal.check-updates") version "1.0.112"
 }
 
 jacoco {
@@ -21,7 +23,7 @@ configurations {
     all {
         resolutionStrategy.eachDependency {
             if (requested.group == "org.jetbrains.kotlin") {
-                useVersion("1.3.20")
+                useVersion("1.3.21")
             }
         }
     }
@@ -33,15 +35,15 @@ repositories {
 }
 
 dependencies {
-    implementation(kotlin("stdlib-jdk8", "1.3.20"))
+    implementation(kotlin("stdlib-jdk8", "1.3.21"))
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.1.1")
     implementation("io.ktor:ktor-network:1.1.2")
     implementation("io.ktor:ktor-network-tls:1.1.2")
 
     testImplementation("com.nhaarman.mockitokotlin2:mockito-kotlin:2.1.0")
-    testImplementation("org.junit.jupiter:junit-jupiter-api:5.3.1")
-    testImplementation("org.junit.jupiter:junit-jupiter-params:5.3.1")
-    testRuntime("org.junit.jupiter:junit-jupiter-engine:5.3.1")
+    testImplementation("org.junit.jupiter:junit-jupiter-api:5.3.2")
+    testImplementation("org.junit.jupiter:junit-jupiter-params:5.3.2")
+    testRuntime("org.junit.jupiter:junit-jupiter-engine:5.3.2")
 }
 
 java {
@@ -86,7 +88,7 @@ tasks {
     }
 
     withType<Wrapper> {
-        gradleVersion = "5.1.1"
+        gradleVersion = "5.2"
     }
 
     withType<KotlinCompile> {
