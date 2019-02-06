@@ -30,6 +30,13 @@ class ChannelState(val name: String, caseMappingProvider: () -> CaseMapping) {
      * If [modesDiscovered] is false, this map may be missing modes that the server hasn't told us about.
      */
     var modes = HashMap<Char, String>()
+
+    internal fun reset() {
+        receivingUserList = false
+        modesDiscovered = false
+        users.clear()
+        modes.clear()
+    }
 }
 
 /**

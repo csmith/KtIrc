@@ -1,7 +1,7 @@
 package com.dmdirc.ktirc.model
 
-import org.junit.jupiter.api.Assertions.assertFalse
-import org.junit.jupiter.api.Assertions.assertTrue
+import com.dmdirc.ktirc.io.CaseMapping
+import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 
 internal class ChannelStateTest {
@@ -20,6 +20,21 @@ internal class ChannelStateTest {
         assertTrue(ChannelModeType.SetUnsetParameter.needsParameterToUnset)
         assertFalse(ChannelModeType.SetParameter.needsParameterToUnset)
         assertFalse(ChannelModeType.NoParameter.needsParameterToUnset)
+    }
+
+    @Test
+    fun `reset resets all state`() = with(ChannelState("#thegibson") { CaseMapping.Rfc }) {
+        receivingUserList = true
+        modesDiscovered = true
+        modes['a'] = "b"
+        users += ChannelUser("acidBurn")
+
+        reset()
+
+        assertFalse(receivingUserList)
+        assertFalse(modesDiscovered)
+        assertTrue(modes.isEmpty())
+        assertEquals(0, users.count())
     }
 
 }

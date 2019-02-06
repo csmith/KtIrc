@@ -35,6 +35,10 @@ class UserState(private val caseMappingProvider: () -> CaseMapping): Iterable<Kn
         }
     }
 
+    internal fun reset() {
+        users.clear()
+    }
+
 }
 
 /**

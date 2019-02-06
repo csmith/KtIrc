@@ -58,6 +58,27 @@ internal class ServerStateTest {
         assertEquals(ChannelModeType.NoParameter, serverState.channelModeType('b'))
     }
 
+    @Test
+    fun `reset clears all state`() = with(ServerState("acidBurn", "")) {
+        receivedWelcome = true
+        status = ServerStatus.Connecting
+        localNickname = "acidBurn3"
+        serverName = "root.the.gibson"
+        features[ServerFeature.Network] = "gibson"
+        capabilities.advertisedCapabilities[Capability.SaslAuthentication] = "sure"
+        sasl.saslBuffer = "in progress"
+
+        reset()
+
+        assertFalse(receivedWelcome)
+        assertEquals(ServerStatus.Disconnected, status)
+        assertEquals("acidBurn", localNickname)
+        assertEquals("", serverName)
+        assertTrue(features.isEmpty())
+        assertTrue(capabilities.advertisedCapabilities.isEmpty())
+        assertEquals("", sasl.saslBuffer)
+    }
+
 }
 
 internal class ModePrefixMappingTest {

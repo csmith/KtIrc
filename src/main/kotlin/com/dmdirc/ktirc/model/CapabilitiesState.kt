@@ -15,6 +15,12 @@ class CapabilitiesState {
     /** The capabilities that we have agreed to enable. */
     val enabledCapabilities = HashMap<Capability, String>()
 
+    internal fun reset() {
+        negotiationState = CapabilitiesNegotiationState.AWAITING_LIST
+        advertisedCapabilities.clear()
+        enabledCapabilities.clear()
+    }
+
 }
 
 /**

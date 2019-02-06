@@ -9,7 +9,7 @@ internal class UserStateTest {
     private val userState = UserState { CaseMapping.Rfc }
 
     @Test
-    fun `UserState adds and gets new users`() {
+    fun `adds and gets new users`() {
         userState += User("acidBurn", "libby", "root.localhost")
         val user = userState["acidburn"]
         assertNotNull(user)
@@ -19,21 +19,21 @@ internal class UserStateTest {
     }
 
     @Test
-    fun `UserState removes users`() {
+    fun `removes users`() {
         userState += User("acidBurn", "libby", "root.localhost")
         userState -= User("ACIDBURN")
         assertNull(userState["acidburn"])
     }
 
     @Test
-    fun `UserState removes users by nickname`() {
+    fun `removes users by nickname`() {
         userState += User("acidBurn", "libby", "root.localhost")
         userState -= "ACIDBURN"
         assertNull(userState["acidburn"])
     }
 
     @Test
-    fun `UserState updates existing user with same nickname`() {
+    fun `updates existing user with same nickname`() {
         userState += User("acidBurn", "libby", "root.localhost")
         userState.update(User("acidBurn", realName = "Libby", awayMessage = "Hacking"))
 
@@ -46,7 +46,7 @@ internal class UserStateTest {
     }
 
     @Test
-    fun `UserState updates existing user with new nickname`() {
+    fun `updates existing user with new nickname`() {
         userState += User("acidBurn", "libby", "root.localhost")
         userState.update(User("acidBurn2", realName = "Libby", awayMessage = "Hacking"), "acidBurn")
 
@@ -93,6 +93,17 @@ internal class UserStateTest {
 
         assertEquals(1, userState.count())
         assertNotNull(userState["zeroCool"])
+    }
+
+    @Test
+    fun `reset clears all state`() {
+        userState += User("acidBurn", "libby", "root.localhost")
+        userState += User("zeroCool", "dade", "root.localhost")
+        userState += User("acidBurn2", "libby", "root.localhost")
+
+        userState.reset()
+
+        assertEquals(0, userState.count())
     }
 
 }

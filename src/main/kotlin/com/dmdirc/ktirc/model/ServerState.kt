@@ -10,8 +10,8 @@ import kotlin.reflect.KClass
  * Contains the current state of a single IRC server.
  */
 class ServerState internal constructor(
-        initialNickname: String,
-        initialServerName: String,
+        private val initialNickname: String,
+        private val initialServerName: String,
         saslMechanisms: Collection<SaslMechanism> = supportedSaslMechanisms) {
 
     private val log by logger()
@@ -79,6 +79,16 @@ class ServerState internal constructor(
         return ChannelModeType.NoParameter
     }
 
+    internal fun reset() {
+        receivedWelcome = false
+        status = ServerStatus.Disconnected
+        localNickname = initialNickname
+        serverName = initialServerName
+        features.clear()
+        capabilities.reset()
+        sasl.reset()
+    }
+
 }
 
 /**
@@ -104,6 +114,8 @@ class ServerFeatureMap {
 
     internal fun setAll(featureMap: ServerFeatureMap) = featureMap.features.forEach { feature, value -> features[feature] = value }
     internal fun reset(feature: ServerFeature<*>) = features.put(feature, null)
+    internal fun clear() = features.clear()
+    internal fun isEmpty() = features.isEmpty()
 
 }
 
@@ -143,10 +155,6 @@ sealed class ServerFeature<T : Any>(val name: String, val type: KClass<T>, val d
     object WhoxSupport : ServerFeature<Boolean>("WHOX", Boolean::class, false)
 }
 
-internal val serverFeatures: Map<String, ServerFeature<*>> by lazy {
-    ServerFeature::class.nestedClasses.map { it.objectInstance as ServerFeature<*> }.associateBy { it.name }
-}
-
 /**
  * Enumeration of the possible states of a server.
  */
@@ -159,4 +167,8 @@ enum class ServerStatus {
     Negotiating,
     /** We are connected and commands can be sent. */
     Ready,
+}
+
+internal val serverFeatures: Map<String, ServerFeature<*>> by lazy {
+    ServerFeature::class.nestedClasses.map { it.objectInstance as ServerFeature<*> }.associateBy { it.name }
 }

@@ -14,12 +14,16 @@ internal class SaslState(private val mechanisms: Collection<SaslMechanism>) {
     var mechanismState: Any? = null
 
     fun getPreferredSaslMechanism(serverMechanisms: String?): SaslMechanism? {
-        serverMechanisms ?: return null
-        val serverSupported = serverMechanisms.split(',')
+        val serverSupported = serverMechanisms?.split(',') ?: return null
         return mechanisms
                 .filter { it.priority < currentMechanism?.priority ?: Int.MAX_VALUE }
                 .filter { serverMechanisms.isEmpty() || it.ircName in serverSupported }
                 .maxBy { it.priority }
+    }
+
+    fun reset() {
+        saslBuffer = ""
+        currentMechanism = null
     }
 
 }

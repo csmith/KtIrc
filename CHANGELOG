@@ -11,6 +11,7 @@ vNEXT (in development)
     * Added sendTagMessage() to send message tags without any content
     * The reply() utility automatically marks messages as a reply
     * Added react() utility to send a reaction client tag
+ * State is now reset when the client is disconnected, so you can immediately reconnect
  * (Internal) improved how coroutines and channels are used in LineBufferedSocket
 
 v0.5.0

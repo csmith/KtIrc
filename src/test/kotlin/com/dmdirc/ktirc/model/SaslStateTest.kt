@@ -3,8 +3,7 @@ package com.dmdirc.ktirc.model
 import com.dmdirc.ktirc.sasl.SaslMechanism
 import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.mock
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertNull
+import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 
 internal class SaslStateTest {
@@ -76,6 +75,19 @@ internal class SaslStateTest {
         state.mechanismState = "in progress"
         state.currentMechanism = mech2
         assertNull(state.mechanismState)
+    }
+
+    @Test
+    fun `reset clears all state`() = with(SaslState(mechanisms)) {
+        currentMechanism = mech2
+        mechanismState = "in progress"
+        saslBuffer = "abcdef"
+
+        reset()
+
+        assertNull(currentMechanism)
+        assertNull(mechanismState)
+        assertTrue(saslBuffer.isEmpty())
     }
 
 }

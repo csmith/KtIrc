@@ -5,6 +5,7 @@ import com.dmdirc.ktirc.io.*
 import com.dmdirc.ktirc.messages.*
 import com.dmdirc.ktirc.model.*
 import com.dmdirc.ktirc.util.currentTimeProvider
+import com.dmdirc.ktirc.util.logger
 import io.ktor.util.KtorExperimentalAPI
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.map
@@ -90,6 +91,8 @@ interface IrcClient {
 @ExperimentalCoroutinesApi
 class IrcClientImpl(private val server: Server, override val profile: Profile) : IrcClient, CoroutineScope {
 
+    private val log by logger()
+
     override val coroutineContext = GlobalScope.newCoroutineContext(Dispatchers.IO)
 
     internal var socketFactory: (CoroutineScope, String, Int, Boolean) -> LineBufferedSocket = ::KtorLineBufferedSocket
@@ -106,7 +109,7 @@ class IrcClientImpl(private val server: Server, override val profile: Profile) :
     private val connecting = AtomicBoolean(false)
 
     override fun send(message: String) {
-        socket?.sendChannel?.offer(message.toByteArray())
+        socket?.sendChannel?.offer(message.toByteArray()) ?: log.warning { "No send channel for message: $message"}
     }
 
     override fun connect() {
@@ -127,6 +130,7 @@ class IrcClientImpl(private val server: Server, override val profile: Profile) :
                 // TODO: Send correct host
                 sendUser(profile.userName, profile.realName)
                 messageHandler.processMessages(this@IrcClientImpl, receiveChannel.map { parser.parse(it) })
+                reset()
                 emitEvent(ServerDisconnected(currentTimeProvider()))
             }
         }
@@ -147,5 +151,13 @@ class IrcClientImpl(private val server: Server, override val profile: Profile) :
 
     private fun emitEvent(event: IrcEvent) = messageHandler.emitEvent(this, event)
     private fun sendPasswordIfPresent() = server.password?.let(this::sendPassword)
+
+    internal fun reset() {
+        serverState.reset()
+        channelState.clear()
+        userState.reset()
+        socket = null
+        connecting.set(false)
+    }
 
 }
