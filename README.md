@@ -86,6 +86,13 @@ handlers may themselves raise events. This is useful for higher-order
 events such as `ServerReady` that depend on a variety of factors and
 states.
 
+Handlers themselves may not keep state, as they will be shared across
+multiple instances of `IrcClient` and won't be reset on reconnection.
+State is instead stored in the various `*State` properties of the
+`IrcClient` such as `serverState` and `channelState`. Fields that
+should not be exposed to users of KtIrc can be placed in these
+public state objects but marked as `internal`.
+
 All the generated events (from processors or from event handlers) are
 passed to the `IrcClient`, which in turn passes them to the library
 user via the delegates passed to the `onEvent` method. 

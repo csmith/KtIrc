@@ -117,7 +117,7 @@ internal class IrcClientImplTest {
 
         assertEquals("CAP LS 302", String(client.writeChannel!!.receive()))
         assertEquals("NICK :$NICK", String(client.writeChannel!!.receive()))
-        assertEquals("USER $USER_NAME localhost $HOST :$REAL_NAME", String(client.writeChannel!!.receive()))
+        assertEquals("USER $USER_NAME 0 * :$REAL_NAME", String(client.writeChannel!!.receive()))
     }
 
     @Test

@@ -71,8 +71,20 @@ internal class MessageBuildersTest {
 
     @Test
     fun `sendUser sends correct USER message`() {
-        mockClient.sendUser("AcidBurn", "localhost", "gibson", "Kate")
-        verify(mockClient).send("USER AcidBurn localhost gibson :Kate")
+        mockClient.sendUser("AcidBurn","Kate")
+        verify(mockClient).send("USER AcidBurn 0 * :Kate")
+    }
+
+    @Test
+    fun `sendUser sends correct AUTHENTICATE message`() {
+        mockClient.sendAuthenticationMessage("SCRAM-MD5")
+        verify(mockClient).send("AUTHENTICATE SCRAM-MD5")
+    }
+
+    @Test
+    fun `sendUser sends correct blank AUTHENTICATE message`() {
+        mockClient.sendAuthenticationMessage()
+        verify(mockClient).send("AUTHENTICATE +")
     }
 
 }

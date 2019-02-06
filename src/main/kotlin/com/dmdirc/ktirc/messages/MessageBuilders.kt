@@ -34,4 +34,7 @@ fun IrcClient.sendAction(target: String, action: String) = sendCtcp(target, "ACT
 fun IrcClient.sendMessage(target: String, message: String) = send("PRIVMSG $target :$message")
 
 /** Sends a message to register a user with the server. */
-internal fun IrcClient.sendUser(userName: String, localHostName: String, serverHostName: String, realName: String) = send("USER $userName $localHostName $serverHostName :$realName")
+internal fun IrcClient.sendUser(userName: String, realName: String) = send("USER $userName 0 * :$realName")
+
+/** Starts an authentication request. */
+internal fun IrcClient.sendAuthenticationMessage(data: String = "+") =send("AUTHENTICATE $data")

@@ -20,6 +20,7 @@ interface IrcClient {
     val serverState: ServerState
     val channelState: ChannelStateMap
     val userState: UserState
+    val profile: Profile
 
     val caseMapping: CaseMapping
         get() = serverState.features[ServerFeature.ServerCaseMapping] ?: CaseMapping.Rfc
@@ -87,7 +88,7 @@ interface IrcClient {
 // TODO: How should alternative nicknames work?
 // TODO: Should IRC Client take a pool of servers and rotate through, or make the caller do that?
 // TODO: Should there be a default profile?
-class IrcClientImpl(private val server: Server, private val profile: Profile) : IrcClient {
+class IrcClientImpl(private val server: Server, override val profile: Profile) : IrcClient {
 
     internal var socketFactory: (String, Int, Boolean) -> LineBufferedSocket = ::KtorLineBufferedSocket
 
@@ -135,7 +136,7 @@ class IrcClientImpl(private val server: Server, private val profile: Profile) : 
                 sendPasswordIfPresent()
                 sendNickChange(profile.initialNick)
                 // TODO: Send correct host
-                sendUser(profile.userName, "localhost", server.host, profile.realName)
+                sendUser(profile.userName, profile.realName)
                 messageHandler.processMessages(this@IrcClientImpl, readLines(scope).map { parser.parse(it) })
                 emitEvent(ServerDisconnected(currentTimeProvider()))
             }

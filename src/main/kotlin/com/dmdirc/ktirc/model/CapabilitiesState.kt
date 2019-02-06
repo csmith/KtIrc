@@ -33,6 +33,11 @@ enum class CapabilitiesNegotiationState {
     AWAITING_ACK,
 
     /**
+     * We are attempting to authenticate with SASL.
+     */
+    AUTHENTICATING,
+
+    /**
      * Negotiation has completed.
      */
     FINISHED
@@ -44,17 +49,24 @@ enum class CapabilitiesNegotiationState {
  */
 @Suppress("unused")
 sealed class Capability(val name: String) {
+    // Capabilities that introduce extra commands:
+    /** Allows authentication using SASL via the AUTHENTICATE command. */
+    object SaslAuthentication : Capability("sasl")
+
     // Capabilities that enable more information in message tags:
     /** Messages are tagged with the server time they originated at. */
     object ServerTimeMessageTag : Capability("server-time")
+
     /** Messages are tagged with the sender's account name. */
     object UserAccountMessageTag : Capability("account-tag")
 
     // Capabilities that extend existing commands to supply extra information:
     /** Hosts are included for users in NAMES messages. */
     object HostsInNamesReply : Capability("userhost-in-names")
+
     /** Multiple mode prefixes are returned per-user in NAMES messages. */
     object MultipleUserModePrefixes : Capability("multi-prefix")
+
     /** The user's account and real name are provided when they join a channel. */
     object AccountAndRealNameInJoinMessages : Capability("extended-join")
 
@@ -65,8 +77,10 @@ sealed class Capability(val name: String) {
     // Capabilities that notify us of changes to other clients:
     /** Receive a notification when a user's account changes. */
     object AccountChangeMessages : Capability("account-notify") // TODO: Add processor
+
     /** Receive a notification when a user's away state changes. */
     object AwayStateMessages : Capability("away-notify") // TODO: Add processor
+
     /** Receive a notification when a user's host changes, instead of a quit/join. */
     object HostChangeMessages : Capability("chghost") // TODO: Add processor
 

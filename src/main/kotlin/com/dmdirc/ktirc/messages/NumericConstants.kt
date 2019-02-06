@@ -11,3 +11,6 @@ internal const val RPL_CHANNELMODEIS = "324"
 internal const val RPL_ENDOFMOTD = "376"
 
 internal const val ERR_NOMOTD = "422"
+
+internal const val RPL_SASLSUCCESS = "903"
+internal const val ERR_SASLFAIL = "904"

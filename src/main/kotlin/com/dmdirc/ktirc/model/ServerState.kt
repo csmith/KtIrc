@@ -1,13 +1,18 @@
 package com.dmdirc.ktirc.model
 
 import com.dmdirc.ktirc.io.CaseMapping
+import com.dmdirc.ktirc.sasl.SaslMechanism
+import com.dmdirc.ktirc.sasl.supportedSaslMechanisms
 import com.dmdirc.ktirc.util.logger
 import kotlin.reflect.KClass
 
 /**
  * Contains the current state of a single IRC server.
  */
-class ServerState internal constructor(initialNickname: String, initialServerName: String) {
+class ServerState internal constructor(
+        initialNickname: String,
+        initialServerName: String,
+        saslMechanisms: Collection<SaslMechanism> = supportedSaslMechanisms) {
 
     private val log by logger()
 
@@ -43,6 +48,9 @@ class ServerState internal constructor(initialNickname: String, initialServerNam
 
     /** The capabilities we have negotiated with the server (from IRCv3). */
     val capabilities = CapabilitiesState()
+
+    /** The current state of SASL authentication. */
+    internal val sasl = SaslState(saslMechanisms)
 
     /**
      * Determines what type of channel mode the given character is, based on the server features.

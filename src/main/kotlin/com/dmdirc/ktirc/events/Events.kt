@@ -96,3 +96,12 @@ class MotdFinished(time: LocalDateTime, val missing: Boolean = false): IrcEvent(
  * state.
  */
 class ModeChanged(time: LocalDateTime, val target: String, val modes: String, val arguments: Array<String>, val discovered: Boolean = false): IrcEvent(time)
+
+/** Raised when an AUTHENTICATION message is received. [argument] is `null` if the server sent an empty reply ("+") */
+class AuthenticationMessage(time: LocalDateTime, val argument: String?): IrcEvent(time)
+
+/** Raised when a SASL attempt finishes, successfully or otherwise. */
+class SaslFinished(time: LocalDateTime, var success: Boolean) : IrcEvent(time)
+
+/** Raised when the server says our SASL mechanism isn't available, but gives us a list of others. */
+class SaslMechanismNotAvailableError(time: LocalDateTime, var mechanisms: Array<String>) : IrcEvent(time)

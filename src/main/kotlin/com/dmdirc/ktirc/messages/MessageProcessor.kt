@@ -19,6 +19,7 @@ internal interface MessageProcessor {
 
 internal val messageProcessors = setOf(
         AccountProcessor(),
+        AuthenticationProcessor(),
         CapabilityProcessor(),
         ISupportProcessor(),
         JoinProcessor(),
