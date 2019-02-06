@@ -105,6 +105,11 @@ internal class IrcClientImplTest {
         client.onEvent(mockEventHandler)
         readLineChannel.close()
 
+        // Horrible hacks to make sure we've disconnected.
+        while (client.serverState.status != ServerStatus.Disconnected) {
+            delay(10)
+        }
+
         val captor = argumentCaptor<ServerDisconnected>()
         verify(mockEventHandler, timeout(500).atLeast(2)).invoke(captor.capture())
         assertEquals(TestConstants.time, captor.lastValue.time)
