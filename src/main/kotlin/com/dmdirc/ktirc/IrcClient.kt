@@ -87,14 +87,15 @@ interface IrcClient {
 // TODO: How should alternative nicknames work?
 // TODO: Should IRC Client take a pool of servers and rotate through, or make the caller do that?
 // TODO: Should there be a default profile?
-@KtorExperimentalAPI
-@ExperimentalCoroutinesApi
 class IrcClientImpl(private val server: Server, override val profile: Profile) : IrcClient, CoroutineScope {
 
     private val log by logger()
 
+    @ExperimentalCoroutinesApi
     override val coroutineContext = GlobalScope.newCoroutineContext(Dispatchers.IO)
 
+    @ExperimentalCoroutinesApi
+    @KtorExperimentalAPI
     internal var socketFactory: (CoroutineScope, String, Int, Boolean) -> LineBufferedSocket = ::KtorLineBufferedSocket
 
     override val serverState = ServerState(profile.initialNick, server.host)
@@ -115,6 +116,7 @@ class IrcClientImpl(private val server: Server, override val profile: Profile) :
     override fun connect() {
         check(!connecting.getAndSet(true))
 
+        @Suppress("EXPERIMENTAL_API_USAGE")
         with(socketFactory(this, server.host, server.port, server.tls)) {
             // TODO: Proper error handling - what if connect() fails?
             socket = this

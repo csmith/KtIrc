@@ -1,5 +1,8 @@
 vNEXT (in development)
 
+ * Fixed experimental API warnings when using IrcClient
+ * (Internal) Minor version updates for Gradle, Kotlin and JUnit
+
 v0.6.0
 
  * Changed USER command to not send the server name, per modern standards
