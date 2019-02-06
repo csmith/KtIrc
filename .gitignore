@@ -6,3 +6,5 @@
 /.gradle
 /build
 /out
+# Temporary test files
+**/Test.kt

@@ -54,6 +54,9 @@ sealed class Capability(val name: String) {
     object SaslAuthentication : Capability("sasl")
 
     // Capabilities that enable more information in message tags:
+    /** Draft version of message tags, enables client-only tags. */
+    object DraftMessageTags33 : Capability("draft/message-tags-0.2") // TODO: Add processor for TAGMSG
+
     /** Messages are tagged with the server time they originated at. */
     object ServerTimeMessageTag : Capability("server-time")
 
@@ -76,7 +79,7 @@ sealed class Capability(val name: String) {
 
     // Capabilities that notify us of changes to other clients:
     /** Receive a notification when a user's account changes. */
-    object AccountChangeMessages : Capability("account-notify") // TODO: Add processor
+    object AccountChangeMessages : Capability("account-notify")
 
     /** Receive a notification when a user's away state changes. */
     object AwayStateMessages : Capability("away-notify") // TODO: Add processor

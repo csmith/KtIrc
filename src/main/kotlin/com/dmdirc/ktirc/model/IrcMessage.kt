@@ -34,6 +34,10 @@ sealed class MessageTag(val name: String) {
     object AccountName : MessageTag("account")
     /** Specifies the time the server received the message, if the `server-time` capability is negotiated. */
     object ServerTime : MessageTag("time")
+    /** A unique ID for the message, used to reply, react, edit, delete, etc. */
+    object MessageId : MessageTag("draft/msgid")
+    /** Used to identify a message ID that was replied to, to enable threaded conversations. */
+    object Reply : MessageTag("+draft/reply")
 }
 
 internal val messageTags: Map<String, MessageTag> by lazy {

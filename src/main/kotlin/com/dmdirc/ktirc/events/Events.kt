@@ -36,7 +36,7 @@ class ChannelJoined(time: LocalDateTime, val user: User, val channel: String) : 
 class ChannelParted(time: LocalDateTime, val user: User, val channel: String, val reason: String = "") : IrcEvent(time)
 
 /** Raised when a [victim] is kicked from a channel. */
-class ChannelUserKicked(time: LocalDateTime, val user: User, val channel: String, val victim: String, val reason: String = ""): IrcEvent(time)
+class ChannelUserKicked(time: LocalDateTime, val user: User, val channel: String, val victim: String, val reason: String = "") : IrcEvent(time)
 
 /** Raised when a user quits, and is in a channel. */
 class ChannelQuit(time: LocalDateTime, val user: User, val channel: String, val reason: String = "") : IrcEvent(time)
@@ -48,7 +48,7 @@ class ChannelNamesReceived(time: LocalDateTime, val channel: String, val names: 
 class ChannelNamesFinished(time: LocalDateTime, val channel: String) : IrcEvent(time)
 
 /** Raised when a message is received. */
-class MessageReceived(time: LocalDateTime, val user: User, val target: String, val message: String) : IrcEvent(time)
+class MessageReceived(time: LocalDateTime, val user: User, val target: String, val message: String, val messageId: String? = null) : IrcEvent(time)
 
 /**
  * Raised when a notice is received.
@@ -58,7 +58,7 @@ class MessageReceived(time: LocalDateTime, val user: User, val target: String, v
 class NoticeReceived(time: LocalDateTime, val user: User, val target: String, val message: String) : IrcEvent(time)
 
 /** Raised when an action is received. */
-class ActionReceived(time: LocalDateTime, val user: User, val target: String, val action: String) : IrcEvent(time)
+class ActionReceived(time: LocalDateTime, val user: User, val target: String, val action: String, val messageId: String? = null) : IrcEvent(time)
 
 /** Raised when a CTCP is received. */
 class CtcpReceived(time: LocalDateTime, val user: User, val target: String, val type: String, val content: String) : IrcEvent(time)
@@ -74,7 +74,7 @@ class UserQuit(time: LocalDateTime, val user: User, val reason: String = "") : I
  *
  * This event is only raised if the server supports the `account-notify` capability.
  */
-class UserAccountChanged(time: LocalDateTime, val user: User, val newAccount: String?): IrcEvent(time)
+class UserAccountChanged(time: LocalDateTime, val user: User, val newAccount: String?) : IrcEvent(time)
 
 /** Raised when available server capabilities are received. More batches may follow. */
 class ServerCapabilitiesReceived(time: LocalDateTime, val capabilities: Map<Capability, String>) : IrcEvent(time)
@@ -86,7 +86,7 @@ class ServerCapabilitiesAcknowledged(time: LocalDateTime, val capabilities: Map<
 class ServerCapabilitiesFinished(time: LocalDateTime) : IrcEvent(time)
 
 /** Raised when a Message Of the Day has completed. */
-class MotdFinished(time: LocalDateTime, val missing: Boolean = false): IrcEvent(time)
+class MotdFinished(time: LocalDateTime, val missing: Boolean = false) : IrcEvent(time)
 
 /**
  * Raised when a mode change occurs.
@@ -95,10 +95,10 @@ class MotdFinished(time: LocalDateTime, val missing: Boolean = false): IrcEvent(
  * and the given modes are thus exhaustive. Otherwise, the modes are a sequence of changes to apply to the existing
  * state.
  */
-class ModeChanged(time: LocalDateTime, val target: String, val modes: String, val arguments: Array<String>, val discovered: Boolean = false): IrcEvent(time)
+class ModeChanged(time: LocalDateTime, val target: String, val modes: String, val arguments: Array<String>, val discovered: Boolean = false) : IrcEvent(time)
 
 /** Raised when an AUTHENTICATION message is received. [argument] is `null` if the server sent an empty reply ("+") */
-class AuthenticationMessage(time: LocalDateTime, val argument: String?): IrcEvent(time)
+class AuthenticationMessage(time: LocalDateTime, val argument: String?) : IrcEvent(time)
 
 /** Raised when a SASL attempt finishes, successfully or otherwise. */
 class SaslFinished(time: LocalDateTime, var success: Boolean) : IrcEvent(time)

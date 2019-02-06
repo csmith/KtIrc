@@ -1,6 +1,7 @@
 package com.dmdirc.ktirc.messages
 
 import com.dmdirc.ktirc.IrcClient
+import com.dmdirc.ktirc.model.MessageTag
 
 /** Sends a message to ask the server to list capabilities. */
 internal fun IrcClient.sendCapabilityList() = send("CAP LS 302")
@@ -31,10 +32,15 @@ fun IrcClient.sendCtcp(target: String, type: String, data: String? = null) =
 fun IrcClient.sendAction(target: String, action: String) = sendCtcp(target, "ACTION", action)
 
 /** Sends a private message to a user or channel. */
-fun IrcClient.sendMessage(target: String, message: String) = send("PRIVMSG $target :$message")
+fun IrcClient.sendMessage(target: String, message: String, inReplyTo: String? = null) =
+        if (inReplyTo == null)
+            send("PRIVMSG $target :$message")
+        else
+            send("@${MessageTag.Reply.name}=$inReplyTo PRIVMSG $target :$message")
+            // TODO ^ Proper tag building/serializing
 
 /** Sends a message to register a user with the server. */
 internal fun IrcClient.sendUser(userName: String, realName: String) = send("USER $userName 0 * :$realName")
 
 /** Starts an authentication request. */
-internal fun IrcClient.sendAuthenticationMessage(data: String = "+") =send("AUTHENTICATE $data")
+internal fun IrcClient.sendAuthenticationMessage(data: String = "+") = send("AUTHENTICATE $data")

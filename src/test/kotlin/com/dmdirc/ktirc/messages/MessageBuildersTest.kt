@@ -52,6 +52,12 @@ internal class MessageBuildersTest {
     }
 
     @Test
+    fun `sendMessage sends correct PRIVMSG message with reply to tag`() {
+        mockClient.sendMessage("acidBurn", "Hack the planet!", "abc123")
+        verify(mockClient).send("@+draft/reply=abc123 PRIVMSG acidBurn :Hack the planet!")
+    }
+
+    @Test
     fun `sendCtcp sends correct CTCP message with no arguments`() {
         mockClient.sendCtcp("acidBurn", "ping")
         verify(mockClient).send("PRIVMSG acidBurn :\u0001PING\u0001")

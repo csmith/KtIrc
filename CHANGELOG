@@ -2,6 +2,12 @@ vNEXT (in development)
 
  * Changed USER command to not send the server name, per modern standards
  * Added support for SASL authentication (with PLAIN mechanism)
+ * Removed some unused test code
+ * Message IDs and replies:
+    * Added support for IRCv3 message tags v3.3
+    * Exposed message IDs in MessageReceived and ActionReceived events
+    * When sending a message you can now indicate what it is in reply to
+    * The reply() utility automatically marks messages as a reply
 
 v0.5.0
 

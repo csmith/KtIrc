@@ -5,10 +5,12 @@ import com.dmdirc.ktirc.events.ActionReceived
 import com.dmdirc.ktirc.events.CtcpReceived
 import com.dmdirc.ktirc.events.MessageReceived
 import com.dmdirc.ktirc.model.IrcMessage
+import com.dmdirc.ktirc.model.MessageTag
 import com.dmdirc.ktirc.model.User
 import com.dmdirc.ktirc.params
 import com.dmdirc.ktirc.util.currentTimeProvider
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
@@ -30,6 +32,21 @@ internal class PrivmsgProcessorTest {
         assertEquals(User("acidburn", "libby", "root.localhost"), event.user)
         assertEquals("#crashandburn", event.target)
         assertEquals("hack the planet!", event.message)
+        assertNull(event.messageId)
+    }
+
+    @Test
+    fun `PrivsgProcessor raises message received event with message ID`() {
+        val events = PrivmsgProcessor().process(
+                IrcMessage(mapOf(MessageTag.MessageId to "abc123"), "acidburn!libby@root.localhost".toByteArray(), "PRIVMSG", params("#crashandburn", "hack the planet!")))
+        assertEquals(1, events.size)
+
+        val event = events[0] as MessageReceived
+        assertEquals(TestConstants.time, event.time)
+        assertEquals(User("acidburn", "libby", "root.localhost"), event.user)
+        assertEquals("#crashandburn", event.target)
+        assertEquals("hack the planet!", event.message)
+        assertEquals("abc123", event.messageId)
     }
 
     @Test
@@ -43,6 +60,21 @@ internal class PrivmsgProcessorTest {
         assertEquals(User("acidburn", "libby", "root.localhost"), event.user)
         assertEquals("#crashandburn", event.target)
         assertEquals("hacks the planet", event.action)
+        assertNull(event.messageId)
+    }
+
+    @Test
+    fun `PrivsgProcessor raises action received event with message ID`() {
+        val events = PrivmsgProcessor().process(
+                IrcMessage(mapOf(MessageTag.MessageId to "abc123"), "acidburn!libby@root.localhost".toByteArray(), "PRIVMSG", params("#crashandburn", "\u0001ACTION hacks the planet\u0001")))
+        assertEquals(1, events.size)
+
+        val event = events[0] as ActionReceived
+        assertEquals(TestConstants.time, event.time)
+        assertEquals(User("acidburn", "libby", "root.localhost"), event.user)
+        assertEquals("#crashandburn", event.target)
+        assertEquals("hacks the planet", event.action)
+        assertEquals("abc123", event.messageId)
     }
 
     @Test
@@ -56,6 +88,7 @@ internal class PrivmsgProcessorTest {
         assertEquals(User("acidburn", "libby", "root.localhost"), event.user)
         assertEquals("#crashandburn", event.target)
         assertEquals("", event.action)
+        assertNull(event.messageId)
     }
 
     @Test
@@ -69,6 +102,7 @@ internal class PrivmsgProcessorTest {
         assertEquals(User("acidburn", "libby", "root.localhost"), event.user)
         assertEquals("#crashandburn", event.target)
         assertEquals("hacks the planet", event.action)
+        assertNull(event.messageId)
     }
 
     @Test

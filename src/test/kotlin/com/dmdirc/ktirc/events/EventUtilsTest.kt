@@ -91,5 +91,29 @@ internal class EventUtilsTest {
         verify(ircClient).send("PRIVMSG #TheGibson :acidBurn: OK")
     }
 
+    @Test
+    fun `reply sends response with message ID to user when message is private`() {
+        serverState.localNickname = "zeroCool"
+        val message = MessageReceived(TestConstants.time, User("acidBurn"), "Zerocool", "Hack the planet!", "abc123")
+
+        ircClient.reply(message, "OK")
+        verify(ircClient).send("@+draft/reply=abc123 PRIVMSG acidBurn :OK")
+    }
+
+    @Test
+    fun `reply sends unprefixed response with message ID to user when message is in a channel`() {
+        val message = MessageReceived(TestConstants.time, User("acidBurn"), "#TheGibson", "Hack the planet!", "abc123")
+
+        ircClient.reply(message, "OK")
+        verify(ircClient).send("@+draft/reply=abc123 PRIVMSG #TheGibson :OK")
+    }
+
+    @Test
+    fun `reply sends prefixed response with message ID to user when message is in a channel`() {
+        val message = MessageReceived(TestConstants.time, User("acidBurn"), "#TheGibson", "Hack the planet!", "abc123")
+
+        ircClient.reply(message, "OK", prefixWithNickname = true)
+        verify(ircClient).send("@+draft/reply=abc123 PRIVMSG #TheGibson :acidBurn: OK")
+    }
 
 }

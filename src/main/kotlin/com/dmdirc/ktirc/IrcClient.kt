@@ -167,26 +167,3 @@ class IrcClientImpl(private val server: Server, override val profile: Profile) :
     private fun sendPasswordIfPresent() = server.password?.let(this::sendPassword)
 
 }
-
-internal fun main() {
-    val rootLogger = LogManager.getLogManager().getLogger("")
-    rootLogger.level = Level.FINEST
-    for (h in rootLogger.handlers) {
-        h.level = Level.FINEST
-    }
-
-    runBlocking {
-        with(IrcClientImpl(Server("testnet.inspircd.org", 6667), Profile("KtIrc", "Kotlin!", "kotlin"))) {
-            onEvent { event ->
-                when (event) {
-                    is ServerWelcome -> sendJoin("#ktirc")
-                    is MessageReceived ->
-                        if (event.message == "!test")
-                            reply(event, "Test successful!")
-                }
-            }
-            connect()
-            join()
-        }
-    }
-}
