@@ -4,8 +4,6 @@ import com.dmdirc.ktirc.events.*
 import com.dmdirc.ktirc.io.*
 import com.dmdirc.ktirc.messages.*
 import com.dmdirc.ktirc.model.*
-import com.dmdirc.ktirc.sasl.PlainMechanism
-import com.dmdirc.ktirc.sasl.SaslMechanism
 import com.dmdirc.ktirc.util.currentTimeProvider
 import com.dmdirc.ktirc.util.logger
 import io.ktor.util.KtorExperimentalAPI
@@ -21,7 +19,6 @@ interface IrcClient {
     val serverState: ServerState
     val channelState: ChannelStateMap
     val userState: UserState
-    val hasSaslConfig: Boolean
 
     val caseMapping: CaseMapping
         get() = serverState.features[ServerFeature.ServerCaseMapping] ?: CaseMapping.Rfc
@@ -107,10 +104,9 @@ internal class IrcClientImpl(private val config: IrcClientConfig) : IrcClient, C
     @KtorExperimentalAPI
     internal var socketFactory: (CoroutineScope, String, Int, Boolean) -> LineBufferedSocket = ::KtorLineBufferedSocket
 
-    override val serverState = ServerState(config.profile.nickname, config.server.host, getSaslMechanisms())
+    override val serverState = ServerState(config.profile.nickname, config.server.host, config.sasl)
     override val channelState = ChannelStateMap { caseMapping }
     override val userState = UserState { caseMapping }
-    override val hasSaslConfig = config.sasl != null
 
     private val messageHandler = MessageHandler(messageProcessors.toList(), eventHandlers.toMutableList())
 
@@ -169,14 +165,6 @@ internal class IrcClientImpl(private val config: IrcClientConfig) : IrcClient, C
         userState.reset()
         socket = null
         connecting.set(false)
-    }
-
-    private fun getSaslMechanisms(): Collection<SaslMechanism> {
-        // TODO: Move this somewhere else
-        // TODO: Allow mechanisms to be configured
-        config.sasl?.let {
-            return listOf(PlainMechanism(it))
-        } ?: return emptyList()
     }
 
 }

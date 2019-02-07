@@ -52,7 +52,7 @@ internal class CapabilitiesHandler : EventHandler {
             log.info { "Acknowledged capabilities: ${capabilities.keys.map { it.name }.toList()}" }
             enabledCapabilities.putAll(capabilities)
 
-            if (client.hasSaslConfig) {
+            if (client.serverState.sasl.mechanisms.isNotEmpty()) {
                 client.serverState.sasl.getPreferredSaslMechanism(enabledCapabilities[Capability.SaslAuthentication])?.let { mechanism ->
                     log.info { "Attempting SASL authentication using ${mechanism.ircName}" }
                     client.serverState.sasl.currentMechanism = mechanism
@@ -60,7 +60,7 @@ internal class CapabilitiesHandler : EventHandler {
                     client.sendAuthenticationMessage(mechanism.ircName)
                     return
                 }
-                log.warning { "User supplied credentials but we couldn't negotiate a SASL mechanism with the server" }
+                log.warning { "SASL is enabled but we couldn't negotiate a SASL mechanism with the server" }
             }
 
             client.endNegotiation()

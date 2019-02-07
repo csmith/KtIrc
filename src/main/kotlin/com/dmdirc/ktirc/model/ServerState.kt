@@ -1,7 +1,7 @@
 package com.dmdirc.ktirc.model
 
+import com.dmdirc.ktirc.SaslConfig
 import com.dmdirc.ktirc.io.CaseMapping
-import com.dmdirc.ktirc.sasl.SaslMechanism
 import com.dmdirc.ktirc.util.logger
 import kotlin.reflect.KClass
 
@@ -11,7 +11,7 @@ import kotlin.reflect.KClass
 class ServerState internal constructor(
         private val initialNickname: String,
         private val initialServerName: String,
-        saslMechanisms: Collection<SaslMechanism>) {
+        saslConfig: SaslConfig? = null) {
 
     private val log by logger()
 
@@ -49,7 +49,7 @@ class ServerState internal constructor(
     val capabilities = CapabilitiesState()
 
     /** The current state of SASL authentication. */
-    internal val sasl = SaslState(saslMechanisms)
+    internal val sasl = SaslState(saslConfig)
 
     /**
      * Convenience accessor for the [ServerFeature.ModePrefixes] feature, which will always have a value.

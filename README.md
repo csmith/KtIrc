@@ -80,8 +80,8 @@ client.connect()
 ### `java.lang.IllegalStateException: Check failed` when connecting to some servers
 
 This happens when the IRC server requests an optional client certificate (for use
-in SASL auth, usually). At present there is no support for client certificates in
-the networking library used by KtIrc. This is fixed in the
+in SASL EXTERNAL auth, usually). At present there is no support for client
+certificates in the networking library used by KtIrc. This is fixed in the
 [upstream library](https://github.com/ktorio/ktor/issues/641) and will be included
 as soon as snapshot builds are available. There is no workaround other than using
 an insecure connection.

@@ -16,7 +16,7 @@ import org.junit.jupiter.api.Test
 
 internal class EventUtilsTest {
 
-    private val serverState = ServerState("", "", emptyList())
+    private val serverState = ServerState("", "")
     private val ircClient = mock<IrcClient> {
         on { serverState } doReturn serverState
         on { caseMapping } doReturn CaseMapping.Ascii

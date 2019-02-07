@@ -123,3 +123,23 @@ internal class IrcClientConfigBuilderTest {
     }
 
 }
+
+internal class SaslConfigTest {
+
+    @Test
+    fun `mechanisms function clears all existing mechanisms`() {
+        val config = SaslConfig().apply {
+            mechanisms += "TEST"
+            mechanisms("FOO", "BAR")
+        }
+
+        assertEquals(setOf("FOO", "BAR"), config.mechanisms)
+    }
+
+    @Test
+    fun `defaults to plain mechanism`() {
+        val config = SaslConfig()
+        assertEquals(setOf("PLAIN"), config.mechanisms)
+    }
+
+}

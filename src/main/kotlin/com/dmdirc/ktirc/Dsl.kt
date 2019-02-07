@@ -28,6 +28,9 @@ internal data class IrcClientConfig(val server: ServerConfig, val profile: Profi
  * }
  *
  * sasl {
+ *     mechanisms += "PLAIN" // or to set the list from scratch:
+ *     mechanisms("PLAIN")
+ *
  *     username = "botaccount"
  *     password = "s3cur3"
  * }
@@ -54,7 +57,7 @@ class IrcClientConfigBuilder {
     /**
      * Configures the profile of the IrcClient user.
      *
-     * At a minimum, [ProfileConfig.nickName] must be supplied.
+     * At a minimum, [ProfileConfig.nickname] must be supplied.
      */
     @IrcClientDsl
     fun profile(block: ProfileConfig.() -> Unit) {
@@ -109,11 +112,40 @@ class ProfileConfig {
 
 /**
  * Dsl for configuring SASL authentication.
+ *
+ * By default the `PLAIN` method will be enabled if SASL is configured.
+ *
+ * You can modify the mechanisms either by editing the [mechanisms] collection:
+ *
+ * ```
+ * mechanisms += "EXTERNAL"
+ * mechanisms.remove("PLAIN")
+ * ```
+ *
+ * or by calling the [mechanisms] function with all the mechanisms you wish
+ * to enable:
+ *
+ * ```
+ * mechanisms("PLAIN", "EXTERNAL")
+ * ```
+ *
+ * Priority of mechanisms is determined by KtIrc, regardless of the order
+ * they are specified in here.
  */
 @IrcClientDsl
 class SaslConfig {
+    /** The SASL mechanisms to enable. */
+    val mechanisms: MutableCollection<String> = mutableSetOf("PLAIN")
     /** The username to provide when authenticating using SASL. */
     var username: String = ""
     /** The username to provide when authenticating using SASL. */
     var password: String = ""
+
+    @IrcClientDsl
+    fun mechanisms(vararg methods: String) {
+        with (this.mechanisms) {
+            clear()
+            addAll(methods)
+        }
+    }
 }

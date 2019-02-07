@@ -1,10 +1,15 @@
 package com.dmdirc.ktirc.model
 
+import com.dmdirc.ktirc.SaslConfig
 import com.dmdirc.ktirc.sasl.SaslMechanism
+import com.dmdirc.ktirc.sasl.createSaslMechanism
 
-internal class SaslState(private val mechanisms: Collection<SaslMechanism>) {
+internal class SaslState(config: SaslConfig?) {
+
+    val mechanisms = (config?.createSaslMechanism() ?: emptyList()).toMutableList()
 
     var saslBuffer: String = ""
+
     var currentMechanism: SaslMechanism? = null
         set(value) {
             mechanismState = null

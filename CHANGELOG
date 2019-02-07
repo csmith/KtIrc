@@ -4,6 +4,9 @@ vNEXT (in development)
  * IrcClients are now constructed using a DSL
    * Users of the library no longer need to care about the implementing class
    * Facilitates adding more options in the future without breaking existing implementations
+ * SASL improvements
+   * The enabled mechanisms can now be configured (in the SASL DSL)
+   * Added support for EXTERNAL mechanism, disabled by default
  * (Internal) Minor version updates for Gradle, Kotlin and JUnit
 
 v0.6.0
