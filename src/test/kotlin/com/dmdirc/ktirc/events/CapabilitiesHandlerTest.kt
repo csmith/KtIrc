@@ -4,7 +4,6 @@ import com.dmdirc.ktirc.IrcClient
 import com.dmdirc.ktirc.TestConstants
 import com.dmdirc.ktirc.model.CapabilitiesNegotiationState
 import com.dmdirc.ktirc.model.Capability
-import com.dmdirc.ktirc.model.Profile
 import com.dmdirc.ktirc.model.ServerState
 import com.dmdirc.ktirc.sasl.SaslMechanism
 import com.dmdirc.ktirc.sasl.fromBase64
@@ -32,11 +31,8 @@ internal class CapabilitiesHandlerTest {
 
     private val handler = CapabilitiesHandler()
     private val serverState = ServerState("", "", listOf(saslMech1, saslMech2, saslMech3))
-    private val nonSaslProfile = Profile("acidBurn", "Kate Libby", "acidB")
-    private val saslProfile = Profile("acidBurn", "Kate Libby", "acidB", "acidB", "HackThePlan3t!")
     private val ircClient = mock<IrcClient> {
         on { serverState } doReturn serverState
-        on { profile } doReturn nonSaslProfile
     }
 
     @Test
@@ -96,7 +92,7 @@ internal class CapabilitiesHandlerTest {
 
     @Test
     fun `sends END when capabilities acknowledged and no sasl state`() {
-        whenever(ircClient.profile).thenReturn(saslProfile)
+        whenever(ircClient.hasSaslConfig).thenReturn(true)
         handler.processEvent(ircClient, ServerCapabilitiesAcknowledged(TestConstants.time, hashMapOf(
                 Capability.EchoMessages to "",
                 Capability.HostsInNamesReply to "123"
@@ -107,7 +103,7 @@ internal class CapabilitiesHandlerTest {
 
     @Test
     fun `sends END when capabilities acknowledged and no shared mechanism`() {
-        whenever(ircClient.profile).thenReturn(saslProfile)
+        whenever(ircClient.hasSaslConfig).thenReturn(true)
         handler.processEvent(ircClient, ServerCapabilitiesAcknowledged(TestConstants.time, hashMapOf(
                 Capability.SaslAuthentication to "fake1,fake2",
                 Capability.HostsInNamesReply to "123"
@@ -118,7 +114,7 @@ internal class CapabilitiesHandlerTest {
 
     @Test
     fun `sends AUTHENTICATE when capabilities acknowledged with shared mechanism`() {
-        whenever(ircClient.profile).thenReturn(saslProfile)
+        whenever(ircClient.hasSaslConfig).thenReturn(true)
         handler.processEvent(ircClient, ServerCapabilitiesAcknowledged(TestConstants.time, hashMapOf(
                 Capability.SaslAuthentication to "mech1,fake2",
                 Capability.HostsInNamesReply to "123"
@@ -129,7 +125,7 @@ internal class CapabilitiesHandlerTest {
 
     @Test
     fun `sets current SASL mechanism when capabilities acknowledged with shared mechanism`() {
-        whenever(ircClient.profile).thenReturn(saslProfile)
+        whenever(ircClient.hasSaslConfig).thenReturn(true)
         handler.processEvent(ircClient, ServerCapabilitiesAcknowledged(TestConstants.time, hashMapOf(
                 Capability.SaslAuthentication to "mech1,fake2",
                 Capability.HostsInNamesReply to "123"
@@ -140,7 +136,7 @@ internal class CapabilitiesHandlerTest {
 
     @Test
     fun `updates negotiation state when capabilities acknowledged with shared mechanism`() {
-        whenever(ircClient.profile).thenReturn(saslProfile)
+        whenever(ircClient.hasSaslConfig).thenReturn(true)
         handler.processEvent(ircClient, ServerCapabilitiesAcknowledged(TestConstants.time, hashMapOf(
                 Capability.SaslAuthentication to "mech1,fake2",
                 Capability.HostsInNamesReply to "123"

@@ -10,7 +10,3 @@ internal interface SaslMechanism {
     fun handleAuthenticationEvent(client: IrcClient, data: ByteArray?)
 
 }
-
-internal val supportedSaslMechanisms = listOf<SaslMechanism>(
-        PlainMechanism()
-)

@@ -4,6 +4,8 @@ import com.dmdirc.ktirc.events.*
 import com.dmdirc.ktirc.io.*
 import com.dmdirc.ktirc.messages.*
 import com.dmdirc.ktirc.model.*
+import com.dmdirc.ktirc.sasl.PlainMechanism
+import com.dmdirc.ktirc.sasl.SaslMechanism
 import com.dmdirc.ktirc.util.currentTimeProvider
 import com.dmdirc.ktirc.util.logger
 import io.ktor.util.KtorExperimentalAPI
@@ -19,7 +21,7 @@ interface IrcClient {
     val serverState: ServerState
     val channelState: ChannelStateMap
     val userState: UserState
-    val profile: Profile
+    val hasSaslConfig: Boolean
 
     val caseMapping: CaseMapping
         get() = serverState.features[ServerFeature.ServerCaseMapping] ?: CaseMapping.Rfc
@@ -79,15 +81,22 @@ interface IrcClient {
 }
 
 /**
- * Concrete implementation of an [IrcClient].
+ * Constructs a new [IrcClient] using a configuration DSL.
  *
- * @param server The server to connect to.
- * @param profile The user details to use when connecting.
+ * See [IrcClientConfigBuilder] for details of all options
+ */
+@IrcClientDsl
+@Suppress("FunctionName")
+fun IrcClient(block: IrcClientConfigBuilder.() -> Unit): IrcClient =
+        IrcClientImpl(IrcClientConfigBuilder().apply(block).build())
+
+/**
+ * Concrete implementation of an [IrcClient].
  */
 // TODO: How should alternative nicknames work?
 // TODO: Should IRC Client take a pool of servers and rotate through, or make the caller do that?
 // TODO: Should there be a default profile?
-class IrcClientImpl(private val server: Server, override val profile: Profile) : IrcClient, CoroutineScope {
+internal class IrcClientImpl(private val config: IrcClientConfig) : IrcClient, CoroutineScope {
 
     private val log by logger()
 
@@ -98,9 +107,10 @@ class IrcClientImpl(private val server: Server, override val profile: Profile) :
     @KtorExperimentalAPI
     internal var socketFactory: (CoroutineScope, String, Int, Boolean) -> LineBufferedSocket = ::KtorLineBufferedSocket
 
-    override val serverState = ServerState(profile.initialNick, server.host)
+    override val serverState = ServerState(config.profile.nickname, config.server.host, getSaslMechanisms())
     override val channelState = ChannelStateMap { caseMapping }
     override val userState = UserState { caseMapping }
+    override val hasSaslConfig = config.sasl != null
 
     private val messageHandler = MessageHandler(messageProcessors.toList(), eventHandlers.toMutableList())
 
@@ -110,14 +120,14 @@ class IrcClientImpl(private val server: Server, override val profile: Profile) :
     private val connecting = AtomicBoolean(false)
 
     override fun send(message: String) {
-        socket?.sendChannel?.offer(message.toByteArray()) ?: log.warning { "No send channel for message: $message"}
+        socket?.sendChannel?.offer(message.toByteArray()) ?: log.warning { "No send channel for message: $message" }
     }
 
     override fun connect() {
         check(!connecting.getAndSet(true))
 
         @Suppress("EXPERIMENTAL_API_USAGE")
-        with(socketFactory(this, server.host, server.port, server.tls)) {
+        with(socketFactory(this, config.server.host, config.server.port, config.server.useTls)) {
             // TODO: Proper error handling - what if connect() fails?
             socket = this
 
@@ -128,9 +138,8 @@ class IrcClientImpl(private val server: Server, override val profile: Profile) :
                 emitEvent(ServerConnected(currentTimeProvider()))
                 sendCapabilityList()
                 sendPasswordIfPresent()
-                sendNickChange(profile.initialNick)
-                // TODO: Send correct host
-                sendUser(profile.userName, profile.realName)
+                sendNickChange(config.profile.nickname)
+                sendUser(config.profile.username, config.profile.realName)
                 messageHandler.processMessages(this@IrcClientImpl, receiveChannel.map { parser.parse(it) })
                 reset()
                 emitEvent(ServerDisconnected(currentTimeProvider()))
@@ -152,7 +161,7 @@ class IrcClientImpl(private val server: Server, override val profile: Profile) :
     }
 
     private fun emitEvent(event: IrcEvent) = messageHandler.emitEvent(this, event)
-    private fun sendPasswordIfPresent() = server.password?.let(this::sendPassword)
+    private fun sendPasswordIfPresent() = config.server.password?.let(this::sendPassword)
 
     internal fun reset() {
         serverState.reset()
@@ -160,6 +169,14 @@ class IrcClientImpl(private val server: Server, override val profile: Profile) :
         userState.reset()
         socket = null
         connecting.set(false)
+    }
+
+    private fun getSaslMechanisms(): Collection<SaslMechanism> {
+        // TODO: Move this somewhere else
+        // TODO: Allow mechanisms to be configured
+        config.sasl?.let {
+            return listOf(PlainMechanism(it))
+        } ?: return emptyList()
     }
 
 }

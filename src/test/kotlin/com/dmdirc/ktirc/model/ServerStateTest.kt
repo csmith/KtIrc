@@ -7,25 +7,25 @@ internal class ServerStateTest {
 
     @Test
     fun `ServerState should use the initial nickname as local nickname`() {
-        val serverState = ServerState("acidBurn", "")
+        val serverState = ServerState("acidBurn", "", emptyList())
         assertEquals("acidBurn", serverState.localNickname)
     }
 
     @Test
     fun `ServerState should use the initial name as server name`() {
-        val serverState = ServerState("", "the.gibson")
+        val serverState = ServerState("", "the.gibson", emptyList())
         assertEquals("the.gibson", serverState.serverName)
     }
 
     @Test
     fun `ServerState should default status to disconnected`() {
-        val serverState = ServerState("acidBurn", "")
+        val serverState = ServerState("acidBurn", "", emptyList())
         assertEquals(ServerStatus.Disconnected, serverState.status)
     }
 
     @Test
     fun `returns mode type for known channel mode`() {
-        val serverState = ServerState("acidBurn", "")
+        val serverState = ServerState("acidBurn", "", emptyList())
         serverState.features[ServerFeature.ChannelModes] = arrayOf("ab", "cd", "ef", "gh")
         assertEquals(ChannelModeType.List, serverState.channelModeType('a'))
         assertEquals(ChannelModeType.SetUnsetParameter, serverState.channelModeType('d'))
@@ -35,7 +35,7 @@ internal class ServerStateTest {
 
     @Test
     fun `returns whether a mode is a channel user mode or not`() {
-        val serverState = ServerState("acidBurn", "")
+        val serverState = ServerState("acidBurn", "", emptyList())
         serverState.features[ServerFeature.ModePrefixes] = ModePrefixMapping("oqv", "@~+")
         assertTrue(serverState.isChannelUserMode('o'))
         assertTrue(serverState.isChannelUserMode('q'))
@@ -47,19 +47,19 @@ internal class ServerStateTest {
 
     @Test
     fun `returns NoParameter for unknown channel mode`() {
-        val serverState = ServerState("acidBurn", "")
+        val serverState = ServerState("acidBurn", "", emptyList())
         serverState.features[ServerFeature.ChannelModes] = arrayOf("ab", "cd", "ef", "gh")
         assertEquals(ChannelModeType.NoParameter, serverState.channelModeType('z'))
     }
 
     @Test
     fun `returns NoParameter for channel modes if feature doesn't exist`() {
-        val serverState = ServerState("acidBurn", "")
+        val serverState = ServerState("acidBurn", "", emptyList())
         assertEquals(ChannelModeType.NoParameter, serverState.channelModeType('b'))
     }
 
     @Test
-    fun `reset clears all state`() = with(ServerState("acidBurn", "")) {
+    fun `reset clears all state`() = with(ServerState("acidBurn", "", emptyList())) {
         receivedWelcome = true
         status = ServerStatus.Connecting
         localNickname = "acidBurn3"

@@ -2,7 +2,6 @@ package com.dmdirc.ktirc.model
 
 import com.dmdirc.ktirc.io.CaseMapping
 import com.dmdirc.ktirc.sasl.SaslMechanism
-import com.dmdirc.ktirc.sasl.supportedSaslMechanisms
 import com.dmdirc.ktirc.util.logger
 import kotlin.reflect.KClass
 
@@ -12,7 +11,7 @@ import kotlin.reflect.KClass
 class ServerState internal constructor(
         private val initialNickname: String,
         private val initialServerName: String,
-        saslMechanisms: Collection<SaslMechanism> = supportedSaslMechanisms) {
+        saslMechanisms: Collection<SaslMechanism>) {
 
     private val log by logger()
 
@@ -26,7 +25,7 @@ class ServerState internal constructor(
     /**
      * What we believe our current nickname to be on the server.
      *
-     * Initially this will be the nickname provided in the [Profile]. It will be updated to the actual nickname
+     * Initially this will be the nickname provided in the config. It will be updated to the actual nickname
      * in use when connecting. Once you have received a [com.dmdirc.ktirc.events.ServerWelcome] event you can
      * rely on this value being current.
      * */
@@ -36,7 +35,7 @@ class ServerState internal constructor(
     /**
      * The name of the server we are connected to.
      *
-     * Initially this will be the hostname or IP address provided in the [Server]. It will be updated to the server's
+     * Initially this will be the hostname or IP address provided in the config. It will be updated to the server's
      * self-reported hostname when connecting. Once you have received a [com.dmdirc.ktirc.events.ServerWelcome] event
      * you can rely on this value being current.
      */

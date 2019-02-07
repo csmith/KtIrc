@@ -11,7 +11,7 @@ import org.junit.jupiter.api.Test
 
 internal class ServerStateHandlerTest {
 
-    private val serverState = ServerState("", "")
+    private val serverState = ServerState("", "", emptyList())
     private val ircClient = mock<IrcClient> {
         on { serverState } doReturn serverState
     }

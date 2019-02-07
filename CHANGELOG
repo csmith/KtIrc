@@ -1,6 +1,9 @@
 vNEXT (in development)
 
  * Fixed experimental API warnings when using IrcClient
+ * IrcClients are now constructed using a DSL
+   * Users of the library no longer need to care about the implementing class
+   * Facilitates adding more options in the future without breaking existing implementations
  * (Internal) Minor version updates for Gradle, Kotlin and JUnit
 
 v0.6.0

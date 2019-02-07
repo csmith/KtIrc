@@ -6,7 +6,9 @@ import com.dmdirc.ktirc.events.ServerConnecting
 import com.dmdirc.ktirc.events.ServerWelcome
 import com.dmdirc.ktirc.io.CaseMapping
 import com.dmdirc.ktirc.io.LineBufferedSocket
-import com.dmdirc.ktirc.model.*
+import com.dmdirc.ktirc.model.ChannelState
+import com.dmdirc.ktirc.model.ServerFeature
+import com.dmdirc.ktirc.model.User
 import com.dmdirc.ktirc.util.currentTimeProvider
 import com.nhaarman.mockitokotlin2.*
 import io.ktor.util.KtorExperimentalAPI
@@ -46,6 +48,17 @@ internal class IrcClientImplTest {
 
     private val mockEventHandler = mock<(IrcEvent) -> Unit>()
 
+    private val profileConfig = ProfileConfig().apply {
+        nickname = NICK
+        realName = REAL_NAME
+        username = USER_NAME
+    }
+
+    private val normalConfig = IrcClientConfig(ServerConfig().apply {
+        host = HOST
+        port = PORT
+    }, profileConfig, null)
+
     @BeforeEach
     fun setUp() {
         currentTimeProvider = { TestConstants.time }
@@ -53,7 +66,7 @@ internal class IrcClientImplTest {
 
     @Test
     fun `uses socket factory to create a new socket on connect`() {
-        val client = IrcClientImpl(Server(HOST, PORT), Profile(NICK, REAL_NAME, USER_NAME))
+        val client = IrcClientImpl(normalConfig)
         client.socketFactory = mockSocketFactory
         client.connect()
 
@@ -62,7 +75,11 @@ internal class IrcClientImplTest {
 
     @Test
     fun `uses socket factory to create a new tls on connect`() {
-        val client = IrcClientImpl(Server(HOST, PORT, true), Profile(NICK, REAL_NAME, USER_NAME))
+        val client = IrcClientImpl(IrcClientConfig(ServerConfig().apply {
+            host = HOST
+            port = PORT
+            useTls = true
+        }, profileConfig, null))
         client.socketFactory = mockSocketFactory
         client.connect()
 
@@ -71,7 +88,7 @@ internal class IrcClientImplTest {
 
     @Test
     fun `throws if socket already exists`() {
-        val client = IrcClientImpl(Server(HOST, PORT), Profile(NICK, REAL_NAME, USER_NAME))
+        val client = IrcClientImpl(normalConfig)
         client.socketFactory = mockSocketFactory
         client.connect()
 
@@ -83,7 +100,7 @@ internal class IrcClientImplTest {
     @Test
     fun `emits connection events with local time`() = runBlocking {
         currentTimeProvider = { TestConstants.time }
-        val client = IrcClientImpl(Server(HOST, PORT), Profile(NICK, REAL_NAME, USER_NAME))
+        val client = IrcClientImpl(normalConfig)
         client.socketFactory = mockSocketFactory
         client.onEvent(mockEventHandler)
         client.connect()
@@ -100,7 +117,7 @@ internal class IrcClientImplTest {
 
     @Test
     fun `sends basic connection strings`() = runBlocking {
-        val client = IrcClientImpl(Server(HOST, PORT), Profile(NICK, REAL_NAME, USER_NAME))
+        val client = IrcClientImpl(normalConfig)
         client.socketFactory = mockSocketFactory
         client.connect()
 
@@ -111,7 +128,11 @@ internal class IrcClientImplTest {
 
     @Test
     fun `sends password first, when present`() = runBlocking {
-        val client = IrcClientImpl(Server(HOST, PORT, password = PASSWORD), Profile(NICK, REAL_NAME, USER_NAME))
+        val client = IrcClientImpl(IrcClientConfig(ServerConfig().apply {
+            host = HOST
+            port = PORT
+            password = PASSWORD
+        }, profileConfig, null))
         client.socketFactory = mockSocketFactory
         client.connect()
 
@@ -121,7 +142,7 @@ internal class IrcClientImplTest {
 
     @Test
     fun `sends events to provided event handler`() {
-        val client = IrcClientImpl(Server(HOST, PORT, password = PASSWORD), Profile(NICK, REAL_NAME, USER_NAME))
+        val client = IrcClientImpl(normalConfig)
         client.socketFactory = mockSocketFactory
         client.onEvent(mockEventHandler)
 
@@ -136,14 +157,14 @@ internal class IrcClientImplTest {
 
     @Test
     fun `gets case mapping from server features`() {
-        val client = IrcClientImpl(Server(HOST, PORT), Profile(NICK, REAL_NAME, USER_NAME))
+        val client = IrcClientImpl(normalConfig)
         client.serverState.features[ServerFeature.ServerCaseMapping] = CaseMapping.RfcStrict
         assertEquals(CaseMapping.RfcStrict, client.caseMapping)
     }
 
     @Test
     fun `indicates if user is local user or not`() {
-        val client = IrcClientImpl(Server(HOST, PORT), Profile(NICK, REAL_NAME, USER_NAME))
+        val client = IrcClientImpl(normalConfig)
         client.serverState.localNickname = "[acidBurn]"
 
         assertTrue(client.isLocalUser(User("{acidBurn}", "libby", "root.localhost")))
@@ -152,7 +173,7 @@ internal class IrcClientImplTest {
 
     @Test
     fun `indicates if nickname is local user or not`() {
-        val client = IrcClientImpl(Server(HOST, PORT), Profile(NICK, REAL_NAME, USER_NAME))
+        val client = IrcClientImpl(normalConfig)
         client.serverState.localNickname = "[acidBurn]"
 
         assertTrue(client.isLocalUser("{acidBurn}"))
@@ -161,7 +182,7 @@ internal class IrcClientImplTest {
 
     @Test
     fun `uses current case mapping to check local user`() {
-        val client = IrcClientImpl(Server(HOST, PORT), Profile(NICK, REAL_NAME, USER_NAME))
+        val client = IrcClientImpl(normalConfig)
         client.serverState.localNickname = "[acidBurn]"
         client.serverState.features[ServerFeature.ServerCaseMapping] = CaseMapping.Ascii
         assertFalse(client.isLocalUser(User("{acidBurn}", "libby", "root.localhost")))
@@ -169,7 +190,7 @@ internal class IrcClientImplTest {
 
     @Test
     fun `sends text to socket`() = runBlocking {
-        val client = IrcClientImpl(Server(HOST, PORT), Profile(NICK, REAL_NAME, USER_NAME))
+        val client = IrcClientImpl(normalConfig)
         client.socketFactory = mockSocketFactory
         client.connect()
 
@@ -189,7 +210,7 @@ internal class IrcClientImplTest {
 
     @Test
     fun `disconnects the socket`() = runBlocking {
-        val client = IrcClientImpl(Server(HOST, PORT), Profile(NICK, REAL_NAME, USER_NAME))
+        val client = IrcClientImpl(normalConfig)
         client.socketFactory = mockSocketFactory
         client.connect()
 
@@ -200,7 +221,7 @@ internal class IrcClientImplTest {
 
     @Test
     fun `sends messages in order`() = runBlocking {
-        val client = IrcClientImpl(Server(HOST, PORT), Profile(NICK, REAL_NAME, USER_NAME))
+        val client = IrcClientImpl(normalConfig)
         client.socketFactory = mockSocketFactory
         client.connect()
 
@@ -220,19 +241,19 @@ internal class IrcClientImplTest {
 
     @Test
     fun `defaults local nickname to profile`() = runBlocking {
-        val client = IrcClientImpl(Server(HOST, PORT), Profile(NICK, REAL_NAME, USER_NAME))
+        val client = IrcClientImpl(normalConfig)
         assertEquals(NICK, client.serverState.localNickname)
     }
 
     @Test
     fun `defaults server name to host name`() = runBlocking {
-        val client = IrcClientImpl(Server(HOST, PORT), Profile(NICK, REAL_NAME, USER_NAME))
+        val client = IrcClientImpl(normalConfig)
         assertEquals(HOST, client.serverState.serverName)
     }
 
     @Test
     fun `reset clears all state`() {
-        with (IrcClientImpl(Server(HOST, PORT), Profile(NICK, REAL_NAME, USER_NAME))) {
+        with(IrcClientImpl(normalConfig)) {
             userState += User("acidBurn")
             channelState += ChannelState("#thegibson") { CaseMapping.Rfc }
             serverState.serverName = "root.$HOST"

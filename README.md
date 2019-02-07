@@ -8,6 +8,27 @@
 KtIrc is a Kotlin JVM library for connecting to and interacting with IRC servers.
 It is still in an early stage of development.
 
+## Features
+
+#### Built for Kotlin
+
+KtIrc is written in and designed for use in Kotlin; it uses extension methods,
+DSLs, sealed classes, and so on, to make it much easier to use than an
+equivalent Java library.
+
+#### Coroutine-powered
+
+KtIrc uses co-routines for all of its input/output which lets it deal with
+IRC messages in the background while your app does other things, without
+the overhead of creating a new thread per IRC client.
+
+#### Modern IRC standards
+
+KtIrc supports many IRCv3 features such as SASL authentication, message IDs,
+server timestamps, replies, reactions, account tags, and more. These features
+(where server support is available) make it easier to develop bots and
+clients, and enhance IRC with new user-facing functionality.
+
 ## Setup
 
 KtIrc is published to JCenter, so adding it to a gradle build is as simple as:
@@ -24,21 +45,34 @@ dependencies {
 
 ## Usage
 
-The main interface for interacting with KtIrc is the `IrcClientImpl` class. A
-simple bot might look like:
+Clients are created using a DSL and the `IrcClient` function. At a minimum
+you must specify a server and a profile. A simple bot might look like:
 
 ```kotlin
-with(IrcClientImpl(Server("my.server.com", 6667), Profile("nick", "realName", "userName"))) {
-    onEvent { event ->
-        when (event) {
-            is ServerReady -> sendJoin("#ktirc")
-            is MessageReceived ->
-                if (event.message == "!test")
-                    reply(event, "Test successful!")
-        }
+val client = IrcClient {
+    server {
+        host = "my.server.com"
+    } 
+    profile {
+        nickname = "nick"
+        username = "username"
+        realName = "Hi there"
     }
-    connect()
 }
+
+client.onEvent { event ->
+    when (event) {
+        is ServerReady ->
+            client.sendJoin("#ktirc")
+        is ServerDisconnected ->
+            client.connect()
+        is MessageReceived ->
+            if (event.message == "!test")
+                client.reply(event, "Test successful!")
+    }
+}
+
+client.connect()
 ```
 
 ## Known issues / FAQ
@@ -47,9 +81,10 @@ with(IrcClientImpl(Server("my.server.com", 6667), Profile("nick", "realName", "u
 
 This happens when the IRC server requests an optional client certificate (for use
 in SASL auth, usually). At present there is no support for client certificates in
-the networking library used by KtIrc. This is tracked upstream in
-[ktor#641](https://github.com/ktorio/ktor/issues/641). There is no workaround
-other than using an insecure connection.
+the networking library used by KtIrc. This is fixed in the
+[upstream library](https://github.com/ktorio/ktor/issues/641) and will be included
+as soon as snapshot builds are available. There is no workaround other than using
+an insecure connection.
 
 ### KtIrc connects over IPv4 even when host has IPv6
 

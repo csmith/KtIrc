@@ -1,7 +1,7 @@
 package com.dmdirc.ktirc.sasl
 
 import com.dmdirc.ktirc.IrcClient
-import com.dmdirc.ktirc.model.Profile
+import com.dmdirc.ktirc.SaslConfig
 import com.dmdirc.ktirc.model.ServerState
 import com.nhaarman.mockitokotlin2.argumentCaptor
 import com.nhaarman.mockitokotlin2.doReturn
@@ -13,13 +13,14 @@ import org.junit.jupiter.api.Test
 internal class PlainMechanismTest {
 
     private val serverState = ServerState("", "", emptyList())
-    private val saslProfile = Profile("acidBurn", "Kate Libby", "acidB", "acidB", "HackThePlan3t!")
     private val ircClient = mock<IrcClient> {
         on { serverState } doReturn serverState
-        on { profile } doReturn saslProfile
     }
 
-    private val mechanism = PlainMechanism()
+    private val mechanism = PlainMechanism(SaslConfig().apply {
+        username = "acidB"
+        password = "HackThePlan3t!"
+    })
 
     @Test
     fun `sends encoded username and password when first message received`() {

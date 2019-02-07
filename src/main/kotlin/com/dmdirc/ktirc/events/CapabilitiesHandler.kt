@@ -52,7 +52,7 @@ internal class CapabilitiesHandler : EventHandler {
             log.info { "Acknowledged capabilities: ${capabilities.keys.map { it.name }.toList()}" }
             enabledCapabilities.putAll(capabilities)
 
-            if (client.hasCredentials) {
+            if (client.hasSaslConfig) {
                 client.serverState.sasl.getPreferredSaslMechanism(enabledCapabilities[Capability.SaslAuthentication])?.let { mechanism ->
                     log.info { "Attempting SASL authentication using ${mechanism.ircName}" }
                     client.serverState.sasl.currentMechanism = mechanism
@@ -99,8 +99,5 @@ internal class CapabilitiesHandler : EventHandler {
         serverState.sasl.saslBuffer = ""
         return if (data.isEmpty()) null else data
     }
-
-    private val IrcClient.hasCredentials
-            get() = profile.authUsername != null && profile.authPassword != null
 
 }
