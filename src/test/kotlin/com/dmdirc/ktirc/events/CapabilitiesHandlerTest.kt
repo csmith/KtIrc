@@ -134,6 +134,18 @@ internal class CapabilitiesHandlerTest {
         assertSame(saslMech1, serverState.sasl.currentMechanism)
     }
 
+
+    @Test
+    fun `sends authenticate when capabilities acknowledged with shared mechanism`() {
+        serverState.sasl.mechanisms.addAll(listOf(saslMech1, saslMech2, saslMech3))
+        handler.processEvent(ircClient, ServerCapabilitiesAcknowledged(TestConstants.time, hashMapOf(
+                Capability.SaslAuthentication to "mech1,fake2",
+                Capability.HostsInNamesReply to "123"
+        )))
+
+        verify(ircClient).send("AUTHENTICATE mech1")
+    }
+
     @Test
     fun `updates negotiation state when capabilities acknowledged with shared mechanism`() {
         serverState.sasl.mechanisms.addAll(listOf(saslMech1, saslMech2, saslMech3))
@@ -263,6 +275,30 @@ internal class CapabilitiesHandlerTest {
             assertEquals("", saslBuffer)
             assertNull(mechanismState)
         }
+    }
+
+    @Test
+    fun `sends a new authenticate request when sasl mechanism rejected and new one is acceptable`() {
+        serverState.sasl.mechanisms.addAll(listOf(saslMech1, saslMech2, saslMech3))
+        handler.processEvent(ircClient, SaslMechanismNotAvailableError(TestConstants.time, listOf("mech1", "fake2")))
+
+        verify(ircClient).send("AUTHENTICATE mech1")
+    }
+
+    @Test
+    fun `sends cap end when sasl mechanism rejected and no new one is acceptable`() {
+        serverState.sasl.mechanisms.addAll(listOf(saslMech1, saslMech2, saslMech3))
+        handler.processEvent(ircClient, SaslMechanismNotAvailableError(TestConstants.time, listOf("fake1", "fake2")))
+
+        verify(ircClient).send("CAP END")
+    }
+
+    @Test
+    fun `sets negotiation state when sasl mechanism rejected and no new one is acceptable`() {
+        serverState.sasl.mechanisms.addAll(listOf(saslMech1, saslMech2, saslMech3))
+        handler.processEvent(ircClient, SaslMechanismNotAvailableError(TestConstants.time, listOf("fake1", "fake2")))
+
+        assertEquals(CapabilitiesNegotiationState.FINISHED, serverState.capabilities.negotiationState)
     }
 
 }

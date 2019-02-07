@@ -7,6 +7,7 @@ vNEXT (in development)
  * SASL improvements
    * The enabled mechanisms can now be configured (in the SASL DSL)
    * Added support for EXTERNAL mechanism, disabled by default
+   * Now attempts to renegotiate if the server doesn't recognise the SASL mechanism that was tried
  * (Internal) Minor version updates for Gradle, Kotlin and JUnit
 
 v0.6.0

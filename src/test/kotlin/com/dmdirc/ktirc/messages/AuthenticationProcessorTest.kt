@@ -3,6 +3,7 @@ package com.dmdirc.ktirc.messages
 import com.dmdirc.ktirc.TestConstants
 import com.dmdirc.ktirc.events.AuthenticationMessage
 import com.dmdirc.ktirc.events.SaslFinished
+import com.dmdirc.ktirc.events.SaslMechanismNotAvailableError
 import com.dmdirc.ktirc.model.IrcMessage
 import com.dmdirc.ktirc.params
 import com.dmdirc.ktirc.util.currentTimeProvider
@@ -67,6 +68,26 @@ internal class AuthenticationProcessorTest {
         val event = events[0] as SaslFinished
         assertEquals(TestConstants.time, event.time)
         assertFalse(event.success)
+    }
+
+    @Test
+    fun `raises not available error on mechs numeric`() {
+        val events = processor.process(IrcMessage(emptyMap(), ":the.gibson".toByteArray(), "908", params("*", "PLAIN,EXTERNAL,MAGIC", "are supported by this server")))
+
+        assertEquals(1, events.size)
+        val event = events[0] as SaslMechanismNotAvailableError
+        assertEquals(TestConstants.time, event.time)
+        assertEquals(listOf("PLAIN", "EXTERNAL", "MAGIC"), event.mechanisms)
+    }
+
+    @Test
+    fun `raises empty not available error on malformed mechs numeric`() {
+        val events = processor.process(IrcMessage(emptyMap(), ":the.gibson".toByteArray(), "908", params("*")))
+
+        assertEquals(1, events.size)
+        val event = events[0] as SaslMechanismNotAvailableError
+        assertEquals(TestConstants.time, event.time)
+        assertTrue(event.mechanisms.isEmpty())
     }
 
 }

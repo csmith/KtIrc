@@ -14,3 +14,4 @@ internal const val ERR_NOMOTD = "422"
 
 internal const val RPL_SASLSUCCESS = "903"
 internal const val ERR_SASLFAIL = "904"
+internal const val RPL_SASLMECHS = "908"

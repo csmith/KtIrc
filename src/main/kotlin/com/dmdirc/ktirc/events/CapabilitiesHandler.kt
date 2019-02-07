@@ -20,6 +20,7 @@ internal class CapabilitiesHandler : EventHandler {
             is ServerCapabilitiesFinished -> handleCapabilitiesFinished(client)
             is ServerCapabilitiesAcknowledged -> handleCapabilitiesAcknowledged(client, event.capabilities)
             is AuthenticationMessage -> handleAuthenticationMessage(client, event.argument)
+            is SaslMechanismNotAvailableError -> handleSaslMechanismChange(client, event.mechanisms)
             is SaslFinished -> handleSaslFinished(client)
         }
         return emptyList()
@@ -32,7 +33,7 @@ internal class CapabilitiesHandler : EventHandler {
     private fun handleCapabilitiesFinished(client: IrcClient) {
         // TODO: We probably need to split the outgoing REQ lines if there are lots of caps
         // TODO: For caps with values we may need to decide which value to use/whether to enable them/etc
-        with (client.serverState.capabilities) {
+        with(client.serverState.capabilities) {
             if (advertisedCapabilities.keys.isEmpty()) {
                 negotiationState = CapabilitiesNegotiationState.FINISHED
                 client.sendCapabilityEnd()
@@ -48,17 +49,15 @@ internal class CapabilitiesHandler : EventHandler {
 
     private fun handleCapabilitiesAcknowledged(client: IrcClient, capabilities: Map<Capability, String>) {
         // TODO: Check if everything we wanted is enabled
-        with (client.serverState.capabilities) {
+        with(client.serverState.capabilities) {
             log.info { "Acknowledged capabilities: ${capabilities.keys.map { it.name }.toList()}" }
             enabledCapabilities.putAll(capabilities)
 
             if (client.serverState.sasl.mechanisms.isNotEmpty()) {
-                client.serverState.sasl.getPreferredSaslMechanism(enabledCapabilities[Capability.SaslAuthentication])?.let { mechanism ->
-                    log.info { "Attempting SASL authentication using ${mechanism.ircName}" }
-                    client.serverState.sasl.currentMechanism = mechanism
-                    negotiationState = CapabilitiesNegotiationState.AUTHENTICATING
-                    client.sendAuthenticationMessage(mechanism.ircName)
-                    return
+                enabledCapabilities[Capability.SaslAuthentication]?.let { serverCaps ->
+                    if (startSaslAuth(client, serverCaps.split(','))) {
+                        return
+                    }
                 }
                 log.warning { "SASL is enabled but we couldn't negotiate a SASL mechanism with the server" }
             }
@@ -66,6 +65,24 @@ internal class CapabilitiesHandler : EventHandler {
             client.endNegotiation()
         }
     }
+
+    private fun handleSaslMechanismChange(client: IrcClient, mechanisms: Collection<String>) {
+        if (!startSaslAuth(client, mechanisms)) {
+            log.warning { "SASL is enabled but we couldn't negotiate a SASL mechanism with the server" }
+            client.endNegotiation()
+        }
+    }
+
+    private fun startSaslAuth(client: IrcClient, serverMechanisms: Collection<String>) =
+            with(client.serverState) {
+                sasl.getPreferredSaslMechanism(serverMechanisms)?.let { mechanism ->
+                    log.info { "Attempting SASL authentication using ${mechanism.ircName}" }
+                    sasl.currentMechanism = mechanism
+                    capabilities.negotiationState = CapabilitiesNegotiationState.AUTHENTICATING
+                    client.sendAuthenticationMessage(mechanism.ircName)
+                    true
+                } ?: false
+            }
 
     private fun handleAuthenticationMessage(client: IrcClient, argument: String?) {
         if (argument?.length == 400) {
@@ -80,8 +97,8 @@ internal class CapabilitiesHandler : EventHandler {
         }
     }
 
-    private fun handleSaslFinished(client: IrcClient) = with (client) {
-        with (serverState.sasl) {
+    private fun handleSaslFinished(client: IrcClient) = with(client) {
+        with(serverState.sasl) {
             saslBuffer = ""
             mechanismState = null
             currentMechanism = null

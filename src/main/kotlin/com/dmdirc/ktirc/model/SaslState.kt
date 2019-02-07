@@ -18,11 +18,10 @@ internal class SaslState(config: SaslConfig?) {
 
     var mechanismState: Any? = null
 
-    fun getPreferredSaslMechanism(serverMechanisms: String?): SaslMechanism? {
-        val serverSupported = serverMechanisms?.split(',') ?: return null
+    fun getPreferredSaslMechanism(serverMechanisms: Collection<String>): SaslMechanism? {
         return mechanisms
                 .filter { it.priority < currentMechanism?.priority ?: Int.MAX_VALUE }
-                .filter { serverMechanisms.isEmpty() || it.ircName in serverSupported }
+                .filter { serverMechanisms.isEmpty() || it.ircName in serverMechanisms }
                 .maxBy { it.priority }
     }
 

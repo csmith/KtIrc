@@ -30,7 +30,7 @@ internal class SaslStateTest {
         val state = SaslState(null)
         state.mechanisms.addAll(mechanisms)
 
-        assertEquals(mech3, state.getPreferredSaslMechanism(""))
+        assertEquals(mech3, state.getPreferredSaslMechanism(emptyList()))
     }
 
     @Test
@@ -39,7 +39,7 @@ internal class SaslStateTest {
         state.mechanisms.addAll(mechanisms)
         state.currentMechanism = mech3
 
-        assertEquals(mech2, state.getPreferredSaslMechanism(""))
+        assertEquals(mech2, state.getPreferredSaslMechanism(emptyList()))
     }
 
     @Test
@@ -48,7 +48,7 @@ internal class SaslStateTest {
         state.mechanisms.addAll(mechanisms)
         state.currentMechanism = mech1
 
-        assertNull(state.getPreferredSaslMechanism(""))
+        assertNull(state.getPreferredSaslMechanism(emptyList()))
     }
 
     @Test
@@ -56,7 +56,7 @@ internal class SaslStateTest {
         val state = SaslState(null)
         state.mechanisms.addAll(mechanisms)
 
-        assertEquals(mech3, state.getPreferredSaslMechanism("mech1,mech3,mech2"))
+        assertEquals(mech3, state.getPreferredSaslMechanism(listOf("mech1", "mech3", "mech2")))
     }
 
     @Test
@@ -64,7 +64,7 @@ internal class SaslStateTest {
         val state = SaslState(null)
         state.mechanisms.addAll(mechanisms)
 
-        assertEquals(mech2, state.getPreferredSaslMechanism("mech2,mech1,other"))
+        assertEquals(mech2, state.getPreferredSaslMechanism(listOf("mech2", "mech1", "other")))
     }
 
     @Test
@@ -72,7 +72,7 @@ internal class SaslStateTest {
         val state = SaslState(null)
         state.mechanisms.addAll(mechanisms)
 
-        assertNull(state.getPreferredSaslMechanism("foo,bar,baz"))
+        assertNull(state.getPreferredSaslMechanism(listOf("foo", "bar", "baz")))
     }
 
     @Test

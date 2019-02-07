@@ -104,4 +104,4 @@ class AuthenticationMessage(time: LocalDateTime, val argument: String?) : IrcEve
 class SaslFinished(time: LocalDateTime, var success: Boolean) : IrcEvent(time)
 
 /** Raised when the server says our SASL mechanism isn't available, but gives us a list of others. */
-class SaslMechanismNotAvailableError(time: LocalDateTime, var mechanisms: Array<String>) : IrcEvent(time)
+class SaslMechanismNotAvailableError(time: LocalDateTime, var mechanisms: Collection<String>) : IrcEvent(time)
