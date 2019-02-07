@@ -1,12 +1,10 @@
 package com.dmdirc.ktirc
 
-import com.dmdirc.ktirc.events.IrcEvent
-import com.dmdirc.ktirc.events.ServerConnected
-import com.dmdirc.ktirc.events.ServerConnecting
-import com.dmdirc.ktirc.events.ServerWelcome
+import com.dmdirc.ktirc.events.*
 import com.dmdirc.ktirc.io.CaseMapping
 import com.dmdirc.ktirc.io.LineBufferedSocket
 import com.dmdirc.ktirc.model.ChannelState
+import com.dmdirc.ktirc.model.ConnectionError
 import com.dmdirc.ktirc.model.ServerFeature
 import com.dmdirc.ktirc.model.User
 import com.dmdirc.ktirc.util.currentTimeProvider
@@ -16,10 +14,14 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.filter
 import kotlinx.coroutines.channels.map
+import kotlinx.coroutines.sync.Mutex
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
+import java.nio.channels.UnresolvedAddressException
+import java.security.cert.CertificateException
+import java.util.concurrent.atomic.AtomicReference
 
 @KtorExperimentalAPI
 @ExperimentalCoroutinesApi
@@ -263,6 +265,52 @@ internal class IrcClientImplTest {
             assertEquals(0, channelState.count())
             assertEquals(HOST, serverState.serverName)
         }
+    }
+
+    @Test
+    fun `sends connect error when host is unresolvable`() = runBlocking {
+        whenever(mockSocket.connect()).doThrow(UnresolvedAddressException())
+        with(IrcClientImpl(normalConfig)) {
+            socketFactory = mockSocketFactory
+            withTimeout(500) {
+                launch {
+                    delay(50)
+                    connect()
+                }
+                val event = waitForEvent<ServerConnectionError>()
+                assertEquals(ConnectionError.UnresolvableAddress, event.error)
+            }
+        }
+    }
+
+    @Test
+    fun `sends connect error when tls certificate is bad`() = runBlocking {
+        whenever(mockSocket.connect()).doThrow(CertificateException("Boooo"))
+        with(IrcClientImpl(normalConfig)) {
+            socketFactory = mockSocketFactory
+            withTimeout(500) {
+                launch {
+                    delay(50)
+                    connect()
+                }
+                val event = waitForEvent<ServerConnectionError>()
+                assertEquals(ConnectionError.BadTlsCertificate, event.error)
+                assertEquals("Boooo", event.details)
+            }
+        }
+    }
+
+    private suspend inline fun <reified T : IrcEvent> IrcClient.waitForEvent(): T {
+        val mutex = Mutex(true)
+        val value = AtomicReference<T>()
+        onEvent {
+            if (it is T) {
+                value.set(it)
+                mutex.unlock()
+            }
+        }
+        mutex.lock()
+        return value.get()
     }
 
 

@@ -17,11 +17,14 @@ import kotlinx.coroutines.io.ByteReadChannel
 import kotlinx.coroutines.io.ByteWriteChannel
 import java.net.InetSocketAddress
 import java.security.SecureRandom
+import java.security.cert.CertificateException
 import javax.net.ssl.X509TrustManager
 
 internal interface LineBufferedSocket {
 
+    @Throws(CertificateException::class)
     fun connect()
+
     fun disconnect()
 
     val sendChannel: SendChannel<ByteArray>

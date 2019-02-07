@@ -54,8 +54,8 @@ internal class CapabilitiesHandler : EventHandler {
             enabledCapabilities.putAll(capabilities)
 
             if (client.serverState.sasl.mechanisms.isNotEmpty()) {
-                enabledCapabilities[Capability.SaslAuthentication]?.let { serverCaps ->
-                    if (startSaslAuth(client, serverCaps.split(','))) {
+                advertisedCapabilities[Capability.SaslAuthentication]?.let { serverCaps ->
+                    if (startSaslAuth(client, if (serverCaps.isEmpty()) emptyList() else serverCaps.split(','))) {
                         return
                     }
                 }

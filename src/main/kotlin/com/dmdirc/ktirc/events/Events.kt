@@ -1,6 +1,7 @@
 package com.dmdirc.ktirc.events
 
 import com.dmdirc.ktirc.model.Capability
+import com.dmdirc.ktirc.model.ConnectionError
 import com.dmdirc.ktirc.model.ServerFeatureMap
 import com.dmdirc.ktirc.model.User
 import java.time.LocalDateTime
@@ -16,6 +17,9 @@ class ServerConnected(time: LocalDateTime) : IrcEvent(time)
 
 /** Raised when the connection to the server has ended. */
 class ServerDisconnected(time: LocalDateTime) : IrcEvent(time)
+
+/** Raised when an error occurred trying to connect. */
+class ServerConnectionError(time: LocalDateTime, val error: ConnectionError, val details: String?) : IrcEvent(time)
 
 /** Raised when the server is ready for use. */
 class ServerReady(time: LocalDateTime) : IrcEvent(time)

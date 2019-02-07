@@ -1,23 +1,28 @@
 package com.dmdirc.ktirc
 
-import com.dmdirc.ktirc.events.*
-import com.dmdirc.ktirc.io.*
-import com.dmdirc.ktirc.messages.*
+import com.dmdirc.ktirc.events.IrcEvent
+import com.dmdirc.ktirc.io.CaseMapping
+import com.dmdirc.ktirc.messages.sendJoin
 import com.dmdirc.ktirc.model.*
-import com.dmdirc.ktirc.util.currentTimeProvider
-import com.dmdirc.ktirc.util.logger
-import io.ktor.util.KtorExperimentalAPI
-import kotlinx.coroutines.*
-import kotlinx.coroutines.channels.map
-import java.util.concurrent.atomic.AtomicBoolean
 
 /**
  * Primary interface for interacting with KtIrc.
  */
 interface IrcClient {
 
+    /**
+     * Holds state relating to the current server, its features, and capabilities.
+     */
     val serverState: ServerState
+
+    /**
+     * Holds the state for each channel we are currently joined to.
+     */
     val channelState: ChannelStateMap
+
+    /**
+     * Holds the state for all known users (those in common channels).
+     */
     val userState: UserState
 
     val caseMapping: CaseMapping
@@ -86,85 +91,3 @@ interface IrcClient {
 @Suppress("FunctionName")
 fun IrcClient(block: IrcClientConfigBuilder.() -> Unit): IrcClient =
         IrcClientImpl(IrcClientConfigBuilder().apply(block).build())
-
-/**
- * Concrete implementation of an [IrcClient].
- */
-// TODO: How should alternative nicknames work?
-// TODO: Should IRC Client take a pool of servers and rotate through, or make the caller do that?
-// TODO: Should there be a default profile?
-internal class IrcClientImpl(private val config: IrcClientConfig) : IrcClient, CoroutineScope {
-
-    private val log by logger()
-
-    @ExperimentalCoroutinesApi
-    override val coroutineContext = GlobalScope.newCoroutineContext(Dispatchers.IO)
-
-    @ExperimentalCoroutinesApi
-    @KtorExperimentalAPI
-    internal var socketFactory: (CoroutineScope, String, Int, Boolean) -> LineBufferedSocket = ::KtorLineBufferedSocket
-
-    override val serverState = ServerState(config.profile.nickname, config.server.host, config.sasl)
-    override val channelState = ChannelStateMap { caseMapping }
-    override val userState = UserState { caseMapping }
-
-    private val messageHandler = MessageHandler(messageProcessors.toList(), eventHandlers.toMutableList())
-
-    private val parser = MessageParser()
-    private var socket: LineBufferedSocket? = null
-
-    private val connecting = AtomicBoolean(false)
-
-    override fun send(message: String) {
-        socket?.sendChannel?.offer(message.toByteArray()) ?: log.warning { "No send channel for message: $message" }
-    }
-
-    override fun connect() {
-        check(!connecting.getAndSet(true))
-
-        @Suppress("EXPERIMENTAL_API_USAGE")
-        with(socketFactory(this, config.server.host, config.server.port, config.server.useTls)) {
-            // TODO: Proper error handling - what if connect() fails?
-            socket = this
-
-            emitEvent(ServerConnecting(currentTimeProvider()))
-
-            launch {
-                connect()
-                emitEvent(ServerConnected(currentTimeProvider()))
-                sendCapabilityList()
-                sendPasswordIfPresent()
-                sendNickChange(config.profile.nickname)
-                sendUser(config.profile.username, config.profile.realName)
-                messageHandler.processMessages(this@IrcClientImpl, receiveChannel.map { parser.parse(it) })
-                reset()
-                emitEvent(ServerDisconnected(currentTimeProvider()))
-            }
-        }
-    }
-
-    override fun disconnect() {
-        socket?.disconnect()
-    }
-
-    override fun onEvent(handler: (IrcEvent) -> Unit) {
-        messageHandler.handlers.add(object : EventHandler {
-            override fun processEvent(client: IrcClient, event: IrcEvent): List<IrcEvent> {
-                handler(event)
-                return emptyList()
-            }
-        })
-    }
-
-    private fun emitEvent(event: IrcEvent) = messageHandler.emitEvent(this, event)
-    private fun sendPasswordIfPresent() = config.server.password?.let(this::sendPassword)
-
-    internal fun reset() {
-        serverState.reset()
-        channelState.clear()
-        userState.reset()
-        socket = null
-        connecting.set(false)
-    }
-
-}
