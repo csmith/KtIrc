@@ -41,6 +41,9 @@ class ChannelUserKicked(time: LocalDateTime, val user: User, val channel: String
 /** Raised when a user quits, and is in a channel. */
 class ChannelQuit(time: LocalDateTime, val user: User, val channel: String, val reason: String = "") : IrcEvent(time)
 
+/** Raised when a user changes nickname, and is in a channel. */
+class ChannelNickChanged(time: LocalDateTime, val user: User, val channel: String, val newNick: String) : IrcEvent(time)
+
 /** Raised when a batch of the channel's member list has been received. More batches may follow. */
 class ChannelNamesReceived(time: LocalDateTime, val channel: String, val names: List<String>) : IrcEvent(time)
 
@@ -68,6 +71,9 @@ class CtcpReplyReceived(time: LocalDateTime, val user: User, val target: String,
 
 /** Raised when a user quits. */
 class UserQuit(time: LocalDateTime, val user: User, val reason: String = "") : IrcEvent(time)
+
+/** Raised when a user changes nickname. */
+class UserNickChanged(time: LocalDateTime, val user: User, val newNick: String) : IrcEvent(time)
 
 /**
  * Raised when a user's account changes (i.e., they auth'd or deauth'd with services).

@@ -218,6 +218,53 @@ internal class ChannelStateHandlerTest {
     }
 
     @Test
+    fun `renames user in channel member list for nick changes`() {
+        val channel = ChannelState("#thegibson") { CaseMapping.Rfc }
+        channel.users += ChannelUser("acidBurn")
+        channelStateMap += channel
+
+        handler.processEvent(ircClient, UserNickChanged(TestConstants.time, User("acidburn", "libby", "root.localhost"), "acidB"))
+
+        assertFalse("acidBurn" in channel.users)
+        assertTrue("acidB" in channel.users)
+        assertEquals("acidB", channel.users["acidB"]?.nickname)
+    }
+
+    @Test
+    fun `raises ChannelNickChanged event for each channel a user changes nicks in`() {
+        with (ChannelState("#thegibson") { CaseMapping.Rfc }) {
+            users += ChannelUser("ZeroCool")
+            channelStateMap += this
+        }
+
+        with (ChannelState("#dumpsterdiving") { CaseMapping.Rfc }) {
+            users += ChannelUser("ZeroCool")
+            channelStateMap += this
+        }
+
+        with (ChannelState("#chat") { CaseMapping.Rfc }) {
+            users += ChannelUser("AcidBurn")
+            channelStateMap += this
+        }
+
+        val events = handler.processEvent(ircClient, UserNickChanged(TestConstants.time, User("zerocool", "dade", "root.localhost"), "zer0c00l"))
+
+        val names = mutableListOf<String>()
+        assertEquals(2, events.size)
+        events.forEach { event ->
+            (event as ChannelNickChanged).let {
+                assertEquals(TestConstants.time, it.time)
+                assertEquals("zerocool", it.user.nickname)
+                assertEquals("zer0c00l", it.newNick)
+                names.add(it.channel)
+            }
+        }
+
+        assertTrue("#thegibson" in names)
+        assertTrue("#dumpsterdiving" in names)
+    }
+
+    @Test
     fun `sets mode discovered flag when discovered mode event received`() {
         val channel = ChannelState("#thegibson") { CaseMapping.Rfc }
         channelStateMap += channel

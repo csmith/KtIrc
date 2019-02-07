@@ -18,6 +18,7 @@ internal class ChannelStateHandler : EventHandler {
             is ChannelUserKicked -> handleKick(client, event)
             is ModeChanged -> handleModeChanged(client, event)
             is UserQuit -> return handleQuit(client, event)
+            is UserNickChanged -> return handleNickChanged(client, event)
         }
         return emptyList()
     }
@@ -87,29 +88,28 @@ internal class ChannelStateHandler : EventHandler {
             when (char) {
                 '+' -> adding = true
                 '-' -> adding = false
-                else -> argumentOffset += adjustMode(client, chan, char, event.arguments, argumentOffset, adding)
+                else -> argumentOffset += if (client.serverState.isChannelUserMode(char)) {
+                    adjustUserMode(client, chan, char, adding, event.arguments[argumentOffset])
+                } else {
+                    adjustMode(client, chan, char, event.arguments, argumentOffset, adding)
+                }
             }
         }
     }
 
     private fun adjustMode(client: IrcClient, chan: ChannelState, mode: Char, arguments: Array<String>, argumentOffset: Int, adding: Boolean): Int {
-        return if (client.serverState.isChannelUserMode(mode)) {
-            adjustUserMode(client, chan, mode, adding, arguments[argumentOffset])
-            1
+        val type = client.serverState.channelModeType(mode)
+        val takesParam = if (adding) type.needsParameterToSet else type.needsParameterToUnset
+        val param = if (takesParam) arguments[argumentOffset] else ""
+        if (adding) {
+            chan.modes[mode] = param
         } else {
-            val type = client.serverState.channelModeType(mode)
-            val takesParam = if (adding) type.needsParameterToSet else type.needsParameterToUnset
-            val param = if (takesParam) arguments[argumentOffset] else ""
-            if (adding) {
-                chan.modes[mode] = param
-            } else {
-                chan.modes.remove(mode)
-            }
-            if (takesParam) 1 else 0
+            chan.modes.remove(mode)
         }
+        return if (takesParam) 1 else 0
     }
 
-    private fun adjustUserMode(client: IrcClient, chan: ChannelState, mode: Char, adding: Boolean, user: String) {
+    private fun adjustUserMode(client: IrcClient, chan: ChannelState, mode: Char, adding: Boolean, user: String): Int {
         chan.users[user]?.let { channelUser ->
             // Filter from the master list of mode prefixes so that ordering is consistent
             channelUser.modes = client.serverState.channelModePrefixes.modes.filter {
@@ -120,6 +120,7 @@ internal class ChannelStateHandler : EventHandler {
                 }
             }
         }
+        return 1
     }
 
     private fun handleQuit(client: IrcClient, event: UserQuit) = sequence {
@@ -127,6 +128,15 @@ internal class ChannelStateHandler : EventHandler {
             if (it.users.contains(event.user.nickname)) {
                 it.users -= event.user.nickname
                 yield(ChannelQuit(event.time, event.user, it.name, event.reason))
+            }
+        }
+    }.toList()
+
+    private fun handleNickChanged(client: IrcClient, event: UserNickChanged) = sequence {
+        client.channelState.forEach {
+            it.users[event.user.nickname]?.let { chanUser ->
+                chanUser.nickname = event.newNick
+                yield(ChannelNickChanged(event.time, event.user, it.name, event.newNick))
             }
         }
     }.toList()

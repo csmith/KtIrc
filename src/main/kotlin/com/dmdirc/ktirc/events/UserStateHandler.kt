@@ -12,6 +12,7 @@ internal class UserStateHandler : EventHandler {
             is ChannelUserKicked -> handleKick(client, event)
             is ChannelNamesReceived  -> handleNamesReceived(client, event)
             is UserAccountChanged -> handleAccountChanged(client, event)
+            is UserNickChanged -> handleNickChanged(client, event)
             is UserQuit -> handleQuit(client.userState, event)
         }
         return emptyList()
@@ -61,6 +62,13 @@ internal class UserStateHandler : EventHandler {
 
     private fun handleAccountChanged(client: IrcClient, event: UserAccountChanged) {
         client.userState[event.user]?.details?.account = event.newAccount
+    }
+
+    private fun handleNickChanged(client: IrcClient, event: UserNickChanged) {
+        client.userState[event.user]?.details?.nickname = event.newNick
+        if (client.isLocalUser(event.user)) {
+            client.serverState.localNickname = event.newNick
+        }
     }
 
     private fun handleQuit(state: UserState, event: UserQuit) {
