@@ -113,7 +113,7 @@ class ProfileConfig {
 /**
  * Dsl for configuring SASL authentication.
  *
- * By default the `PLAIN` method will be enabled if SASL is configured.
+ * By default the `PLAIN`, `SCRAM-SHA-1`, and `SCRAM-SHA-256` methods will be enabled if SASL is configured.
  *
  * You can modify the mechanisms either by editing the [mechanisms] collection:
  *
@@ -135,7 +135,7 @@ class ProfileConfig {
 @IrcClientDsl
 class SaslConfig {
     /** The SASL mechanisms to enable. */
-    val mechanisms: MutableCollection<String> = mutableSetOf("PLAIN")
+    val mechanisms: MutableCollection<String> = mutableSetOf("PLAIN", "SCRAM-SHA-1", "SCRAM-SHA-256")
     /** The username to provide when authenticating using SASL. */
     var username: String = ""
     /** The username to provide when authenticating using SASL. */

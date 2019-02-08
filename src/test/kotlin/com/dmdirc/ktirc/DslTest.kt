@@ -137,9 +137,9 @@ internal class SaslConfigTest {
     }
 
     @Test
-    fun `defaults to plain mechanism`() {
+    fun `defaults to plain and scram mechanisms`() {
         val config = SaslConfig()
-        assertEquals(setOf("PLAIN"), config.mechanisms)
+        assertEquals(setOf("PLAIN", "SCRAM-SHA-1", "SCRAM-SHA-256"), config.mechanisms)
     }
 
 }
