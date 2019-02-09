@@ -95,6 +95,9 @@ class ServerCapabilitiesAcknowledged(time: LocalDateTime, val capabilities: Map<
 /** Raised when the server has finished sending us capabilities. */
 class ServerCapabilitiesFinished(time: LocalDateTime) : IrcEvent(time)
 
+/** Raised when a line of the Message Of the Day has been received. */
+class MotdLineReceived(time: LocalDateTime, val line: String, val first: Boolean = false) : IrcEvent(time)
+
 /** Raised when a Message Of the Day has completed. */
 class MotdFinished(time: LocalDateTime, val missing: Boolean = false) : IrcEvent(time)
 
