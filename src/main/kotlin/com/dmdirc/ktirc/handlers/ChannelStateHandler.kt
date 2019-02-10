@@ -1,6 +1,7 @@
-package com.dmdirc.ktirc.events
+package com.dmdirc.ktirc.handlers
 
 import com.dmdirc.ktirc.IrcClient
+import com.dmdirc.ktirc.events.*
 import com.dmdirc.ktirc.model.ChannelState
 import com.dmdirc.ktirc.model.ChannelUser
 import com.dmdirc.ktirc.util.logger

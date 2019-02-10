@@ -1,6 +1,8 @@
 package com.dmdirc.ktirc
 
 import com.dmdirc.ktirc.events.*
+import com.dmdirc.ktirc.handlers.EventHandler
+import com.dmdirc.ktirc.handlers.eventHandlers
 import com.dmdirc.ktirc.io.KtorLineBufferedSocket
 import com.dmdirc.ktirc.io.LineBufferedSocket
 import com.dmdirc.ktirc.io.MessageHandler

@@ -1,7 +1,7 @@
 package com.dmdirc.ktirc.io
 
 import com.dmdirc.ktirc.IrcClient
-import com.dmdirc.ktirc.events.EventHandler
+import com.dmdirc.ktirc.handlers.EventHandler
 import com.dmdirc.ktirc.events.IrcEvent
 import com.dmdirc.ktirc.messages.MessageProcessor
 import com.dmdirc.ktirc.model.IrcMessage

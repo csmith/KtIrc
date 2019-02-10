@@ -54,6 +54,12 @@ class ChannelNamesReceived(time: LocalDateTime, val channel: String, val names: 
 /** Raised when the entirety of the channel's member list has been received. */
 class ChannelNamesFinished(time: LocalDateTime, val channel: String) : IrcEvent(time)
 
+/** Raised when a channel topic is discovered (not changed). Usually followed by [ChannelTopicMetadataDiscovered]. */
+class ChannelTopicDiscovered(time: LocalDateTime, val channel: String, val topic: String) : IrcEvent(time)
+
+/** Raised when a channel topic's metadata is discovered. */
+class ChannelTopicMetadataDiscovered(time: LocalDateTime, val channel: String, val user: User, val setTime: LocalDateTime) : IrcEvent(time)
+
 /** Raised when a message is received. */
 class MessageReceived(time: LocalDateTime, val user: User, val target: String, val message: String, val messageId: String? = null) : IrcEvent(time)
 

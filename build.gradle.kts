@@ -41,9 +41,9 @@ dependencies {
     implementation("io.ktor:ktor-network-tls:1.1.2")
 
     testImplementation("com.nhaarman.mockitokotlin2:mockito-kotlin:2.1.0")
-    testImplementation("org.junit.jupiter:junit-jupiter-api:5.3.2")
-    testImplementation("org.junit.jupiter:junit-jupiter-params:5.3.2")
-    testRuntime("org.junit.jupiter:junit-jupiter-engine:5.3.2")
+    testImplementation("org.junit.jupiter:junit-jupiter-api:5.4.0")
+    testImplementation("org.junit.jupiter:junit-jupiter-params:5.4.0")
+    testRuntime("org.junit.jupiter:junit-jupiter-engine:5.4.0")
 }
 
 java {
@@ -88,7 +88,7 @@ tasks {
     }
 
     withType<Wrapper> {
-        gradleVersion = "5.2"
+        gradleVersion = "5.2.1"
     }
 
     withType<KotlinCompile> {

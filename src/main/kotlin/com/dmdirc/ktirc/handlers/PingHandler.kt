@@ -1,6 +1,8 @@
-package com.dmdirc.ktirc.events
+package com.dmdirc.ktirc.handlers
 
 import com.dmdirc.ktirc.IrcClient
+import com.dmdirc.ktirc.events.IrcEvent
+import com.dmdirc.ktirc.events.PingReceived
 import com.dmdirc.ktirc.messages.sendPong
 
 internal class PingHandler : EventHandler {

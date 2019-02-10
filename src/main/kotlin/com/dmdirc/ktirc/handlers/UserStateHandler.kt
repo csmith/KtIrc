@@ -1,6 +1,7 @@
-package com.dmdirc.ktirc.events
+package com.dmdirc.ktirc.handlers
 
 import com.dmdirc.ktirc.IrcClient
+import com.dmdirc.ktirc.events.*
 import com.dmdirc.ktirc.model.UserState
 
 internal class UserStateHandler : EventHandler {
@@ -10,7 +11,7 @@ internal class UserStateHandler : EventHandler {
             is ChannelJoined -> handleJoin(client.userState, event)
             is ChannelParted -> handlePart(client, event)
             is ChannelUserKicked -> handleKick(client, event)
-            is ChannelNamesReceived  -> handleNamesReceived(client, event)
+            is ChannelNamesReceived -> handleNamesReceived(client, event)
             is UserAccountChanged -> handleAccountChanged(client, event)
             is UserNickChanged -> handleNickChanged(client, event)
             is UserQuit -> handleQuit(client.userState, event)

@@ -1,7 +1,8 @@
-package com.dmdirc.ktirc.events
+package com.dmdirc.ktirc.handlers
 
 import com.dmdirc.ktirc.IrcClient
 import com.dmdirc.ktirc.TestConstants
+import com.dmdirc.ktirc.events.*
 import com.dmdirc.ktirc.model.CapabilitiesNegotiationState
 import com.dmdirc.ktirc.model.Capability
 import com.dmdirc.ktirc.model.ServerState
