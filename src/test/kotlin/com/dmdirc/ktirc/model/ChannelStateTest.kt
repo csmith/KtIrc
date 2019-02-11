@@ -26,15 +26,19 @@ internal class ChannelStateTest {
     fun `reset resets all state`() = with(ChannelState("#thegibson") { CaseMapping.Rfc }) {
         receivingUserList = true
         modesDiscovered = true
+        topicDiscovered = true
         modes['a'] = "b"
         users += ChannelUser("acidBurn")
+        topic = ChannelTopic("Hack the planet!")
 
         reset()
 
         assertFalse(receivingUserList)
         assertFalse(modesDiscovered)
+        assertFalse(topicDiscovered)
         assertTrue(modes.isEmpty())
         assertEquals(0, users.count())
+        assertEquals(ChannelTopic(), topic)
     }
 
 }

@@ -383,4 +383,71 @@ internal class ChannelStateHandlerTest {
         assertEquals("bbb", channelStateMap["#thegibson"]?.modes?.get('b'))
     }
 
+    @Test
+    fun `updates topic state when it's discovered for the first time`() {
+        val state = ChannelState("#thegibson") { CaseMapping.Rfc }
+        channelStateMap += state
+
+        handler.processEvent(ircClient, ChannelTopicDiscovered(TestConstants.time, "#thegibson", "Hack the planet!"))
+        handler.processEvent(ircClient, ChannelTopicMetadataDiscovered(TestConstants.time, "#thegibson", User("acidBurn"), TestConstants.otherTime))
+
+        assertTrue(state.topicDiscovered)
+        assertEquals(ChannelTopic("Hack the planet!", User("acidBurn"), TestConstants.otherTime), state.topic)
+    }
+
+    @Test
+    fun `updates topic state when no topic is discovered for the first time`() {
+        val state = ChannelState("#thegibson") { CaseMapping.Rfc }
+        channelStateMap += state
+
+        handler.processEvent(ircClient, ChannelTopicDiscovered(TestConstants.time, "#thegibson", null))
+
+        assertTrue(state.topicDiscovered)
+        assertEquals(ChannelTopic(), state.topic)
+    }
+
+    @Test
+    fun `leaves topic state when it's discovered for a second time`() {
+        val state = ChannelState("#thegibson") { CaseMapping.Rfc }
+        state.topic = ChannelTopic("Hack the planet!", User("acidBurn"), TestConstants.otherTime)
+        state.topicDiscovered = true
+        channelStateMap += state
+
+        handler.processEvent(ircClient, ChannelTopicDiscovered(TestConstants.time, "#thegibson", "Hack the planet"))
+        handler.processEvent(ircClient, ChannelTopicMetadataDiscovered(TestConstants.time, "#thegibson", User("zeroCool"), TestConstants.time))
+
+        assertTrue(state.topicDiscovered)
+        assertEquals(ChannelTopic("Hack the planet!", User("acidBurn"), TestConstants.otherTime), state.topic)
+    }
+
+    @Test
+    fun `updates topic state when the topic is changed`() {
+        val state = ChannelState("#thegibson") { CaseMapping.Rfc }
+        channelStateMap += state
+
+        handler.processEvent(ircClient, ChannelTopicChanged(TestConstants.time, User("acidBurn"), "#thegibson", "Hack the planet!"))
+
+        assertEquals(ChannelTopic("Hack the planet!", User("acidBurn"), TestConstants.time), state.topic)
+    }
+
+    @Test
+    fun `updates topic state when the topic is unset`() {
+        val state = ChannelState("#thegibson") { CaseMapping.Rfc }
+        channelStateMap += state
+
+        handler.processEvent(ircClient, ChannelTopicChanged(TestConstants.time, User("acidBurn"), "#thegibson", null))
+
+        assertEquals(ChannelTopic(null, User("acidBurn"), TestConstants.time), state.topic)
+    }
+
+    @Test
+    fun `ignores topic change when channel doesn't exist`() {
+        val state = ChannelState("#thegibson") { CaseMapping.Rfc }
+        channelStateMap += state
+
+        handler.processEvent(ircClient, ChannelTopicChanged(TestConstants.time, User("acidBurn"), "#dumpsterdiving", "Hack the planet!"))
+
+        assertEquals(ChannelTopic(), state.topic)
+    }
+
 }

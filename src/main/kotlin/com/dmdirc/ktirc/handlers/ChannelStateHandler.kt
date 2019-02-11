@@ -3,6 +3,7 @@ package com.dmdirc.ktirc.handlers
 import com.dmdirc.ktirc.IrcClient
 import com.dmdirc.ktirc.events.*
 import com.dmdirc.ktirc.model.ChannelState
+import com.dmdirc.ktirc.model.ChannelTopic
 import com.dmdirc.ktirc.model.ChannelUser
 import com.dmdirc.ktirc.util.logger
 
@@ -17,6 +18,9 @@ internal class ChannelStateHandler : EventHandler {
             is ChannelNamesReceived -> handleNamesReceived(client, event)
             is ChannelNamesFinished -> handleNamesFinished(client, event)
             is ChannelUserKicked -> handleKick(client, event)
+            is ChannelTopicDiscovered -> handleTopicDiscovered(client, event)
+            is ChannelTopicMetadataDiscovered -> handleTopicMetadata(client, event)
+            is ChannelTopicChanged -> handleTopicChanged(client, event)
             is ModeChanged -> handleModeChanged(client, event)
             is UserQuit -> return handleQuit(client, event)
             is UserNickChanged -> return handleNickChanged(client, event)
@@ -73,6 +77,32 @@ internal class ChannelStateHandler : EventHandler {
         client.channelState[event.channel]?.let {
             it.receivingUserList = false
             log.finest { "Finished receiving names in ${event.channel}. Users: ${it.users.toList()}" }
+        }
+    }
+
+    private fun handleTopicDiscovered(client: IrcClient, event: ChannelTopicDiscovered) {
+        client.channelState[event.channel]?.let {
+            if (!it.topicDiscovered) {
+                it.topic = ChannelTopic(event.topic)
+                if (event.topic == null) {
+                    it.topicDiscovered = true
+                }
+            }
+        }
+    }
+
+    private fun handleTopicMetadata(client: IrcClient, event: ChannelTopicMetadataDiscovered) {
+        client.channelState[event.channel]?.let {
+            if (!it.topicDiscovered) {
+                it.topic = ChannelTopic(it.topic.topic, event.user, event.setTime)
+                it.topicDiscovered = true
+            }
+        }
+    }
+
+    private fun handleTopicChanged(client: IrcClient, event: ChannelTopicChanged) {
+        client.channelState[event.channel]?.let {
+            it.topic = ChannelTopic(event.topic, event.user, event.time)
         }
     }
 

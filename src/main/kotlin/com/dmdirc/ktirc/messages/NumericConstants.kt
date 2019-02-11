@@ -8,6 +8,7 @@ internal const val RPL_ISUPPORT = "005"
 internal const val RPL_UMODEIS = "221"
 
 internal const val RPL_CHANNELMODEIS = "324"
+internal const val RPL_NOTOPIC = "331"
 internal const val RPL_TOPIC = "332"
 internal const val RPL_TOPICWHOTIME = "333"
 internal const val RPL_MOTD = "372"
