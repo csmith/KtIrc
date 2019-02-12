@@ -1,5 +1,8 @@
 vNEXT (in development)
 
+ * Improve DSL for creating an IrcClient to allow parameters to be passed to server and profile
+   e.g. IrcClient { server("irc.example.com", 6667) }
+
 v0.8.0
 
  * Added support for SCRAM-SHA-1 and SCRAM-SHA-256 SASL mechanisms

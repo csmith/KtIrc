@@ -27,6 +27,15 @@ internal class IrcClientConfigBuilderTest {
     }
 
     @Test
+    fun `throws if empty host is provided`() {
+        assertThrows<IllegalStateException> {
+            IrcClientConfigBuilder().apply {
+                server("")
+            }
+        }
+    }
+
+    @Test
     fun `throws if profile is defined twice`() {
         assertThrows<IllegalStateException> {
             IrcClientConfigBuilder().apply {
@@ -41,6 +50,15 @@ internal class IrcClientConfigBuilderTest {
         assertThrows<IllegalStateException> {
             IrcClientConfigBuilder().apply {
                 profile {}
+            }
+        }
+    }
+
+    @Test
+    fun `throws if empty nickname is provided`() {
+        assertThrows<IllegalStateException> {
+            IrcClientConfigBuilder().apply {
+                profile("")
             }
         }
     }
@@ -92,11 +110,66 @@ internal class IrcClientConfigBuilderTest {
     }
 
     @Test
+    fun `applies server settings with convenience function`() {
+        val config = IrcClientConfigBuilder().apply {
+            profile { nickname = "acidBurn" }
+            server("thegibson.com", 1337, true, "h4cktheplan3t")
+        }.build()
+
+        assertEquals("thegibson.com", config.server.host)
+        assertEquals(1337, config.server.port)
+        assertEquals("h4cktheplan3t", config.server.password)
+        assertTrue(config.server.useTls)
+    }
+
+    @Test
+    fun `applies server settings with convenience function and block`() {
+        val config = IrcClientConfigBuilder().apply {
+            profile { nickname = "acidBurn" }
+            server("thegibson.com", 1337) {
+                password = "h4cktheplan3t"
+                useTls = true
+            }
+        }.build()
+
+        assertEquals("thegibson.com", config.server.host)
+        assertEquals(1337, config.server.port)
+        assertEquals("h4cktheplan3t", config.server.password)
+        assertTrue(config.server.useTls)
+    }
+
+    @Test
     fun `applies profile settings`() {
         val config = IrcClientConfigBuilder().apply {
             profile {
                 nickname = "acidBurn"
                 username = "acidB"
+                realName = "Kate"
+            }
+            server { host = "thegibson.com" }
+        }.build()
+
+        assertEquals("acidBurn", config.profile.nickname)
+        assertEquals("acidB", config.profile.username)
+        assertEquals("Kate", config.profile.realName)
+    }
+
+    @Test
+    fun `applies profile settings with convenience function`() {
+        val config = IrcClientConfigBuilder().apply {
+            profile("acidBurn", "acidB", "Kate")
+            server { host = "thegibson.com" }
+        }.build()
+
+        assertEquals("acidBurn", config.profile.nickname)
+        assertEquals("acidB", config.profile.username)
+        assertEquals("Kate", config.profile.realName)
+    }
+
+    @Test
+    fun `applies profile settings with convenience function and block`() {
+        val config = IrcClientConfigBuilder().apply {
+            profile("acidBurn", "acidB") {
                 realName = "Kate"
             }
             server { host = "thegibson.com" }

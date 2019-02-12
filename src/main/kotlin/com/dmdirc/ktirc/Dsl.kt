@@ -40,29 +40,58 @@ internal data class IrcClientConfig(val server: ServerConfig, val profile: Profi
 class IrcClientConfigBuilder {
 
     private var server: ServerConfig? = null
+        set(value) {
+            check(field == null) { "server may only be specified once" }
+            check(!value?.host.isNullOrEmpty()) { "server.host must be specified" }
+            field = value
+        }
+
     private var profile: ProfileConfig? = null
+        set(value) {
+            check(field == null) { "profile may only be specified once" }
+            check(!value?.nickname.isNullOrEmpty()) { "profile.nickname must be specified" }
+            field = value
+        }
+
     private var sasl: SaslConfig? = null
+        set(value) {
+            check(field == null) { "sasl may only be specified once" }
+            field = value
+        }
 
     /**
      * Configures the server that the IrcClient will connect to.
      *
-     * At a minimum, [ServerConfig.host] must be supplied.
+     * See [ServerConfig] for details of each parameter.
+     *
+     * @param block Optional additional configuration to apply to the [ServerConfig]
      */
     @IrcClientDsl
-    fun server(block: ServerConfig.() -> Unit) {
-        check(server == null) { "server may only be specified once" }
-        server = ServerConfig().apply(block).also { check(it.host.isNotEmpty()) { "server.host must be specified" } }
+    fun server(host: String? = null, port: Int? = null, useTls: Boolean? = null, password: String? = null, block: (ServerConfig.() -> Unit)? = null) {
+        server = ServerConfig().apply {
+            host?.let { this.host = it }
+            port?.let { this.port = it }
+            useTls?.let { this.useTls = it }
+            password?.let { this.password = it }
+            block?.let { apply(it) }
+        }
     }
 
     /**
      * Configures the profile of the IrcClient user.
      *
-     * At a minimum, [ProfileConfig.nickname] must be supplied.
+     * See [ProfileConfig] for details of each parameter.
+     *
+     * @param block Optional additional configuration to apply to the [ProfileConfig]
      */
     @IrcClientDsl
-    fun profile(block: ProfileConfig.() -> Unit) {
-        check(profile == null) { "profile may only be specified once" }
-        profile = ProfileConfig().apply(block).also { check(it.nickname.isNotEmpty()) { "profile.nickname must be specified" } }
+    fun profile(nickname: String? = null, username: String? = null, realName: String? = null, block: (ProfileConfig.() -> Unit)? = null) {
+        profile = ProfileConfig().apply {
+            nickname?.let { this.nickname = it }
+            username?.let { this.username = it }
+            realName?.let { this.realName = it }
+            block?.let { apply(it) }
+        }
     }
 
     /**
@@ -70,7 +99,6 @@ class IrcClientConfigBuilder {
      */
     @IrcClientDsl
     fun sasl(block: SaslConfig.() -> Unit) {
-        check(sasl == null) { "sasl may only be specified once" }
         sasl = SaslConfig().apply(block)
     }
 
@@ -143,7 +171,7 @@ class SaslConfig {
 
     @IrcClientDsl
     fun mechanisms(vararg methods: String) {
-        with (this.mechanisms) {
+        with(this.mechanisms) {
             clear()
             addAll(methods)
         }
