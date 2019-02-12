@@ -36,6 +36,8 @@ internal class IrcClientImpl(private val config: IrcClientConfig) : IrcClient, C
     @KtorExperimentalAPI
     internal var socketFactory: (CoroutineScope, String, Int, Boolean) -> LineBufferedSocket = ::KtorLineBufferedSocket
 
+    override var behaviour = config.behaviour
+
     override val serverState = ServerState(config.profile.nickname, config.server.host, config.sasl)
     override val channelState = ChannelStateMap { caseMapping }
     override val userState = UserState { caseMapping }

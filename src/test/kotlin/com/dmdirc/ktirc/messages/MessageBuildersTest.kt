@@ -30,6 +30,12 @@ internal class MessageBuildersTest {
     }
 
     @Test
+    fun `sendModeRequest sends correct MODE message`() {
+        mockClient.sendModeRequest("#TheGibson")
+        verify(mockClient).send("MODE :#TheGibson")
+    }
+
+    @Test
     fun `sendNickChange sends correct NICK message`() {
         mockClient.sendNickChange("AcidBurn")
         verify(mockClient).send("NICK :AcidBurn")

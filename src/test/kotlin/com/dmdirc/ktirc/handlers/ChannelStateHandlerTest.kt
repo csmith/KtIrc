@@ -1,5 +1,6 @@
 package com.dmdirc.ktirc.handlers
 
+import com.dmdirc.ktirc.BehaviourConfig
 import com.dmdirc.ktirc.IrcClient
 import com.dmdirc.ktirc.TestConstants
 import com.dmdirc.ktirc.events.*
@@ -7,6 +8,8 @@ import com.dmdirc.ktirc.io.CaseMapping
 import com.dmdirc.ktirc.model.*
 import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.mock
+import com.nhaarman.mockitokotlin2.never
+import com.nhaarman.mockitokotlin2.verify
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 
@@ -15,9 +18,11 @@ internal class ChannelStateHandlerTest {
     private val handler = ChannelStateHandler()
     private val channelStateMap = ChannelStateMap { CaseMapping.Rfc }
     private val serverState = ServerState("", "")
+    private val behaviour = BehaviourConfig()
     private val ircClient = mock<IrcClient> {
         on { serverState } doReturn serverState
         on { channelState } doReturn channelStateMap
+        on { behaviour } doReturn behaviour
         on { isLocalUser(User("acidburn", "libby", "root.localhost")) } doReturn true
         on { isLocalUser("acidburn") } doReturn  true
     }
@@ -114,6 +119,58 @@ internal class ChannelStateHandlerTest {
         assertEquals(2, channel.users.count())
         assertEquals("o", channel.users["zeroCool"]?.modes)
         assertEquals("v", channel.users["acidBurn"]?.modes)
+    }
+
+    @Test
+    fun `updates receiving user list state`() {
+        val channel = ChannelState("#thegibson") { CaseMapping.Rfc }
+        channelStateMap += channel
+        serverState.features[ServerFeature.ModePrefixes] = ModePrefixMapping("ov", "@+")
+
+        handler.processEvent(ircClient, ChannelNamesReceived(TestConstants.time, "#thegibson", listOf("@zeroCool!dade@root.localhost", "+acidBurn!libby@root.localhost")))
+
+        assertTrue(channel.receivingUserList)
+
+        handler.processEvent(ircClient, ChannelNamesFinished(TestConstants.time, "#thegibson"))
+
+        assertFalse(channel.receivingUserList)
+    }
+
+    @Test
+    fun `requests modes on end of names if configured and undiscovered`() {
+        val channel = ChannelState("#thegibson") { CaseMapping.Rfc }
+        channelStateMap += channel
+        serverState.features[ServerFeature.ModePrefixes] = ModePrefixMapping("ov", "@+")
+        behaviour.requestModesOnJoin = true
+
+        handler.processEvent(ircClient, ChannelNamesFinished(TestConstants.time, "#thegibson"))
+
+        verify(ircClient).send("MODE :#thegibson")
+    }
+
+    @Test
+    fun `does not request modes on end of names if already discovered`() {
+        val channel = ChannelState("#thegibson") { CaseMapping.Rfc }
+        channelStateMap += channel
+        serverState.features[ServerFeature.ModePrefixes] = ModePrefixMapping("ov", "@+")
+        behaviour.requestModesOnJoin = true
+        channel.modesDiscovered = true
+
+        handler.processEvent(ircClient, ChannelNamesFinished(TestConstants.time, "#thegibson"))
+
+        verify(ircClient, never()).send("MODE :#thegibson")
+    }
+
+    @Test
+    fun `does not request modes on end of names if not configured`() {
+        val channel = ChannelState("#thegibson") { CaseMapping.Rfc }
+        channelStateMap += channel
+        serverState.features[ServerFeature.ModePrefixes] = ModePrefixMapping("ov", "@+")
+        behaviour.requestModesOnJoin = false
+
+        handler.processEvent(ircClient, ChannelNamesFinished(TestConstants.time, "#thegibson"))
+
+        verify(ircClient, never()).send("MODE :#thegibson")
     }
 
     @Test

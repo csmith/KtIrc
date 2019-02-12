@@ -1,7 +1,6 @@
 package com.dmdirc.ktirc
 
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 
@@ -59,6 +58,16 @@ internal class IrcClientConfigBuilderTest {
         assertThrows<IllegalStateException> {
             IrcClientConfigBuilder().apply {
                 profile("")
+            }
+        }
+    }
+
+    @Test
+    fun `throws if behaviour is defined twice`() {
+        assertThrows<IllegalStateException> {
+            IrcClientConfigBuilder().apply {
+                behaviour {}
+                behaviour {}
             }
         }
     }
@@ -178,6 +187,29 @@ internal class IrcClientConfigBuilderTest {
         assertEquals("acidBurn", config.profile.nickname)
         assertEquals("acidB", config.profile.username)
         assertEquals("Kate", config.profile.realName)
+    }
+
+    @Test
+    fun `applies behaviour settings`() {
+        val config = IrcClientConfigBuilder().apply {
+            profile { nickname = "acidBurn" }
+            server { host = "thegibson.com" }
+            behaviour {
+                requestModesOnJoin = true
+            }
+        }.build()
+
+        assertTrue(config.behaviour.requestModesOnJoin)
+    }
+
+    @Test
+    fun `falls back to default behaviour settings`() {
+        val config = IrcClientConfigBuilder().apply {
+            profile { nickname = "acidBurn" }
+            server { host = "thegibson.com" }
+        }.build()
+
+        assertFalse(config.behaviour.requestModesOnJoin)
     }
 
     @Test

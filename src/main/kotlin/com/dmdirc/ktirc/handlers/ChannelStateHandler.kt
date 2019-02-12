@@ -2,6 +2,7 @@ package com.dmdirc.ktirc.handlers
 
 import com.dmdirc.ktirc.IrcClient
 import com.dmdirc.ktirc.events.*
+import com.dmdirc.ktirc.messages.sendModeRequest
 import com.dmdirc.ktirc.model.ChannelState
 import com.dmdirc.ktirc.model.ChannelTopic
 import com.dmdirc.ktirc.model.ChannelUser
@@ -77,6 +78,9 @@ internal class ChannelStateHandler : EventHandler {
         client.channelState[event.channel]?.let {
             it.receivingUserList = false
             log.finest { "Finished receiving names in ${event.channel}. Users: ${it.users.toList()}" }
+            if (client.behaviour.requestModesOnJoin && !it.modesDiscovered) {
+                client.sendModeRequest(it.name)
+            }
         }
     }
 

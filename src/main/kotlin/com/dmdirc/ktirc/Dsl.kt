@@ -6,7 +6,11 @@ package com.dmdirc.ktirc
 @DslMarker
 annotation class IrcClientDsl
 
-internal data class IrcClientConfig(val server: ServerConfig, val profile: ProfileConfig, val sasl: SaslConfig?)
+internal data class IrcClientConfig(
+        val server: ServerConfig,
+        val profile: ProfileConfig,
+        val behaviour: ClientBehaviour,
+        val sasl: SaslConfig?)
 
 /**
  * Dsl for configuring an IRC Client.
@@ -25,6 +29,10 @@ internal data class IrcClientConfig(val server: ServerConfig, val profile: Profi
  *     nickname = "MyBot"           // Required
  *     username = "bot
  *     realName = "Botomatic v1.2"
+ * }
+ *
+ * behaviour {
+ *     requestModesOnJoin = true
  * }
  *
  * sasl {
@@ -50,6 +58,12 @@ class IrcClientConfigBuilder {
         set(value) {
             check(field == null) { "profile may only be specified once" }
             check(!value?.nickname.isNullOrEmpty()) { "profile.nickname must be specified" }
+            field = value
+        }
+
+    private var behaviour: BehaviourConfig? = null
+        set(value) {
+            check(field == null) { "behaviour may only be specified once" }
             field = value
         }
 
@@ -95,6 +109,14 @@ class IrcClientConfigBuilder {
     }
 
     /**
+     * Configures the behaviour of the client (optional).
+     */
+    @IrcClientDsl
+    fun behaviour(block: BehaviourConfig.() -> Unit) {
+        behaviour = BehaviourConfig().apply(block)
+    }
+
+    /**
      * Configures SASL authentication (optional).
      */
     @IrcClientDsl
@@ -106,6 +128,7 @@ class IrcClientConfigBuilder {
             IrcClientConfig(
                     checkNotNull(server) { "Server must be specified " },
                     checkNotNull(profile) { "Profile must be specified" },
+                    behaviour ?: BehaviourConfig(),
                     sasl)
 
 }
@@ -176,4 +199,12 @@ class SaslConfig {
             addAll(methods)
         }
     }
+}
+
+/**
+ * Dsl for configuring the behaviour of an [IrcClient].
+ */
+@IrcClientDsl
+class BehaviourConfig : ClientBehaviour {
+    override var requestModesOnJoin = false
 }

@@ -15,6 +15,9 @@ internal fun IrcClient.sendCapabilityRequest(capabilities: List<String>) = send(
 /** Sends a request to join the given channel. */
 fun IrcClient.sendJoin(channel: String) = send("JOIN :$channel")
 
+/** Sends a request to see the modes of a given target. */
+fun IrcClient.sendModeRequest(target: String) = send("MODE :$target")
+
 /** Sends a request to change to the given nickname. */
 fun IrcClient.sendNickChange(nick: String) = send("NICK :$nick")
 

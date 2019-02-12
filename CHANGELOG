@@ -2,6 +2,8 @@ vNEXT (in development)
 
  * Improve DSL for creating an IrcClient to allow parameters to be passed to server and profile
    e.g. IrcClient { server("irc.example.com", 6667) }
+ * Add behaviour options
+   * requestModesOnJoin - automatically sends a MODE request when joining a channel
 
 v0.8.0
 

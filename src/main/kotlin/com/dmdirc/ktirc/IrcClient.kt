@@ -25,6 +25,11 @@ interface IrcClient {
      */
     val userState: UserState
 
+    /**
+     * The configured behaviour of the client.
+     */
+    val behaviour: ClientBehaviour
+
     val caseMapping: CaseMapping
         get() = serverState.features[ServerFeature.ServerCaseMapping] ?: CaseMapping.Rfc
 
@@ -87,6 +92,16 @@ interface IrcClient {
      * [com.dmdirc.ktirc.events.ServerReady] event has been received.
      */
     fun isChannel(target: String) = target.isNotEmpty() && serverState.channelTypes.contains(target[0])
+
+}
+
+/**
+ * Defines the behaviour of an [IrcClient].
+ */
+interface ClientBehaviour {
+
+    /** Whether or not to request channel modes when we join a channel. */
+    val requestModesOnJoin: Boolean
 
 }
 

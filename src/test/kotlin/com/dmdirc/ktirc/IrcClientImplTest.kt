@@ -59,7 +59,7 @@ internal class IrcClientImplTest {
     private val normalConfig = IrcClientConfig(ServerConfig().apply {
         host = HOST
         port = PORT
-    }, profileConfig, null)
+    }, profileConfig, BehaviourConfig(), null)
 
     @BeforeEach
     fun setUp() {
@@ -81,7 +81,7 @@ internal class IrcClientImplTest {
             host = HOST
             port = PORT
             useTls = true
-        }, profileConfig, null))
+        }, profileConfig, BehaviourConfig(), null))
         client.socketFactory = mockSocketFactory
         client.connect()
 
@@ -134,7 +134,7 @@ internal class IrcClientImplTest {
             host = HOST
             port = PORT
             password = PASSWORD
-        }, profileConfig, null))
+        }, profileConfig, BehaviourConfig(), null))
         client.socketFactory = mockSocketFactory
         client.connect()
 
@@ -222,6 +222,7 @@ internal class IrcClientImplTest {
     }
 
     @Test
+    @ObsoleteCoroutinesApi
     fun `sends messages in order`() = runBlocking {
         val client = IrcClientImpl(normalConfig)
         client.socketFactory = mockSocketFactory
@@ -242,15 +243,26 @@ internal class IrcClientImplTest {
     }
 
     @Test
-    fun `defaults local nickname to profile`() = runBlocking {
+    fun `defaults local nickname to profile`() {
         val client = IrcClientImpl(normalConfig)
         assertEquals(NICK, client.serverState.localNickname)
     }
 
     @Test
-    fun `defaults server name to host name`() = runBlocking {
+    fun `defaults server name to host name`() {
         val client = IrcClientImpl(normalConfig)
         assertEquals(HOST, client.serverState.serverName)
+    }
+
+    @Test
+    fun `exposes behaviour config`() {
+        val client = IrcClientImpl(IrcClientConfig(
+                ServerConfig().apply { host = HOST },
+                profileConfig,
+                BehaviourConfig().apply { requestModesOnJoin = true },
+                null))
+
+        assertTrue(client.behaviour.requestModesOnJoin)
     }
 
     @Test
