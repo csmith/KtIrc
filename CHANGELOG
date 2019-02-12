@@ -1,5 +1,7 @@
 vNEXT (in development)
 
+v0.8.0
+
  * Added support for SCRAM-SHA-1 and SCRAM-SHA-256 SASL mechanisms
  * Added MotdLineReceived event
  * Added topic events and state
