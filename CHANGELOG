@@ -3,6 +3,7 @@ vNEXT (in development)
  * Added support for SCRAM-SHA-1 and SCRAM-SHA-256 SASL mechanisms
  * Added MotdLineReceived event
  * Added topic events and state
+ * Add utility method IrcClient.isChannel(String) to identify if a target is a channel or not
  * (Internal) Move event handlers into their own package
 
 v0.7.0

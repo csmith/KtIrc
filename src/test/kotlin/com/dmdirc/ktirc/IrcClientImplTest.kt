@@ -300,6 +300,19 @@ internal class IrcClientImplTest {
         }
     }
 
+    @Test
+    fun `identifies channels that have a prefix in the chantypes feature`() {
+        with(IrcClientImpl(normalConfig)) {
+            serverState.features[ServerFeature.ChannelTypes] = "&~"
+            assertTrue(isChannel("&dumpsterdiving"))
+            assertTrue(isChannel("~hacktheplanet"))
+            assertFalse(isChannel("#root"))
+            assertFalse(isChannel("acidBurn"))
+            assertFalse(isChannel(""))
+            assertFalse(isChannel("acidBurn#~"))
+        }
+    }
+
     private suspend inline fun <reified T : IrcEvent> IrcClient.waitForEvent(): T {
         val mutex = Mutex(true)
         val value = AtomicReference<T>()

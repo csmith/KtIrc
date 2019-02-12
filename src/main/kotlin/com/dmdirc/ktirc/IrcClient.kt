@@ -71,14 +71,22 @@ interface IrcClient {
     fun onEvent(handler: (IrcEvent) -> Unit)
 
     /**
-     * Utility method to determine if the given user is the one we are connected to IRC as.
+     * Utility method to determine if the given user is the one we are connected to IRC as. Should only be used after a
+     * [com.dmdirc.ktirc.events.ServerReady] event has been received.
      */
     fun isLocalUser(user: User) = isLocalUser(user.nickname)
 
     /**
-     * Utility method to determine if the given user is the one we are connected to IRC as.
+     * Utility method to determine if the given user is the one we are connected to IRC as. Should only be used after a
+     * [com.dmdirc.ktirc.events.ServerReady] event has been received.
      */
     fun isLocalUser(nickname: String) = caseMapping.areEquivalent(nickname, serverState.localNickname)
+
+    /**
+     * Determines if the given [target] appears to be a channel or not. Should only be used after a
+     * [com.dmdirc.ktirc.events.ServerReady] event has been received.
+     */
+    fun isChannel(target: String) = target.isNotEmpty() && serverState.channelTypes.contains(target[0])
 
 }
 

@@ -58,6 +58,12 @@ class ServerState internal constructor(
         get() = features[ServerFeature.ModePrefixes] ?: throw IllegalStateException("lost mode prefixes")
 
     /**
+     * Convenience accessor for the [ServerFeature.ChannelTypes] feature, which will always have a value.
+     */
+    val channelTypes
+        get() = features[ServerFeature.ChannelTypes] ?: throw IllegalStateException("lost channel types")
+
+    /**
      * Determines if the given mode is one applied to a user of a channel, such as 'o' for operator.
      */
     fun isChannelUserMode(mode: Char) = channelModePrefixes.isMode(mode)
@@ -148,6 +154,8 @@ sealed class ServerFeature<T : Any>(val name: String, val type: KClass<T>, val d
     object MaximumChannels : ServerFeature<Int>("MAXCHANNELS", Int::class) // TODO: CHANLIMIT also exists
     /** The modes supported in channels. */
     object ChannelModes : ServerFeature<Array<String>>("CHANMODES", Array<String>::class)
+    /** The types of channels supported. */
+    object ChannelTypes : ServerFeature<String>("CHANTYPES", String::class, "#&")
     /** The maximum length of a channel name, defaulting to 200. */
     object MaximumChannelNameLength : ServerFeature<Int>("CHANNELLEN", Int::class, 200)
     /** Whether or not the server supports extended who. */
