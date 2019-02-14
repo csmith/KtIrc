@@ -15,7 +15,7 @@ internal class PrivmsgProcessor : MessageProcessor {
     override fun process(message: IrcMessage) = message.sourceUser?.let { user ->
         listOf(when {
             message.isCtcp() -> handleCtcp(message, user)
-            else -> MessageReceived(message.time, user, String(message.params[0]), String(message.params[1]), message.messageId)
+            else -> MessageReceived(message.metadata, user, String(message.params[0]), String(message.params[1]), message.messageId)
         })
     } ?: emptyList()
 
@@ -24,8 +24,8 @@ internal class PrivmsgProcessor : MessageProcessor {
         val parts = content.split(' ', limit=2)
         val body = if (parts.size == 2) parts[1] else ""
         return when (parts[0].toUpperCase()) {
-            "ACTION" -> ActionReceived(message.time, user, String(message.params[0]), body, message.messageId)
-            else -> CtcpReceived(message.time, user, String(message.params[0]), parts[0], body)
+            "ACTION" -> ActionReceived(message.metadata, user, String(message.params[0]), body, message.messageId)
+            else -> CtcpReceived(message.metadata, user, String(message.params[0]), parts[0], body)
         }
     }
 

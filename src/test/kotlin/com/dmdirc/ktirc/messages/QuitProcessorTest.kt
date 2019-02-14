@@ -22,7 +22,7 @@ internal class QuitProcessorTest {
                 IrcMessage(emptyMap(), "acidburn!libby@root.localhost".toByteArray(), "QUIT", emptyList()))
         assertEquals(1, events.size)
 
-        assertEquals(TestConstants.time, events[0].time)
+        assertEquals(TestConstants.time, events[0].metadata.time)
         assertEquals(User("acidburn", "libby", "root.localhost"), events[0].user)
         assertEquals("", events[0].reason)
     }
@@ -33,7 +33,7 @@ internal class QuitProcessorTest {
                 IrcMessage(emptyMap(), "acidburn!libby@root.localhost".toByteArray(), "QUIT", params("Hack the planet!")))
         assertEquals(1, events.size)
 
-        assertEquals(TestConstants.time, events[0].time)
+        assertEquals(TestConstants.time, events[0].metadata.time)
         assertEquals(User("acidburn", "libby", "root.localhost"), events[0].user)
         assertEquals("Hack the planet!", events[0].reason)
     }

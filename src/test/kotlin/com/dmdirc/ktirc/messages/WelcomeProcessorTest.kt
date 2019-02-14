@@ -22,7 +22,7 @@ internal class WelcomeProcessorTest {
         val events = processor.process(IrcMessage(emptyMap(), "thegibson.com".toByteArray(), "001", params(
                 "acidBurn", "Welcome to the Internet Relay Network, acidBurn!burn@hacktheplanet.com")))
         assertEquals(1, events.size)
-        assertEquals(TestConstants.time, events[0].time)
+        assertEquals(TestConstants.time, events[0].metadata.time)
         assertEquals("acidBurn", events[0].localNick)
         assertEquals("thegibson.com", events[0].server)
     }

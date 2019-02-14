@@ -23,44 +23,44 @@ internal class ServerStateHandlerTest {
 
     @Test
     fun `sets local nickname on welcome event`() {
-        handler.processEvent(ircClient, ServerWelcome(TestConstants.time, "the.gibson", "acidBurn"))
+        handler.processEvent(ircClient, ServerWelcome(EventMetadata(TestConstants.time), "the.gibson", "acidBurn"))
         assertEquals("acidBurn", serverState.localNickname)
     }
 
     @Test
     fun `sets server name on welcome event`() {
-        handler.processEvent(ircClient, ServerWelcome(TestConstants.time, "the.gibson", "acidBurn"))
+        handler.processEvent(ircClient, ServerWelcome(EventMetadata(TestConstants.time), "the.gibson", "acidBurn"))
         assertEquals("the.gibson", serverState.serverName)
     }
 
     @Test
     fun `sets receivedWelcome on welcome event`() {
-        handler.processEvent(ircClient, ServerWelcome(TestConstants.time, "the.gibson", "acidBurn"))
+        handler.processEvent(ircClient, ServerWelcome(EventMetadata(TestConstants.time), "the.gibson", "acidBurn"))
         assertTrue(serverState.receivedWelcome)
     }
 
     @Test
     fun `sets state to connecting on event`() {
-        handler.processEvent(ircClient, ServerConnecting(TestConstants.time))
+        handler.processEvent(ircClient, ServerConnecting(EventMetadata(TestConstants.time)))
         assertEquals(ServerStatus.Connecting, serverState.status)
     }
 
     @Test
     fun `sets state to disconnected on event`() {
         serverState.status = ServerStatus.Ready
-        handler.processEvent(ircClient, ServerDisconnected(TestConstants.time))
+        handler.processEvent(ircClient, ServerDisconnected(EventMetadata(TestConstants.time)))
         assertEquals(ServerStatus.Disconnected, serverState.status)
     }
 
     @Test
     fun `sets state to negotiating on connected`() {
-        handler.processEvent(ircClient, ServerConnected(TestConstants.time))
+        handler.processEvent(ircClient, ServerConnected(EventMetadata(TestConstants.time)))
         assertEquals(ServerStatus.Negotiating, serverState.status)
     }
 
     @Test
     fun `sets state to ready on ServerReady`() {
-        handler.processEvent(ircClient, ServerReady(TestConstants.time))
+        handler.processEvent(ircClient, ServerReady(EventMetadata(TestConstants.time)))
         assertEquals(ServerStatus.Ready, serverState.status)
     }
 
@@ -70,7 +70,7 @@ internal class ServerStateHandlerTest {
         features[ServerFeature.ChannelModes] = arrayOf("abc", "def")
         features[ServerFeature.WhoxSupport] = true
 
-        handler.processEvent(ircClient, ServerFeaturesUpdated(TestConstants.time, features))
+        handler.processEvent(ircClient, ServerFeaturesUpdated(EventMetadata(TestConstants.time), features))
 
         assertArrayEquals(arrayOf("abc", "def"), serverState.features[ServerFeature.ChannelModes])
         assertEquals(true, serverState.features[ServerFeature.WhoxSupport])

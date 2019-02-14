@@ -25,7 +25,7 @@ internal class NoticeProcessorTest {
         assertEquals(1, events.size)
 
         val event = events[0] as NoticeReceived
-        assertEquals(TestConstants.time, event.time)
+        assertEquals(TestConstants.time, event.metadata.time)
         assertEquals(User("acidburn", "libby", "root.localhost"), event.user)
         assertEquals("#crashandburn", event.target)
         assertEquals("hack the planet!", event.message)
@@ -38,7 +38,7 @@ internal class NoticeProcessorTest {
         assertEquals(1, events.size)
 
         val event = events[0] as NoticeReceived
-        assertEquals(TestConstants.time, event.time)
+        assertEquals(TestConstants.time, event.metadata.time)
         assertEquals(User("*"), event.user)
         assertEquals("#crashandburn", event.target)
         assertEquals("hack the planet!", event.message)
@@ -51,7 +51,7 @@ internal class NoticeProcessorTest {
         assertEquals(1, events.size)
 
         val event = events[0] as CtcpReplyReceived
-        assertEquals(TestConstants.time, event.time)
+        assertEquals(TestConstants.time, event.metadata.time)
         assertEquals(User("acidburn", "libby", "root.localhost"), event.user)
         assertEquals("#crashandburn", event.target)
         assertEquals("PING", event.type)
@@ -65,7 +65,7 @@ internal class NoticeProcessorTest {
         assertEquals(1, events.size)
 
         val event = events[0] as CtcpReplyReceived
-        assertEquals(TestConstants.time, event.time)
+        assertEquals(TestConstants.time, event.metadata.time)
         assertEquals(User("acidburn", "libby", "root.localhost"), event.user)
         assertEquals("#crashandburn", event.target)
         assertEquals("PING", event.type)

@@ -22,7 +22,7 @@ internal class AccountProcessorTest {
                 IrcMessage(emptyMap(), "acidburn!libby@root.localhost".toByteArray(), "ACCOUNT", params("acidBurn")))
         assertEquals(1, events.size)
 
-        assertEquals(TestConstants.time, events[0].time)
+        assertEquals(TestConstants.time, events[0].metadata.time)
         assertEquals(User("acidburn", "libby", "root.localhost"), events[0].user)
         assertEquals("acidBurn", events[0].newAccount)
     }
@@ -33,7 +33,7 @@ internal class AccountProcessorTest {
                 IrcMessage(emptyMap(), "acidburn!libby@root.localhost".toByteArray(), "ACCOUNT", params("*")))
         assertEquals(1, events.size)
 
-        assertEquals(TestConstants.time, events[0].time)
+        assertEquals(TestConstants.time, events[0].metadata.time)
         assertEquals(User("acidburn", "libby", "root.localhost"), events[0].user)
         assertEquals(null, events[0].newAccount)
     }

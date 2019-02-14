@@ -3,10 +3,7 @@ package com.dmdirc.ktirc.events.mutators
 import com.dmdirc.ktirc.BehaviourConfig
 import com.dmdirc.ktirc.IrcClient
 import com.dmdirc.ktirc.TestConstants
-import com.dmdirc.ktirc.events.ChannelNickChanged
-import com.dmdirc.ktirc.events.ChannelQuit
-import com.dmdirc.ktirc.events.UserNickChanged
-import com.dmdirc.ktirc.events.UserQuit
+import com.dmdirc.ktirc.events.*
 import com.dmdirc.ktirc.io.CaseMapping
 import com.dmdirc.ktirc.model.*
 import com.nhaarman.mockitokotlin2.doReturn
@@ -45,7 +42,7 @@ internal class ChannelFanOutMutatorTest {
             channelStateMap += this
         }
 
-        val quitEvent = UserQuit(TestConstants.time, User("zerocool", "dade", "root.localhost"), "Hack the planet!")
+        val quitEvent = UserQuit(EventMetadata(TestConstants.time), User("zerocool", "dade", "root.localhost"), "Hack the planet!")
         val events = mutator.mutateEvent(ircClient, quitEvent)
 
         val names = mutableListOf<String>()
@@ -53,7 +50,7 @@ internal class ChannelFanOutMutatorTest {
         Assertions.assertSame(quitEvent, events[0])
         events.subList(1, events.size).forEach { event ->
             (event as ChannelQuit).let {
-                Assertions.assertEquals(TestConstants.time, it.time)
+                Assertions.assertEquals(TestConstants.time, it.metadata.time)
                 Assertions.assertEquals("zerocool", it.user.nickname)
                 Assertions.assertEquals("Hack the planet!", it.reason)
                 names.add(it.channel)
@@ -81,7 +78,7 @@ internal class ChannelFanOutMutatorTest {
             channelStateMap += this
         }
 
-        val nickEvent = UserNickChanged(TestConstants.time, User("zerocool", "dade", "root.localhost"), "zer0c00l")
+        val nickEvent = UserNickChanged(EventMetadata(TestConstants.time), User("zerocool", "dade", "root.localhost"), "zer0c00l")
         val events = mutator.mutateEvent(ircClient, nickEvent)
 
         val names = mutableListOf<String>()
@@ -89,7 +86,7 @@ internal class ChannelFanOutMutatorTest {
         Assertions.assertSame(nickEvent, events[0])
         events.subList(1, events.size).forEach { event ->
             (event as ChannelNickChanged).let {
-                Assertions.assertEquals(TestConstants.time, it.time)
+                Assertions.assertEquals(TestConstants.time, it.metadata.time)
                 Assertions.assertEquals("zerocool", it.user.nickname)
                 Assertions.assertEquals("zer0c00l", it.newNick)
                 names.add(it.channel)

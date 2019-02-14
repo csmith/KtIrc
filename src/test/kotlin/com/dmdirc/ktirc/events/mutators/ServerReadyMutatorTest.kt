@@ -27,16 +27,16 @@ internal class ServerReadyMutatorTest {
         ircClient.serverState.status = ServerStatus.Negotiating
 
         listOf(
-                ServerWelcome(TestConstants.time, "the.gibson", "acidBurn"),
-                PingReceived(TestConstants.time, "1234".toByteArray()),
-                ServerCapabilitiesReceived(TestConstants.time, emptyMap()),
-                ServerCapabilitiesAcknowledged(TestConstants.time, emptyMap()),
-                ServerCapabilitiesFinished(TestConstants.time)
+                ServerWelcome(EventMetadata(TestConstants.time), "the.gibson", "acidBurn"),
+                PingReceived(EventMetadata(TestConstants.time), "1234".toByteArray()),
+                ServerCapabilitiesReceived(EventMetadata(TestConstants.time), emptyMap()),
+                ServerCapabilitiesAcknowledged(EventMetadata(TestConstants.time), emptyMap()),
+                ServerCapabilitiesFinished(EventMetadata(TestConstants.time))
         ).forEach {
             assertEquals(1, mutator.mutateEvent(ircClient, it).size)
         }
 
-        val event = MessageReceived(TestConstants.time, User("zeroCool"), "acidBurn", "Welcome!")
+        val event = MessageReceived(EventMetadata(TestConstants.time), User("zeroCool"), "acidBurn", "Welcome!")
         val events = mutator.mutateEvent(ircClient, event)
         assertEquals(2, events.size)
         assertSame(event, events[1])

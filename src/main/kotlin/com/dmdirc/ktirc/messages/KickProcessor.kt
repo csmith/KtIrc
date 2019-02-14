@@ -8,7 +8,7 @@ internal class KickProcessor : MessageProcessor {
     override val commands = arrayOf("KICK")
 
     override fun process(message: IrcMessage) = message.sourceUser?.let { user ->
-        listOf(ChannelUserKicked(message.time, user, message.channel, message.victim, message.reason))
+        listOf(ChannelUserKicked(message.metadata, user, message.channel, message.victim, message.reason))
     } ?: emptyList()
 
     private val IrcMessage.channel

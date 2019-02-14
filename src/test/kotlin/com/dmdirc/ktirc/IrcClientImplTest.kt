@@ -111,10 +111,10 @@ internal class IrcClientImplTest {
         verify(mockEventHandler, timeout(500).atLeast(2)).invoke(captor.capture())
 
         assertTrue(captor.firstValue is ServerConnecting)
-        assertEquals(TestConstants.time, captor.firstValue.time)
+        assertEquals(TestConstants.time, captor.firstValue.metadata.time)
 
         assertTrue(captor.secondValue is ServerConnected)
-        assertEquals(TestConstants.time, captor.secondValue.time)
+        assertEquals(TestConstants.time, captor.secondValue.metadata.time)
     }
 
     @Test

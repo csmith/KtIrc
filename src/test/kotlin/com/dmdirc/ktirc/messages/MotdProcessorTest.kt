@@ -24,7 +24,7 @@ internal class MotdProcessorTest {
         assertEquals(1, events.size)
 
         val event = events[0] as MotdFinished
-        assertEquals(TestConstants.time, events[0].time)
+        assertEquals(TestConstants.time, events[0].metadata.time)
         assertTrue(event.missing)
     }
 
@@ -35,7 +35,7 @@ internal class MotdProcessorTest {
         assertEquals(1, events.size)
 
         val event = events[0] as MotdFinished
-        assertEquals(TestConstants.time, events[0].time)
+        assertEquals(TestConstants.time, events[0].metadata.time)
         assertFalse(event.missing)
     }
 
@@ -46,7 +46,7 @@ internal class MotdProcessorTest {
         assertEquals(1, events.size)
 
         val event = events[0] as MotdLineReceived
-        assertEquals(TestConstants.time, event.time)
+        assertEquals(TestConstants.time, event.metadata.time)
         assertEquals("- the.gibson MOTD -", event.line)
         assertTrue(event.first)
     }
@@ -58,7 +58,7 @@ internal class MotdProcessorTest {
         assertEquals(1, events.size)
 
         val event = events[0] as MotdLineReceived
-        assertEquals(TestConstants.time, event.time)
+        assertEquals(TestConstants.time, event.metadata.time)
         assertEquals("Hack the planet!", event.line)
         assertFalse(event.first)
     }

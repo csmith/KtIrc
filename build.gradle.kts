@@ -9,7 +9,7 @@ plugins {
     kotlin("jvm") version "1.3.21"
     id("com.jfrog.bintray") version "1.8.4"
     id("org.jetbrains.dokka") version "0.9.17"
-    id("name.remal.check-updates") version "1.0.112"
+    id("name.remal.check-updates") version "1.0.113"
 }
 
 jacoco {

@@ -83,6 +83,9 @@ sealed class Capability(val name: String) {
     /** Messages sent by the client are echo'd back on successful delivery. */
     object EchoMessages : Capability("echo-message")
 
+    /** Messages can be sent in batches, and potentially handled differently by the client. */
+    object Batch : Capability("batch")
+
     // Capabilities that notify us of changes to other clients:
     /** Receive a notification when a user's account changes. */
     object AccountChangeMessages : Capability("account-notify")

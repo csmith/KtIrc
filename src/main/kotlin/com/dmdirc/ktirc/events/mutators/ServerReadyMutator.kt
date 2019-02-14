@@ -28,7 +28,7 @@ internal class ServerReadyMutator : EventMutator {
         if (client.serverState.receivedWelcome
                 && client.serverState.status == ServerStatus.Negotiating
                 && event::class !in excludedEvents) {
-            yield(ServerReady(event.time))
+            yield(ServerReady(event.metadata))
         }
         yield(event)
     }.toList()

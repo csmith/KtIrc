@@ -8,7 +8,7 @@ internal class NickProcessor : MessageProcessor {
     override val commands = arrayOf("NICK")
 
     override fun process(message: IrcMessage) =
-            message.sourceUser?.let { listOf(UserNickChanged(message.time, it, String(message.params[0]))) }
+            message.sourceUser?.let { listOf(UserNickChanged(message.metadata, it, String(message.params[0]))) }
                     ?: emptyList()
 
 }

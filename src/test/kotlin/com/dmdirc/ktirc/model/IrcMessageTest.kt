@@ -15,21 +15,28 @@ internal class IrcMessageTest {
     fun `Gets UTC time from ServerTime tag if present`() {
         currentTimeZoneProvider = { ZoneId.of("Z") }
         val message = IrcMessage(hashMapOf(MessageTag.ServerTime to "1995-09-15T09:00:00.0000Z"), null, "", emptyList())
-        assertEquals(LocalDateTime.parse("1995-09-15T09:00:00"), message.time)
+        assertEquals(LocalDateTime.parse("1995-09-15T09:00:00"), message.metadata.time)
     }
 
     @Test
     fun `Converts time in ServerTime tag to local timezone`() {
         currentTimeZoneProvider = { ZoneId.of("America/New_York") }
         val message = IrcMessage(hashMapOf(MessageTag.ServerTime to "1995-09-15T09:00:00.0000Z"), null, "", emptyList())
-        assertEquals(LocalDateTime.parse("1995-09-15T05:00:00"), message.time)
+        assertEquals(LocalDateTime.parse("1995-09-15T05:00:00"), message.metadata.time)
     }
 
     @Test
     fun `Uses current local time if no tag present`() {
         currentTimeProvider = { TestConstants.time }
         val message = IrcMessage(emptyMap(), null, "", emptyList())
-        assertEquals(LocalDateTime.parse("1995-09-15T09:00:00"), message.time)
+        assertEquals(LocalDateTime.parse("1995-09-15T09:00:00"), message.metadata.time)
+    }
+
+    @Test
+    fun `populates batch field if present`() {
+        currentTimeProvider = { TestConstants.time }
+        val message = IrcMessage(hashMapOf(MessageTag.Batch to "abc123"), null, "", emptyList())
+        assertEquals("abc123", message.metadata.batchId)
     }
 
     @Test

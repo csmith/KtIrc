@@ -8,7 +8,7 @@ internal class PartProcessor : MessageProcessor {
     override val commands = arrayOf("PART")
 
     override fun process(message: IrcMessage) = message.sourceUser?.let { user ->
-        listOf(ChannelParted(message.time, user, message.channel, message.reason))
+        listOf(ChannelParted(message.metadata, user, message.channel, message.reason))
     } ?: emptyList()
 
     private val IrcMessage.channel

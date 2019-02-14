@@ -26,7 +26,7 @@ internal class AuthenticationProcessorTest {
 
         assertEquals(1, events.size)
         val event = events[0] as AuthenticationMessage
-        assertEquals(TestConstants.time, event.time)
+        assertEquals(TestConstants.time, event.metadata.time)
         assertNull(event.argument)
     }
 
@@ -36,7 +36,7 @@ internal class AuthenticationProcessorTest {
 
         assertEquals(1, events.size)
         val event = events[0] as AuthenticationMessage
-        assertEquals(TestConstants.time, event.time)
+        assertEquals(TestConstants.time, event.metadata.time)
         assertNull(event.argument)
     }
 
@@ -46,7 +46,7 @@ internal class AuthenticationProcessorTest {
 
         assertEquals(1, events.size)
         val event = events[0] as AuthenticationMessage
-        assertEquals(TestConstants.time, event.time)
+        assertEquals(TestConstants.time, event.metadata.time)
         assertEquals("HackThePlanet", event.argument)
     }
 
@@ -56,7 +56,7 @@ internal class AuthenticationProcessorTest {
 
         assertEquals(1, events.size)
         val event = events[0] as SaslFinished
-        assertEquals(TestConstants.time, event.time)
+        assertEquals(TestConstants.time, event.metadata.time)
         assertTrue(event.success)
     }
 
@@ -66,7 +66,7 @@ internal class AuthenticationProcessorTest {
 
         assertEquals(1, events.size)
         val event = events[0] as SaslFinished
-        assertEquals(TestConstants.time, event.time)
+        assertEquals(TestConstants.time, event.metadata.time)
         assertFalse(event.success)
     }
 
@@ -76,7 +76,7 @@ internal class AuthenticationProcessorTest {
 
         assertEquals(1, events.size)
         val event = events[0] as SaslMechanismNotAvailableError
-        assertEquals(TestConstants.time, event.time)
+        assertEquals(TestConstants.time, event.metadata.time)
         assertEquals(listOf("PLAIN", "EXTERNAL", "MAGIC"), event.mechanisms)
     }
 
@@ -86,7 +86,7 @@ internal class AuthenticationProcessorTest {
 
         assertEquals(1, events.size)
         val event = events[0] as SaslMechanismNotAvailableError
-        assertEquals(TestConstants.time, event.time)
+        assertEquals(TestConstants.time, event.metadata.time)
         assertTrue(event.mechanisms.isEmpty())
     }
 

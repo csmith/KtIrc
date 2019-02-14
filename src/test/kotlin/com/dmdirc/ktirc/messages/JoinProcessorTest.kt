@@ -22,7 +22,7 @@ internal class JoinProcessorTest {
                 IrcMessage(emptyMap(), "acidburn!libby@root.localhost".toByteArray(), "JOIN", params("#crashandburn")))
         assertEquals(1, events.size)
 
-        assertEquals(TestConstants.time, events[0].time)
+        assertEquals(TestConstants.time, events[0].metadata.time)
         assertEquals(User("acidburn", "libby", "root.localhost"), events[0].user)
         assertEquals("#crashandburn", events[0].channel)
     }
@@ -40,7 +40,7 @@ internal class JoinProcessorTest {
                 IrcMessage(emptyMap(), "acidburn!libby@root.localhost".toByteArray(), "JOIN", params("#crashandburn", "acidBurn", "Libby")))
         assertEquals(1, events.size)
 
-        assertEquals(TestConstants.time, events[0].time)
+        assertEquals(TestConstants.time, events[0].metadata.time)
         assertEquals(User("acidburn", "libby", "root.localhost", account = "acidBurn", realName = "Libby"), events[0].user)
         assertEquals("#crashandburn", events[0].channel)
     }
@@ -51,7 +51,7 @@ internal class JoinProcessorTest {
                 IrcMessage(emptyMap(), "acidburn!libby@root.localhost".toByteArray(), "JOIN", params("#crashandburn", "*", "Libby")))
         assertEquals(1, events.size)
 
-        assertEquals(TestConstants.time, events[0].time)
+        assertEquals(TestConstants.time, events[0].metadata.time)
         assertEquals(User("acidburn", "libby", "root.localhost", realName = "Libby"), events[0].user)
         assertEquals("#crashandburn", events[0].channel)
     }

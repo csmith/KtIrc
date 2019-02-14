@@ -22,7 +22,7 @@ internal class KickProcessorTest {
                 IrcMessage(emptyMap(), "acidburn!libby@root.localhost".toByteArray(), "KICK", params("#crashandburn", "zeroCool")))
         assertEquals(1, events.size)
 
-        assertEquals(TestConstants.time, events[0].time)
+        assertEquals(TestConstants.time, events[0].metadata.time)
         assertEquals(User("acidburn", "libby", "root.localhost"), events[0].user)
         assertEquals("#crashandburn", events[0].channel)
         assertEquals("zeroCool", events[0].victim)
@@ -35,7 +35,7 @@ internal class KickProcessorTest {
                 IrcMessage(emptyMap(), "acidburn!libby@root.localhost".toByteArray(), "KICK", params("#crashandburn", "zeroCool", "Hack the planet!")))
         assertEquals(1, events.size)
 
-        assertEquals(TestConstants.time, events[0].time)
+        assertEquals(TestConstants.time, events[0].metadata.time)
         assertEquals(User("acidburn", "libby", "root.localhost"), events[0].user)
         assertEquals("#crashandburn", events[0].channel)
         assertEquals("zeroCool", events[0].victim)

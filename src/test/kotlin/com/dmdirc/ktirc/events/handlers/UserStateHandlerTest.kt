@@ -36,7 +36,7 @@ internal class UserStateHandlerTest {
     fun `adds channel to user on join`() {
         userState += User("acidBurn")
 
-        handler.processEvent(ircClient, ChannelJoined(TestConstants.time, User("acidBurn", "libby", "root.localhost"), "#thegibson"))
+        handler.processEvent(ircClient, ChannelJoined(EventMetadata(TestConstants.time), User("acidBurn", "libby", "root.localhost"), "#thegibson"))
 
         assertEquals(listOf("#thegibson"), userState["acidBurn"]?.channels?.toList())
     }
@@ -45,7 +45,7 @@ internal class UserStateHandlerTest {
     fun `updates user info on join`() {
         userState += User("acidBurn")
 
-        handler.processEvent(ircClient, ChannelJoined(TestConstants.time, User("acidBurn", "libby", "root.localhost"), "#thegibson"))
+        handler.processEvent(ircClient, ChannelJoined(EventMetadata(TestConstants.time), User("acidBurn", "libby", "root.localhost"), "#thegibson"))
 
         val details = userState["acidBurn"]?.details!!
         assertEquals("libby", details.ident)
@@ -58,7 +58,7 @@ internal class UserStateHandlerTest {
         userState.addToChannel(User("acidBurn"), "#thegibson")
         userState.addToChannel(User("acidBurn"), "#dumpsterdiving")
 
-        handler.processEvent(ircClient, ChannelParted(TestConstants.time, User("acidBurn", "libby", "root.localhost"), "#dumpsterdiving"))
+        handler.processEvent(ircClient, ChannelParted(EventMetadata(TestConstants.time), User("acidBurn", "libby", "root.localhost"), "#dumpsterdiving"))
 
         assertEquals(listOf("#thegibson"), userState["acidBurn"]?.channels?.toList())
     }
@@ -68,7 +68,7 @@ internal class UserStateHandlerTest {
         userState += User("acidBurn")
         userState.addToChannel(User("acidBurn"), "#dumpsterdiving")
 
-        handler.processEvent(ircClient, ChannelParted(TestConstants.time, User("acidBurn", "libby", "root.localhost"), "#dumpsterdiving"))
+        handler.processEvent(ircClient, ChannelParted(EventMetadata(TestConstants.time), User("acidBurn", "libby", "root.localhost"), "#dumpsterdiving"))
 
         assertNull(userState["acidBurn"])
     }
@@ -83,7 +83,7 @@ internal class UserStateHandlerTest {
         userState.addToChannel(User("zeroCool"), "#dumpsterdiving")
         userState.addToChannel(User("zeroCool"), "#thegibson")
 
-        handler.processEvent(ircClient, ChannelParted(TestConstants.time, User("zeroCool", "dade", "root.localhost"), "#dumpsterdiving"))
+        handler.processEvent(ircClient, ChannelParted(EventMetadata(TestConstants.time), User("zeroCool", "dade", "root.localhost"), "#dumpsterdiving"))
 
         assertEquals(listOf("#thegibson"), userState["acidBurn"]?.channels?.toList())
         assertEquals(listOf("#thegibson"), userState["zeroCool"]?.channels?.toList())
@@ -94,7 +94,7 @@ internal class UserStateHandlerTest {
         userState += User("acidBurn")
         userState.addToChannel(User("acidBurn"), "#dumpsterdiving")
 
-        handler.processEvent(ircClient, ChannelParted(TestConstants.time, User("zeroCool", "dade", "root.localhost"), "#dumpsterdiving"))
+        handler.processEvent(ircClient, ChannelParted(EventMetadata(TestConstants.time), User("zeroCool", "dade", "root.localhost"), "#dumpsterdiving"))
 
         assertNull(userState["acidBurn"])
     }
@@ -104,7 +104,7 @@ internal class UserStateHandlerTest {
         userState += User("zeroCool")
         userState.addToChannel(User("zeroCool"), "#dumpsterdiving")
 
-        handler.processEvent(ircClient, ChannelParted(TestConstants.time, User("zeroCool", "dade", "root.localhost"), "#dumpsterdiving"))
+        handler.processEvent(ircClient, ChannelParted(EventMetadata(TestConstants.time), User("zeroCool", "dade", "root.localhost"), "#dumpsterdiving"))
 
         assertNotNull(userState["zeroCool"])
     }
@@ -116,7 +116,7 @@ internal class UserStateHandlerTest {
         userState.addToChannel(User("acidBurn"), "#thegibson")
         userState.addToChannel(User("acidBurn"), "#dumpsterdiving")
 
-        handler.processEvent(ircClient, ChannelUserKicked(TestConstants.time, User("thePlague"), "#dumpsterdiving", "acidBurn"))
+        handler.processEvent(ircClient, ChannelUserKicked(EventMetadata(TestConstants.time), User("thePlague"), "#dumpsterdiving", "acidBurn"))
 
         assertEquals(listOf("#thegibson"), userState["acidBurn"]?.channels?.toList())
     }
@@ -126,7 +126,7 @@ internal class UserStateHandlerTest {
         userState += User("acidBurn")
         userState.addToChannel(User("acidBurn"), "#dumpsterdiving")
 
-        handler.processEvent(ircClient, ChannelUserKicked(TestConstants.time, User("thePlague"), "#dumpsterdiving", "acidBurn"))
+        handler.processEvent(ircClient, ChannelUserKicked(EventMetadata(TestConstants.time), User("thePlague"), "#dumpsterdiving", "acidBurn"))
 
         assertNull(userState["acidBurn"])
     }
@@ -141,7 +141,7 @@ internal class UserStateHandlerTest {
         userState.addToChannel(User("zeroCool"), "#dumpsterdiving")
         userState.addToChannel(User("zeroCool"), "#thegibson")
 
-        handler.processEvent(ircClient, ChannelUserKicked(TestConstants.time, User("thePlague"), "#dumpsterdiving", "zeroCool"))
+        handler.processEvent(ircClient, ChannelUserKicked(EventMetadata(TestConstants.time), User("thePlague"), "#dumpsterdiving", "zeroCool"))
 
         assertEquals(listOf("#thegibson"), userState["acidBurn"]?.channels?.toList())
         assertEquals(listOf("#thegibson"), userState["zeroCool"]?.channels?.toList())
@@ -152,7 +152,7 @@ internal class UserStateHandlerTest {
         userState += User("acidBurn")
         userState.addToChannel(User("acidBurn"), "#dumpsterdiving")
 
-        handler.processEvent(ircClient, ChannelUserKicked(TestConstants.time, User("thePlague"), "#dumpsterdiving", "zeroCool"))
+        handler.processEvent(ircClient, ChannelUserKicked(EventMetadata(TestConstants.time), User("thePlague"), "#dumpsterdiving", "zeroCool"))
 
         assertNull(userState["acidBurn"])
     }
@@ -162,7 +162,7 @@ internal class UserStateHandlerTest {
         userState += User("zeroCool")
         userState.addToChannel(User("zeroCool"), "#dumpsterdiving")
 
-        handler.processEvent(ircClient, ChannelUserKicked(TestConstants.time, User("thePlague"), "#dumpsterdiving", "zeroCool"))
+        handler.processEvent(ircClient, ChannelUserKicked(EventMetadata(TestConstants.time), User("thePlague"), "#dumpsterdiving", "zeroCool"))
 
         assertNotNull(userState["zeroCool"])
     }
@@ -172,7 +172,7 @@ internal class UserStateHandlerTest {
         userState += User("acidBurn")
         userState.addToChannel(User("acidBurn"), "#dumpsterdiving")
 
-        handler.processEvent(ircClient, UserQuit(TestConstants.time, User("acidBurn", "libby", "root.localhost")))
+        handler.processEvent(ircClient, UserQuit(EventMetadata(TestConstants.time), User("acidBurn", "libby", "root.localhost")))
 
         assertNull(userState["acidBurn"])
     }
@@ -182,7 +182,7 @@ internal class UserStateHandlerTest {
         userState += User("acidBurn")
         userState.addToChannel(User("acidBurn"), "#dumpsterdiving")
 
-        handler.processEvent(ircClient, ChannelNamesReceived(TestConstants.time, "#thegibson", listOf("@acidBurn")))
+        handler.processEvent(ircClient, ChannelNamesReceived(EventMetadata(TestConstants.time), "#thegibson", listOf("@acidBurn")))
 
         assertEquals(listOf("#dumpsterdiving", "#thegibson"), userState["acidBurn"]?.channels?.toList())
     }
@@ -192,7 +192,7 @@ internal class UserStateHandlerTest {
         userState += User("acidBurn")
         userState.addToChannel(User("acidBurn"), "#dumpsterdiving")
 
-        handler.processEvent(ircClient, ChannelNamesReceived(TestConstants.time, "#thegibson", listOf("@acidBurn!libby@root.localhost")))
+        handler.processEvent(ircClient, ChannelNamesReceived(EventMetadata(TestConstants.time), "#thegibson", listOf("@acidBurn!libby@root.localhost")))
 
         val details = userState["acidBurn"]?.details!!
         assertEquals("libby", details.ident)
@@ -203,7 +203,7 @@ internal class UserStateHandlerTest {
     fun `updates user info on account change`() {
         userState += User("acidBurn")
 
-        handler.processEvent(ircClient, UserAccountChanged(TestConstants.time, User("acidBurn", "libby", "root.localhost"), "acidBurn"))
+        handler.processEvent(ircClient, UserAccountChanged(EventMetadata(TestConstants.time), User("acidBurn", "libby", "root.localhost"), "acidBurn"))
 
         val details = userState["acidBurn"]?.details!!
         assertEquals("acidBurn", details.account)
@@ -214,7 +214,7 @@ internal class UserStateHandlerTest {
         val user = User("acidBurn", "libby", "root.localhost")
         whenever(ircClient.isLocalUser(user)).doReturn(true)
 
-        handler.processEvent(ircClient, UserNickChanged(TestConstants.time, user, "acid~"))
+        handler.processEvent(ircClient, UserNickChanged(EventMetadata(TestConstants.time), user, "acid~"))
 
         assertEquals("acid~", serverState.localNickname)
     }
@@ -224,7 +224,7 @@ internal class UserStateHandlerTest {
         val user = User("acidBurn", "libby", "root.localhost")
         userState += User("AcidBurn")
 
-        handler.processEvent(ircClient, UserNickChanged(TestConstants.time, user, "acid~"))
+        handler.processEvent(ircClient, UserNickChanged(EventMetadata(TestConstants.time), user, "acid~"))
 
         assertNotNull(userState["acid~"])
         assertNull(userState["AcidBurn"])

@@ -21,7 +21,7 @@ internal class ModeProcessorTest {
                 IrcMessage(emptyMap(), "acidburn!libby@root.localhost".toByteArray(), "221", params("acidBurn", "+hax")))
         assertEquals(1, events.size)
 
-        assertEquals(TestConstants.time, events[0].time)
+        assertEquals(TestConstants.time, events[0].metadata.time)
         assertEquals("acidBurn", events[0].target)
         assertEquals("+hax", events[0].modes)
         assertEquals(0, events[0].arguments.size)
@@ -34,7 +34,7 @@ internal class ModeProcessorTest {
                 IrcMessage(emptyMap(), "acidburn!libby@root.localhost".toByteArray(), "221", params("acidBurn", "+hax", "123", "467")))
         assertEquals(1, events.size)
 
-        assertEquals(TestConstants.time, events[0].time)
+        assertEquals(TestConstants.time, events[0].metadata.time)
         assertEquals("acidBurn", events[0].target)
         assertEquals("+hax", events[0].modes)
         assertEquals(2, events[0].arguments.size)
@@ -49,7 +49,7 @@ internal class ModeProcessorTest {
                 IrcMessage(emptyMap(), "acidburn!libby@root.localhost".toByteArray(), "MODE", params("acidBurn", "+hax")))
         assertEquals(1, events.size)
 
-        assertEquals(TestConstants.time, events[0].time)
+        assertEquals(TestConstants.time, events[0].metadata.time)
         assertEquals("acidBurn", events[0].target)
         assertEquals("+hax", events[0].modes)
         assertEquals(0, events[0].arguments.size)
@@ -62,7 +62,7 @@ internal class ModeProcessorTest {
                 IrcMessage(emptyMap(), "acidburn!libby@root.localhost".toByteArray(), "MODE", params("acidBurn", "+hax", "123", "467")))
         assertEquals(1, events.size)
 
-        assertEquals(TestConstants.time, events[0].time)
+        assertEquals(TestConstants.time, events[0].metadata.time)
         assertEquals("acidBurn", events[0].target)
         assertEquals("+hax", events[0].modes)
         assertEquals(2, events[0].arguments.size)
@@ -77,7 +77,7 @@ internal class ModeProcessorTest {
                 IrcMessage(emptyMap(), "acidburn!libby@root.localhost".toByteArray(), "324", params("acidBurn", "#thegibson", "+hax")))
         assertEquals(1, events.size)
 
-        assertEquals(TestConstants.time, events[0].time)
+        assertEquals(TestConstants.time, events[0].metadata.time)
         assertEquals("#thegibson", events[0].target)
         assertEquals("+hax", events[0].modes)
         assertEquals(0, events[0].arguments.size)
@@ -90,7 +90,7 @@ internal class ModeProcessorTest {
                 IrcMessage(emptyMap(), "acidburn!libby@root.localhost".toByteArray(), "324", params("acidBurn", "#thegibson", "+hax", "123", "467")))
         assertEquals(1, events.size)
 
-        assertEquals(TestConstants.time, events[0].time)
+        assertEquals(TestConstants.time, events[0].metadata.time)
         assertEquals("#thegibson", events[0].target)
         assertEquals("+hax", events[0].modes)
         assertEquals(2, events[0].arguments.size)
@@ -105,7 +105,7 @@ internal class ModeProcessorTest {
                 IrcMessage(emptyMap(), "acidburn!libby@root.localhost".toByteArray(), "MODE", params("#thegibson", "+hax")))
         assertEquals(1, events.size)
 
-        assertEquals(TestConstants.time, events[0].time)
+        assertEquals(TestConstants.time, events[0].metadata.time)
         assertEquals("#thegibson", events[0].target)
         assertEquals("+hax", events[0].modes)
         assertEquals(0, events[0].arguments.size)
@@ -118,7 +118,7 @@ internal class ModeProcessorTest {
                 IrcMessage(emptyMap(), "acidburn!libby@root.localhost".toByteArray(), "MODE", params("#thegibson", "+hax", "123", "467")))
         assertEquals(1, events.size)
 
-        assertEquals(TestConstants.time, events[0].time)
+        assertEquals(TestConstants.time, events[0].metadata.time)
         assertEquals("#thegibson", events[0].target)
         assertEquals("+hax", events[0].modes)
         assertEquals(2, events[0].arguments.size)

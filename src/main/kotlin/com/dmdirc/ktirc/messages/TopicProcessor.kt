@@ -15,11 +15,11 @@ internal class TopicProcessor : MessageProcessor {
 
     override fun process(message: IrcMessage) = sequence {
         when (message.command) {
-            RPL_TOPIC -> yield(ChannelTopicDiscovered(message.time, message.channel, String(message.params[2])))
-            RPL_NOTOPIC -> yield(ChannelTopicDiscovered(message.time, message.channel, null))
+            RPL_TOPIC -> yield(ChannelTopicDiscovered(message.metadata, message.channel, String(message.params[2])))
+            RPL_NOTOPIC -> yield(ChannelTopicDiscovered(message.metadata, message.channel, null))
             RPL_TOPICWHOTIME -> yield(ChannelTopicMetadataDiscovered(
-                    message.time, message.channel, message.params[2].asUser(), message.topicSetTime))
-            "TOPIC" -> message.sourceUser?.let { yield(ChannelTopicChanged(message.time, it, String(message.params[0]), String(message.params[1]))) }
+                    message.metadata, message.channel, message.params[2].asUser(), message.topicSetTime))
+            "TOPIC" -> message.sourceUser?.let { yield(ChannelTopicChanged(message.metadata, it, String(message.params[0]), String(message.params[1]))) }
         }
     }.toList()
 

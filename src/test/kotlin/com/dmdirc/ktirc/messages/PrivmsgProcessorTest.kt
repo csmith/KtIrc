@@ -28,7 +28,7 @@ internal class PrivmsgProcessorTest {
         assertEquals(1, events.size)
 
         val event = events[0] as MessageReceived
-        assertEquals(TestConstants.time, event.time)
+        assertEquals(TestConstants.time, event.metadata.time)
         assertEquals(User("acidburn", "libby", "root.localhost"), event.user)
         assertEquals("#crashandburn", event.target)
         assertEquals("hack the planet!", event.message)
@@ -42,7 +42,7 @@ internal class PrivmsgProcessorTest {
         assertEquals(1, events.size)
 
         val event = events[0] as MessageReceived
-        assertEquals(TestConstants.time, event.time)
+        assertEquals(TestConstants.time, event.metadata.time)
         assertEquals(User("acidburn", "libby", "root.localhost"), event.user)
         assertEquals("#crashandburn", event.target)
         assertEquals("hack the planet!", event.message)
@@ -56,7 +56,7 @@ internal class PrivmsgProcessorTest {
         assertEquals(1, events.size)
 
         val event = events[0] as ActionReceived
-        assertEquals(TestConstants.time, event.time)
+        assertEquals(TestConstants.time, event.metadata.time)
         assertEquals(User("acidburn", "libby", "root.localhost"), event.user)
         assertEquals("#crashandburn", event.target)
         assertEquals("hacks the planet", event.action)
@@ -70,7 +70,7 @@ internal class PrivmsgProcessorTest {
         assertEquals(1, events.size)
 
         val event = events[0] as ActionReceived
-        assertEquals(TestConstants.time, event.time)
+        assertEquals(TestConstants.time, event.metadata.time)
         assertEquals(User("acidburn", "libby", "root.localhost"), event.user)
         assertEquals("#crashandburn", event.target)
         assertEquals("hacks the planet", event.action)
@@ -84,7 +84,7 @@ internal class PrivmsgProcessorTest {
         assertEquals(1, events.size)
 
         val event = events[0] as ActionReceived
-        assertEquals(TestConstants.time, event.time)
+        assertEquals(TestConstants.time, event.metadata.time)
         assertEquals(User("acidburn", "libby", "root.localhost"), event.user)
         assertEquals("#crashandburn", event.target)
         assertEquals("", event.action)
@@ -98,7 +98,7 @@ internal class PrivmsgProcessorTest {
         assertEquals(1, events.size)
 
         val event = events[0] as ActionReceived
-        assertEquals(TestConstants.time, event.time)
+        assertEquals(TestConstants.time, event.metadata.time)
         assertEquals(User("acidburn", "libby", "root.localhost"), event.user)
         assertEquals("#crashandburn", event.target)
         assertEquals("hacks the planet", event.action)
@@ -112,7 +112,7 @@ internal class PrivmsgProcessorTest {
         assertEquals(1, events.size)
 
         val event = events[0] as CtcpReceived
-        assertEquals(TestConstants.time, event.time)
+        assertEquals(TestConstants.time, event.metadata.time)
         assertEquals(User("acidburn", "libby", "root.localhost"), event.user)
         assertEquals("#crashandburn", event.target)
         assertEquals("PING", event.type)
@@ -126,7 +126,7 @@ internal class PrivmsgProcessorTest {
         assertEquals(1, events.size)
 
         val event = events[0] as CtcpReceived
-        assertEquals(TestConstants.time, event.time)
+        assertEquals(TestConstants.time, event.metadata.time)
         assertEquals(User("acidburn", "libby", "root.localhost"), event.user)
         assertEquals("#crashandburn", event.target)
         assertEquals("PING", event.type)

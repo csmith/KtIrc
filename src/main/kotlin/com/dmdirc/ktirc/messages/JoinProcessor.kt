@@ -10,7 +10,7 @@ internal class JoinProcessor : MessageProcessor {
 
     override fun process(message: IrcMessage) = message.sourceUser?.let { user ->
         user.addExtendedJoinFields(message.params)
-        listOf(ChannelJoined(message.time, user, String(message.params[0])))
+        listOf(ChannelJoined(message.metadata, user, String(message.params[0])))
     } ?: emptyList()
 
     private fun User.addExtendedJoinFields(params: List<ByteArray>) {

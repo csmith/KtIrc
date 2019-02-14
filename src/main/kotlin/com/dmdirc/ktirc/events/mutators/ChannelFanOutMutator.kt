@@ -19,7 +19,7 @@ internal class ChannelFanOutMutator : EventMutator {
     private suspend fun SequenceScope<IrcEvent>.handleQuit(client: IrcClient, event: UserQuit) {
         client.channelState.forEach {
             if (it.users.contains(event.user.nickname)) {
-                yield(ChannelQuit(event.time, event.user, it.name, event.reason))
+                yield(ChannelQuit(event.metadata, event.user, it.name, event.reason))
             }
         }
     }
@@ -28,7 +28,7 @@ internal class ChannelFanOutMutator : EventMutator {
         client.channelState.forEach {
             it.users[event.user.nickname]?.let { chanUser ->
                 chanUser.nickname = event.newNick
-                yield(ChannelNickChanged(event.time, event.user, it.name, event.newNick))
+                yield(ChannelNickChanged(event.metadata, event.user, it.name, event.newNick))
             }
         }
     }

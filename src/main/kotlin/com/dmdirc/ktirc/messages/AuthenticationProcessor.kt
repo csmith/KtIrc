@@ -10,10 +10,10 @@ internal class AuthenticationProcessor : MessageProcessor {
     override val commands = arrayOf("AUTHENTICATE", RPL_SASLSUCCESS, ERR_SASLFAIL, RPL_SASLMECHS)
 
     override fun process(message: IrcMessage) = when(message.command) {
-        "AUTHENTICATE" -> listOf(AuthenticationMessage(message.time, message.authenticateArgument))
-        RPL_SASLSUCCESS -> listOf(SaslFinished(message.time, true))
-        ERR_SASLFAIL -> listOf(SaslFinished(message.time, false))
-        RPL_SASLMECHS -> listOf(SaslMechanismNotAvailableError(message.time, message.mechanisms))
+        "AUTHENTICATE" -> listOf(AuthenticationMessage(message.metadata, message.authenticateArgument))
+        RPL_SASLSUCCESS -> listOf(SaslFinished(message.metadata, true))
+        ERR_SASLFAIL -> listOf(SaslFinished(message.metadata, false))
+        RPL_SASLMECHS -> listOf(SaslMechanismNotAvailableError(message.metadata, message.mechanisms))
         else -> emptyList()
     }
 

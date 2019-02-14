@@ -11,7 +11,7 @@ internal class ModeProcessor : MessageProcessor {
         val isDiscovery = message.command == RPL_CHANNELMODEIS || message.command == RPL_UMODEIS
         val paramOffset = if (message.command == RPL_CHANNELMODEIS) 1 else 0
         return listOf(ModeChanged(
-                message.time,
+                message.metadata,
                 target = String(message.params[paramOffset]),
                 modes = String(message.params[paramOffset + 1]),
                 arguments = message.params.takeLast(message.params.size - paramOffset - 2).map { String(it) }.toTypedArray(),

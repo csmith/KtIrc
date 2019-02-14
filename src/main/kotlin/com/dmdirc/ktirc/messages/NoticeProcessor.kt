@@ -12,7 +12,7 @@ internal class NoticeProcessor : MessageProcessor {
 
     override fun process(message: IrcMessage) = when {
             message.isCtcp() -> handleCtcp(message,  message.sourceUser)
-            else -> listOf(NoticeReceived(message.time,  message.sourceUser ?: User("*"), String(message.params[0]), String(message.params[1])))
+            else -> listOf(NoticeReceived(message.metadata,  message.sourceUser ?: User("*"), String(message.params[0]), String(message.params[1])))
         }
 
     private fun handleCtcp(message: IrcMessage, user: User?): List<IrcEvent> {
@@ -20,7 +20,7 @@ internal class NoticeProcessor : MessageProcessor {
         val content = String(message.params[1]).substring(1 until message.params[1].size - 1)
         val parts = content.split(' ', limit=2)
         val body = if (parts.size == 2) parts[1] else ""
-        return listOf(CtcpReplyReceived(message.time, user, String(message.params[0]), parts[0], body))
+        return listOf(CtcpReplyReceived(message.metadata, user, String(message.params[0]), parts[0], body))
     }
 
     private fun IrcMessage.isCtcp() = params[1].size > 2 && params[1][0] == CTCP_BYTE && params[1][params[1].size - 1] == CTCP_BYTE

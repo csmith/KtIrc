@@ -4,6 +4,9 @@ vNEXT (in development)
    e.g. IrcClient { server("irc.example.com", 6667) }
  * Add behaviour options
    * requestModesOnJoin - automatically sends a MODE request when joining a channel
+ * Events now have a `metadata` property instead of a `time` (and time is available in metadata)
+   * IrcEvent.time is now deprecated but will remain until after v1.0.0.
+   * Metadata now contains the event's batch ID, if any.
  * (Internal) Introduced event mutators
    * Event mutators are now responsible for handling changing events in response to state
      e.g. ChannelFanOutMutator creates Channel* events for global quits/nick changes/etc

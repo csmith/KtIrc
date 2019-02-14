@@ -105,7 +105,7 @@ internal class ChannelStateHandler : EventHandler {
 
     private fun handleTopicChanged(client: IrcClient, event: ChannelTopicChanged) {
         client.channelState[event.channel]?.let {
-            it.topic = ChannelTopic(event.topic, event.user, event.time)
+            it.topic = ChannelTopic(event.topic, event.user, event.metadata.time)
         }
     }
 

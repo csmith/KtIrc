@@ -25,7 +25,6 @@ import java.util.concurrent.atomic.AtomicBoolean
  */
 // TODO: How should alternative nicknames work?
 // TODO: Should IRC Client take a pool of servers and rotate through, or make the caller do that?
-// TODO: Should there be a default profile?
 internal class IrcClientImpl(private val config: IrcClientConfig) : IrcClient, CoroutineScope {
 
     private val log by logger()
@@ -61,23 +60,23 @@ internal class IrcClientImpl(private val config: IrcClientConfig) : IrcClient, C
         with(socketFactory(this, config.server.host, config.server.port, config.server.useTls)) {
             socket = this
 
-            emitEvent(ServerConnecting(currentTimeProvider()))
+            emitEvent(ServerConnecting(EventMetadata(currentTimeProvider())))
 
             launch {
                 try {
                     connect()
-                    emitEvent(ServerConnected(currentTimeProvider()))
+                    emitEvent(ServerConnected(EventMetadata(currentTimeProvider())))
                     sendCapabilityList()
                     sendPasswordIfPresent()
                     sendNickChange(config.profile.nickname)
                     sendUser(config.profile.username, config.profile.realName)
                     messageHandler.processMessages(this@IrcClientImpl, receiveChannel.map { parser.parse(it) })
                 } catch (ex : Exception) {
-                    emitEvent(ServerConnectionError(currentTimeProvider(), ex.toConnectionError(), ex.localizedMessage))
+                    emitEvent(ServerConnectionError(EventMetadata(currentTimeProvider()), ex.toConnectionError(), ex.localizedMessage))
                 }
 
                 reset()
-                emitEvent(ServerDisconnected(currentTimeProvider()))
+                emitEvent(ServerDisconnected(EventMetadata(currentTimeProvider())))
             }
         }
     }
