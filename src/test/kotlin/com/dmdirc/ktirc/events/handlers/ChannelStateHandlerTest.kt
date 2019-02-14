@@ -1,4 +1,4 @@
-package com.dmdirc.ktirc.handlers
+package com.dmdirc.ktirc.events.handlers
 
 import com.dmdirc.ktirc.BehaviourConfig
 import com.dmdirc.ktirc.IrcClient
@@ -216,7 +216,7 @@ internal class ChannelStateHandlerTest {
     }
 
     @Test
-    fun `removes user from all channel member lists for quits`() {
+    fun `removes user from channel member lists for quits`() {
         with (ChannelState("#thegibson") { CaseMapping.Rfc }) {
             users += ChannelUser("ZeroCool")
             channelStateMap += this
@@ -232,47 +232,13 @@ internal class ChannelStateHandlerTest {
             channelStateMap += this
         }
 
-        handler.processEvent(ircClient, UserQuit(TestConstants.time, User("zerocool", "dade", "root.localhost")))
+        handler.processEvent(ircClient, ChannelQuit(TestConstants.time, User("zerocool", "dade", "root.localhost"), "#thegibson"))
+        handler.processEvent(ircClient, ChannelQuit(TestConstants.time, User("zerocool", "dade", "root.localhost"), "#dumpsterdiving"))
 
         assertFalse("zerocool" in channelStateMap["#thegibson"]!!.users)
         assertFalse("zerocool" in channelStateMap["#dumpsterdiving"]!!.users)
         assertFalse("zerocool" in channelStateMap["#chat"]!!.users)
         assertTrue("acidburn" in channelStateMap["#chat"]!!.users)
-    }
-
-
-    @Test
-    fun `raises ChannelQuit event for each channel a user quits from`() {
-        with (ChannelState("#thegibson") { CaseMapping.Rfc }) {
-            users += ChannelUser("ZeroCool")
-            channelStateMap += this
-        }
-
-        with (ChannelState("#dumpsterdiving") { CaseMapping.Rfc }) {
-            users += ChannelUser("ZeroCool")
-            channelStateMap += this
-        }
-
-        with (ChannelState("#chat") { CaseMapping.Rfc }) {
-            users += ChannelUser("AcidBurn")
-            channelStateMap += this
-        }
-
-        val events = handler.processEvent(ircClient, UserQuit(TestConstants.time, User("zerocool", "dade", "root.localhost"), "Hack the planet!"))
-
-        val names = mutableListOf<String>()
-        assertEquals(2, events.size)
-        events.forEach { event ->
-            (event as ChannelQuit).let {
-                assertEquals(TestConstants.time, it.time)
-                assertEquals("zerocool", it.user.nickname)
-                assertEquals("Hack the planet!", it.reason)
-                names.add(it.channel)
-            }
-        }
-
-        assertTrue("#thegibson" in names)
-        assertTrue("#dumpsterdiving" in names)
     }
 
     @Test
@@ -281,45 +247,12 @@ internal class ChannelStateHandlerTest {
         channel.users += ChannelUser("acidBurn")
         channelStateMap += channel
 
-        handler.processEvent(ircClient, UserNickChanged(TestConstants.time, User("acidburn", "libby", "root.localhost"), "acidB"))
+        handler.processEvent(ircClient, ChannelNickChanged(TestConstants.time, User("acidburn", "libby", "root.localhost"), "#thegibson", "acidB"))
+        handler.processEvent(ircClient, ChannelNickChanged(TestConstants.time, User("acidburn", "libby", "root.localhost"), "#dumpsterdiving", "acidB"))
 
         assertFalse("acidBurn" in channel.users)
         assertTrue("acidB" in channel.users)
         assertEquals("acidB", channel.users["acidB"]?.nickname)
-    }
-
-    @Test
-    fun `raises ChannelNickChanged event for each channel a user changes nicks in`() {
-        with (ChannelState("#thegibson") { CaseMapping.Rfc }) {
-            users += ChannelUser("ZeroCool")
-            channelStateMap += this
-        }
-
-        with (ChannelState("#dumpsterdiving") { CaseMapping.Rfc }) {
-            users += ChannelUser("ZeroCool")
-            channelStateMap += this
-        }
-
-        with (ChannelState("#chat") { CaseMapping.Rfc }) {
-            users += ChannelUser("AcidBurn")
-            channelStateMap += this
-        }
-
-        val events = handler.processEvent(ircClient, UserNickChanged(TestConstants.time, User("zerocool", "dade", "root.localhost"), "zer0c00l"))
-
-        val names = mutableListOf<String>()
-        assertEquals(2, events.size)
-        events.forEach { event ->
-            (event as ChannelNickChanged).let {
-                assertEquals(TestConstants.time, it.time)
-                assertEquals("zerocool", it.user.nickname)
-                assertEquals("zer0c00l", it.newNick)
-                names.add(it.channel)
-            }
-        }
-
-        assertTrue("#thegibson" in names)
-        assertTrue("#dumpsterdiving" in names)
     }
 
     @Test

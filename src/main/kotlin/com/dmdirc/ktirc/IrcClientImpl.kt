@@ -1,8 +1,9 @@
 package com.dmdirc.ktirc
 
 import com.dmdirc.ktirc.events.*
-import com.dmdirc.ktirc.handlers.EventHandler
-import com.dmdirc.ktirc.handlers.eventHandlers
+import com.dmdirc.ktirc.events.handlers.EventHandler
+import com.dmdirc.ktirc.events.handlers.eventHandlers
+import com.dmdirc.ktirc.events.mutators.eventMutators
 import com.dmdirc.ktirc.io.KtorLineBufferedSocket
 import com.dmdirc.ktirc.io.LineBufferedSocket
 import com.dmdirc.ktirc.io.MessageHandler
@@ -42,7 +43,7 @@ internal class IrcClientImpl(private val config: IrcClientConfig) : IrcClient, C
     override val channelState = ChannelStateMap { caseMapping }
     override val userState = UserState { caseMapping }
 
-    private val messageHandler = MessageHandler(messageProcessors.toList(), eventHandlers.toMutableList())
+    private val messageHandler = MessageHandler(messageProcessors, eventMutators, eventHandlers.toMutableList())
 
     private val parser = MessageParser()
     private var socket: LineBufferedSocket? = null
@@ -87,9 +88,8 @@ internal class IrcClientImpl(private val config: IrcClientConfig) : IrcClient, C
 
     override fun onEvent(handler: (IrcEvent) -> Unit) {
         messageHandler.handlers.add(object : EventHandler {
-            override fun processEvent(client: IrcClient, event: IrcEvent): List<IrcEvent> {
+            override fun processEvent(client: IrcClient, event: IrcEvent) {
                 handler(event)
-                return emptyList()
             }
         })
     }

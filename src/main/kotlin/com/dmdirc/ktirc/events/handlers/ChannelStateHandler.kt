@@ -1,4 +1,4 @@
-package com.dmdirc.ktirc.handlers
+package com.dmdirc.ktirc.events.handlers
 
 import com.dmdirc.ktirc.IrcClient
 import com.dmdirc.ktirc.events.*
@@ -12,7 +12,7 @@ internal class ChannelStateHandler : EventHandler {
 
     private val log by logger()
 
-    override fun processEvent(client: IrcClient, event: IrcEvent): List<IrcEvent> {
+    override fun processEvent(client: IrcClient, event: IrcEvent) {
         when (event) {
             is ChannelJoined -> handleJoin(client, event)
             is ChannelParted -> handlePart(client, event)
@@ -22,11 +22,10 @@ internal class ChannelStateHandler : EventHandler {
             is ChannelTopicDiscovered -> handleTopicDiscovered(client, event)
             is ChannelTopicMetadataDiscovered -> handleTopicMetadata(client, event)
             is ChannelTopicChanged -> handleTopicChanged(client, event)
+            is ChannelQuit -> handleQuit(client, event)
+            is ChannelNickChanged -> handleNickChanged(client, event)
             is ModeChanged -> handleModeChanged(client, event)
-            is UserQuit -> return handleQuit(client, event)
-            is UserNickChanged -> return handleNickChanged(client, event)
         }
-        return emptyList()
     }
 
     private fun handleJoin(client: IrcClient, event: ChannelJoined) {
@@ -158,22 +157,18 @@ internal class ChannelStateHandler : EventHandler {
         return 1
     }
 
-    private fun handleQuit(client: IrcClient, event: UserQuit) = sequence {
-        client.channelState.forEach {
-            if (it.users.contains(event.user.nickname)) {
-                it.users -= event.user.nickname
-                yield(ChannelQuit(event.time, event.user, it.name, event.reason))
-            }
+    private fun handleQuit(client: IrcClient, event: ChannelQuit) {
+        client.channelState[event.channel]?.let {
+            it.users -= event.user.nickname
         }
-    }.toList()
+    }
 
-    private fun handleNickChanged(client: IrcClient, event: UserNickChanged) = sequence {
-        client.channelState.forEach {
+    private fun handleNickChanged(client: IrcClient, event: ChannelNickChanged) {
+        client.channelState[event.channel]?.let {
             it.users[event.user.nickname]?.let { chanUser ->
                 chanUser.nickname = event.newNick
-                yield(ChannelNickChanged(event.time, event.user, it.name, event.newNick))
             }
         }
-    }.toList()
+    }
 
 }

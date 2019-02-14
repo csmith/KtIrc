@@ -1,4 +1,4 @@
-package com.dmdirc.ktirc.handlers
+package com.dmdirc.ktirc.events.handlers
 
 import com.dmdirc.ktirc.IrcClient
 import com.dmdirc.ktirc.TestConstants

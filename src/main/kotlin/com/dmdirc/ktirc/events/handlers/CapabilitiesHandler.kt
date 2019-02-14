@@ -1,4 +1,4 @@
-package com.dmdirc.ktirc.handlers
+package com.dmdirc.ktirc.events.handlers
 
 import com.dmdirc.ktirc.IrcClient
 import com.dmdirc.ktirc.events.*
@@ -15,7 +15,7 @@ internal class CapabilitiesHandler : EventHandler {
 
     private val log by logger()
 
-    override fun processEvent(client: IrcClient, event: IrcEvent): List<IrcEvent> {
+    override fun processEvent(client: IrcClient, event: IrcEvent) {
         when (event) {
             is ServerCapabilitiesReceived -> handleCapabilitiesReceived(client.serverState.capabilities, event.capabilities)
             is ServerCapabilitiesFinished -> handleCapabilitiesFinished(client)
@@ -24,7 +24,6 @@ internal class CapabilitiesHandler : EventHandler {
             is SaslMechanismNotAvailableError -> handleSaslMechanismChange(client, event.mechanisms)
             is SaslFinished -> handleSaslFinished(client)
         }
-        return emptyList()
     }
 
     private fun handleCapabilitiesReceived(state: CapabilitiesState, capabilities: Map<Capability, String>) {

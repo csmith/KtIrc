@@ -4,6 +4,10 @@ vNEXT (in development)
    e.g. IrcClient { server("irc.example.com", 6667) }
  * Add behaviour options
    * requestModesOnJoin - automatically sends a MODE request when joining a channel
+ * (Internal) Introduced event mutators
+   * Event mutators are now responsible for handling changing events in response to state
+     e.g. ChannelFanOutMutator creates Channel* events for global quits/nick changes/etc
+   * Event handlers now just handle events, and don't return anything
 
 v0.8.0
 

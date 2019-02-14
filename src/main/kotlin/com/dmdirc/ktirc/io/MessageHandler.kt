@@ -1,29 +1,35 @@
 package com.dmdirc.ktirc.io
 
 import com.dmdirc.ktirc.IrcClient
-import com.dmdirc.ktirc.handlers.EventHandler
 import com.dmdirc.ktirc.events.IrcEvent
+import com.dmdirc.ktirc.events.handlers.EventHandler
+import com.dmdirc.ktirc.events.mutators.EventMutator
 import com.dmdirc.ktirc.messages.MessageProcessor
 import com.dmdirc.ktirc.model.IrcMessage
 import com.dmdirc.ktirc.util.logger
 import kotlinx.coroutines.channels.ReceiveChannel
 
-internal class MessageHandler(private val processors: List<MessageProcessor>, val handlers: MutableList<EventHandler>) {
+internal class MessageHandler(
+        private val processors: List<MessageProcessor>,
+        private val mutators: List<EventMutator>,
+        val handlers: MutableList<EventHandler>) {
 
     private val log by logger()
 
     suspend fun processMessages(ircClient: IrcClient, messages: ReceiveChannel<IrcMessage>) {
         for (message in messages) {
-            message.toEvents().forEach { event -> emitEvent(ircClient, event) }
+            emitEvents(ircClient, message.toEvents())
         }
     }
 
-    fun emitEvent(ircClient: IrcClient, ircEvent: IrcEvent) {
-        log.fine { "Dispatching event of type ${ircEvent::class}" }
-        handlers.forEach { handler ->
-            handler.processEvent(ircClient, ircEvent).forEach {
-                emitEvent(ircClient, it)
-            }
+    fun emitEvent(ircClient: IrcClient, ircEvent: IrcEvent) = emitEvents(ircClient, listOf(ircEvent))
+
+    fun emitEvents(ircClient: IrcClient, ircEvents: List<IrcEvent>) {
+        mutators.fold(ircEvents) { events, mutator ->
+            events.flatMap { mutator.mutateEvent(ircClient, it) }
+        }.forEach { event ->
+            log.fine { "Dispatching event of type ${event::class}" }
+            handlers.forEach { it.processEvent(ircClient, event) }
         }
     }
 
