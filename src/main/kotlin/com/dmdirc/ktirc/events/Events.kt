@@ -11,14 +11,15 @@ import java.time.LocalDateTime
  *
  * @param time The best-guess time at which the event occurred.
  * @param batchId The ID of the batch this event is part of, if any.
+ * @param messageId The unique ID of this message, if any.
  */
-data class EventMetadata(val time: LocalDateTime, val batchId: String? = null)
+data class EventMetadata(val time: LocalDateTime, val batchId: String? = null, val messageId: String? = null)
 
 /** Base class for all events. */
 sealed class IrcEvent(val metadata: EventMetadata) {
 
     /** The time at which the event occurred. */
-    @Deprecated("Only for backwards compatibility; to be removed post-1.0.0", replaceWith = ReplaceWith("metadata.time"))
+    @Deprecated("Moved to metadata; to be removed post-1.0.0", replaceWith = ReplaceWith("metadata.time"))
     val time: LocalDateTime
         get() = metadata.time
 
@@ -83,7 +84,14 @@ class ChannelTopicMetadataDiscovered(metadata: EventMetadata, val channel: Strin
 class ChannelTopicChanged(metadata: EventMetadata, val user: User, val channel: String, val topic: String?) : IrcEvent(metadata)
 
 /** Raised when a message is received. */
-class MessageReceived(metadata: EventMetadata, val user: User, val target: String, val message: String, val messageId: String? = null) : IrcEvent(metadata)
+class MessageReceived(metadata: EventMetadata, val user: User, val target: String, val message: String) : IrcEvent(metadata) {
+
+    /** The message ID of this message. */
+    @Deprecated("Moved to metadata; to be removed post-1.0.0", replaceWith = ReplaceWith("metadata.messageId"))
+    val messageId: String?
+        get() = metadata.messageId
+
+}
 
 /**
  * Raised when a notice is received.
@@ -93,7 +101,14 @@ class MessageReceived(metadata: EventMetadata, val user: User, val target: Strin
 class NoticeReceived(metadata: EventMetadata, val user: User, val target: String, val message: String) : IrcEvent(metadata)
 
 /** Raised when an action is received. */
-class ActionReceived(metadata: EventMetadata, val user: User, val target: String, val action: String, val messageId: String? = null) : IrcEvent(metadata)
+class ActionReceived(metadata: EventMetadata, val user: User, val target: String, val action: String) : IrcEvent(metadata) {
+
+    /** The message ID of this action. */
+    @Deprecated("Moved to metadata; to be removed post-1.0.0", replaceWith = ReplaceWith("metadata.messageId"))
+    val messageId: String?
+        get() = metadata.messageId
+
+}
 
 /** Raised when a CTCP is received. */
 class CtcpReceived(metadata: EventMetadata, val user: User, val target: String, val type: String, val content: String) : IrcEvent(metadata)

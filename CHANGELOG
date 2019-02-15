@@ -6,6 +6,8 @@ vNEXT (in development)
    * requestModesOnJoin - automatically sends a MODE request when joining a channel
  * Events now have a `metadata` property instead of a `time` (and time is available in metadata)
    * IrcEvent.time is now deprecated but will remain until after v1.0.0.
+   * Metadata now contains the message ID, if any.
+     * ActionReceived.messageId and MessageReceived.messageId are now deprecated, to be removed after v1.0.0.
    * Metadata now contains the event's batch ID, if any.
  * Added support for batches
    * All events in a batch are buffered until the batch is finished

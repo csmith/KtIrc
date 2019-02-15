@@ -12,7 +12,7 @@ import java.time.LocalDateTime
 internal class IrcMessage(val tags: Map<MessageTag, String>, val prefix: ByteArray?, val command: String, val params: List<ByteArray>) {
 
     /** The time at which the message was sent, or our best guess at it. */
-    val metadata = EventMetadata(time, batchId)
+    val metadata = EventMetadata(time, batchId, messageId)
 
     /** The user that generated the message, if any. */
     val sourceUser by lazy {
@@ -22,14 +22,16 @@ internal class IrcMessage(val tags: Map<MessageTag, String>, val prefix: ByteArr
     }
 
     private val time
-        get() = if (MessageTag.ServerTime in tags) {
-            LocalDateTime.ofInstant(Instant.parse(tags[MessageTag.ServerTime]), currentTimeZoneProvider())
-        } else {
-            currentTimeProvider()
+        get() = when (MessageTag.ServerTime in tags) {
+            true -> LocalDateTime.ofInstant(Instant.parse(tags[MessageTag.ServerTime]), currentTimeZoneProvider())
+            false -> currentTimeProvider()
         }
 
     private val batchId
         get() = tags[MessageTag.Batch]
+
+    private val messageId
+        get() = tags[MessageTag.MessageId]
 
 }
 

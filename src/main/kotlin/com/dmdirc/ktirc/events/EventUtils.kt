@@ -28,9 +28,9 @@ internal fun ChannelNamesReceived.toModesAndUsers(client: IrcClient) = sequence 
  */
 fun IrcClient.reply(message: MessageReceived, response: String, prefixWithNickname: Boolean = false) {
     if (isToMe(message)) {
-        sendMessage(message.user.nickname, response, message.messageId)
+        sendMessage(message.user.nickname, response, message.metadata.messageId)
     } else {
-        sendMessage(message.target, if (prefixWithNickname) "${message.user.nickname}: $response" else response, message.messageId)
+        sendMessage(message.target, if (prefixWithNickname) "${message.user.nickname}: $response" else response, message.metadata.messageId)
     }
 }
 
@@ -40,7 +40,7 @@ fun IrcClient.reply(message: MessageReceived, response: String, prefixWithNickna
 fun IrcClient.react(message: MessageReceived, reaction: String) = sendTagMessage(
         if (isToMe(message)) message.user.nickname else message.target,
         mapOf(MessageTag.React to reaction),
-        message.messageId)
+        message.metadata.messageId)
 
 /**
  * Utility to determine whether the given message is to our local user or not.
