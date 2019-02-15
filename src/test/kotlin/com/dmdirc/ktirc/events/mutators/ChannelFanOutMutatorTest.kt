@@ -5,6 +5,7 @@ import com.dmdirc.ktirc.IrcClient
 import com.dmdirc.ktirc.TestConstants
 import com.dmdirc.ktirc.events.*
 import com.dmdirc.ktirc.io.CaseMapping
+import com.dmdirc.ktirc.io.MessageEmitter
 import com.dmdirc.ktirc.model.*
 import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.mock
@@ -17,6 +18,7 @@ internal class ChannelFanOutMutatorTest {
     private val channelStateMap = ChannelStateMap { CaseMapping.Rfc }
     private val serverState = ServerState("", "")
     private val behaviour = BehaviourConfig()
+    private val messageEmitter = mock<MessageEmitter>()
     private val ircClient = mock<IrcClient> {
         on { serverState } doReturn serverState
         on { channelState } doReturn channelStateMap
@@ -43,7 +45,7 @@ internal class ChannelFanOutMutatorTest {
         }
 
         val quitEvent = UserQuit(EventMetadata(TestConstants.time), User("zerocool", "dade", "root.localhost"), "Hack the planet!")
-        val events = mutator.mutateEvent(ircClient, quitEvent)
+        val events = mutator.mutateEvent(ircClient, messageEmitter, quitEvent)
 
         val names = mutableListOf<String>()
         Assertions.assertEquals(3, events.size)
@@ -79,7 +81,7 @@ internal class ChannelFanOutMutatorTest {
         }
 
         val nickEvent = UserNickChanged(EventMetadata(TestConstants.time), User("zerocool", "dade", "root.localhost"), "zer0c00l")
-        val events = mutator.mutateEvent(ircClient, nickEvent)
+        val events = mutator.mutateEvent(ircClient, messageEmitter, nickEvent)
 
         val names = mutableListOf<String>()
         Assertions.assertEquals(3, events.size)

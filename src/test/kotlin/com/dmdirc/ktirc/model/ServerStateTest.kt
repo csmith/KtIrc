@@ -67,6 +67,7 @@ internal class ServerStateTest {
         features[ServerFeature.Network] = "gibson"
         capabilities.advertisedCapabilities[Capability.SaslAuthentication] = "sure"
         sasl.saslBuffer = "in progress"
+        batches["batch"] = Batch("type", emptyList())
 
         reset()
 
@@ -77,6 +78,7 @@ internal class ServerStateTest {
         assertTrue(features.isEmpty())
         assertTrue(capabilities.advertisedCapabilities.isEmpty())
         assertEquals("", sasl.saslBuffer)
+        assertTrue(batches.isEmpty())
     }
 
 }

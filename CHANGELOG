@@ -7,6 +7,9 @@ vNEXT (in development)
  * Events now have a `metadata` property instead of a `time` (and time is available in metadata)
    * IrcEvent.time is now deprecated but will remain until after v1.0.0.
    * Metadata now contains the event's batch ID, if any.
+ * Added support for batches
+   * All events in a batch are buffered until the batch is finished
+   * The events are then published together in a single `BatchReceived` event
  * (Internal) Introduced event mutators
    * Event mutators are now responsible for handling changing events in response to state
      e.g. ChannelFanOutMutator creates Channel* events for global quits/nick changes/etc

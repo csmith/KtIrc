@@ -152,3 +152,6 @@ class BatchStarted(metadata: EventMetadata, val referenceId: String, val batchTy
 
 /** Indicates a batch of messages has finished. */
 class BatchFinished(metadata: EventMetadata, val referenceId: String) : IrcEvent(metadata)
+
+/** A batch of events that should be handled together. */
+class BatchReceived(metadata: EventMetadata, val type: String, val params: Array<String>, val events: List<IrcEvent>) : IrcEvent(metadata)

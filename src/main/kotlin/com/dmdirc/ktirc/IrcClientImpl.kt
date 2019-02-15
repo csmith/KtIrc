@@ -1,7 +1,6 @@
 package com.dmdirc.ktirc
 
 import com.dmdirc.ktirc.events.*
-import com.dmdirc.ktirc.events.handlers.EventHandler
 import com.dmdirc.ktirc.events.handlers.eventHandlers
 import com.dmdirc.ktirc.events.mutators.eventMutators
 import com.dmdirc.ktirc.io.KtorLineBufferedSocket
@@ -42,7 +41,7 @@ internal class IrcClientImpl(private val config: IrcClientConfig) : IrcClient, C
     override val channelState = ChannelStateMap { caseMapping }
     override val userState = UserState { caseMapping }
 
-    private val messageHandler = MessageHandler(messageProcessors, eventMutators, eventHandlers.toMutableList())
+    private val messageHandler = MessageHandler(messageProcessors, eventMutators, eventHandlers)
 
     private val parser = MessageParser()
     private var socket: LineBufferedSocket? = null
@@ -85,15 +84,9 @@ internal class IrcClientImpl(private val config: IrcClientConfig) : IrcClient, C
         socket?.disconnect()
     }
 
-    override fun onEvent(handler: (IrcEvent) -> Unit) {
-        messageHandler.handlers.add(object : EventHandler {
-            override fun processEvent(client: IrcClient, event: IrcEvent) {
-                handler(event)
-            }
-        })
-    }
+    override fun onEvent(handler: (IrcEvent) -> Unit) = messageHandler.addEmitter(handler)
 
-    private fun emitEvent(event: IrcEvent) = messageHandler.emitEvent(this, event)
+    private fun emitEvent(event: IrcEvent) = messageHandler.handleEvent(this, event)
     private fun sendPasswordIfPresent() = config.server.password?.let(this::sendPassword)
 
     internal fun reset() {

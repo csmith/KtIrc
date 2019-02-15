@@ -2,13 +2,14 @@ package com.dmdirc.ktirc.events.mutators
 
 import com.dmdirc.ktirc.IrcClient
 import com.dmdirc.ktirc.events.*
+import com.dmdirc.ktirc.io.MessageEmitter
 
 /**
  * "Fans out" global events such as quits and nick changes to each channel a user is in.
  */
 internal class ChannelFanOutMutator : EventMutator {
 
-    override fun mutateEvent(client: IrcClient, event: IrcEvent) = sequence<IrcEvent> {
+    override fun mutateEvent(client: IrcClient, messageEmitter: MessageEmitter, event: IrcEvent) = sequence<IrcEvent> {
         yield(event)
         when (event) {
             is UserQuit -> handleQuit(client, event)

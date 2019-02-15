@@ -9,28 +9,48 @@ import com.dmdirc.ktirc.model.IrcMessage
 import com.dmdirc.ktirc.util.logger
 import kotlinx.coroutines.channels.ReceiveChannel
 
+internal interface MessageEmitter {
+
+    fun handleEvent(ircClient: IrcClient, ircEvent: IrcEvent, processOnly: Boolean = false) = handleEvents(ircClient, listOf(ircEvent), processOnly)
+
+    fun handleEvents(ircClient: IrcClient, ircEvents: List<IrcEvent>, processOnly: Boolean = false)
+
+}
+
 internal class MessageHandler(
         private val processors: List<MessageProcessor>,
         private val mutators: List<EventMutator>,
-        val handlers: MutableList<EventHandler>) {
+        private val handlers: List<EventHandler>) : MessageEmitter {
 
     private val log by logger()
 
+    private val emitters = mutableListOf<(IrcEvent) -> Unit>()
+
     suspend fun processMessages(ircClient: IrcClient, messages: ReceiveChannel<IrcMessage>) {
         for (message in messages) {
-            emitEvents(ircClient, message.toEvents())
+            handleEvents(ircClient, message.toEvents())
         }
     }
 
-    fun emitEvent(ircClient: IrcClient, ircEvent: IrcEvent) = emitEvents(ircClient, listOf(ircEvent))
-
-    fun emitEvents(ircClient: IrcClient, ircEvents: List<IrcEvent>) {
-        mutators.fold(ircEvents) { events, mutator ->
-            events.flatMap { mutator.mutateEvent(ircClient, it) }
-        }.forEach { event ->
-            log.fine { "Dispatching event of type ${event::class}" }
-            handlers.forEach { it.processEvent(ircClient, event) }
+    override fun handleEvents(ircClient: IrcClient, ircEvents: List<IrcEvent>, processOnly: Boolean) {
+        val events = if (processOnly) ircEvents else ircEvents.mutate(ircClient)
+        events.forEach { event ->
+            event.process(ircClient)
+            if (!processOnly) {
+                log.fine { "Dispatching event of type ${event::class}" }
+                emitters.forEach { it(event) }
+            }
         }
+    }
+
+    fun addEmitter(emitter: (IrcEvent) -> Unit) {
+        emitters.add(emitter)
+    }
+
+    private fun IrcEvent.process(ircClient: IrcClient) = handlers.forEach { it.processEvent(ircClient, this) }
+
+    private fun List<IrcEvent>.mutate(ircClient: IrcClient) = mutators.fold(this) { events, mutator ->
+        events.flatMap { mutator.mutateEvent(ircClient, this@MessageHandler, it) }
     }
 
     private fun IrcMessage.toEvents() = this.getProcessor()?.process(this) ?: emptyList()
