@@ -1,5 +1,7 @@
 vNEXT (in development)
 
+ * Batch start and end events are no longer included in BatchReceived events
+
 v0.9.0
 
  * Improve DSL for creating an IrcClient to allow parameters to be passed to server and profile

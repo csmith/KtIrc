@@ -40,7 +40,7 @@ internal class BatchMutatorTest {
         serverState.batches["abcdef"]?.let {
             assertEquals(listOf("foo", "bar"), it.arguments)
             assertEquals("netsplit", it.type)
-            assertEquals(listOf(event), it.events)
+            assertTrue(it.events.isEmpty())
             assertNull(it.parent)
         }
     }
@@ -86,9 +86,8 @@ internal class BatchMutatorTest {
         val event = events[0] as BatchReceived
         assertEquals("netsplit", event.type)
         assertArrayEquals(arrayOf("p1", "p2"), event.params)
-        assertEquals(2, event.events.size)
+        assertEquals(1, event.events.size)
         assertTrue(event.events[0] is ServerConnected)
-        assertTrue(event.events[1] is BatchFinished)
     }
 
     @Test
@@ -104,9 +103,8 @@ internal class BatchMutatorTest {
         assertEquals(1, parent?.size)
 
         val event = parent?.get(0) as BatchReceived
-        assertEquals(2, event.events.size)
+        assertEquals(1, event.events.size)
         assertTrue(event.events[0] is ServerConnected)
-        assertTrue(event.events[1] is BatchFinished)
     }
 
     @Test
