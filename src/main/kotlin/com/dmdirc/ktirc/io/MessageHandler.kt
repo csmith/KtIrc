@@ -18,13 +18,14 @@ internal interface MessageEmitter {
 }
 
 internal class MessageHandler(
-        private val processors: List<MessageProcessor>,
+        processors: List<MessageProcessor>,
         private val mutators: List<EventMutator>,
         private val handlers: List<EventHandler>) : MessageEmitter {
 
     private val log by logger()
 
     private val emitters = mutableListOf<(IrcEvent) -> Unit>()
+    private val processorMap = processors.flatMap { it.commands.map { c -> c to it } }.toMap()
 
     suspend fun processMessages(ircClient: IrcClient, messages: ReceiveChannel<IrcMessage>) {
         for (message in messages) {
@@ -54,7 +55,7 @@ internal class MessageHandler(
     }
 
     private fun IrcMessage.toEvents() = this.getProcessor()?.process(this) ?: emptyList()
-    private fun IrcMessage.getProcessor() = processors.firstOrNull { it.commands.contains(command) } ?: run {
+    private fun IrcMessage.getProcessor() = processorMap[command] ?: run {
         log.warning { "No processor found for $command" }
         null
     }

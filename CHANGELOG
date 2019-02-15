@@ -13,6 +13,7 @@ vNEXT (in development)
    * All events in a batch are buffered until the batch is finished
    * The events are then published together in a single `BatchReceived` event
  * Added support for CHGHOST messages
+ * (Internal) Improve performance when the MessageHandler is finding a processor for a message
  * (Internal) Introduced event mutators
    * Event mutators are now responsible for handling changing events in response to state
      e.g. ChannelFanOutMutator creates Channel* events for global quits/nick changes/etc

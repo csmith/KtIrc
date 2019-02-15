@@ -94,7 +94,7 @@ sealed class Capability(val name: String) {
     object AwayStateMessages : Capability("away-notify") // TODO: Add processor
 
     /** Receive a notification when a user's host changes, instead of a quit/join. */
-    object HostChangeMessages : Capability("chghost") // TODO: Add processor
+    object HostChangeMessages : Capability("chghost")
 
 }
 
