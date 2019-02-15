@@ -230,4 +230,16 @@ internal class UserStateHandlerTest {
         assertNull(userState["AcidBurn"])
         assertEquals("acid~", userState["acid~"]?.details?.nickname)
     }
+
+    @Test
+    fun `updates details for remote host changes`() {
+        val user = User("acidBurn", "libby", "root.localhost")
+        userState += User("AcidBurn")
+
+        handler.processEvent(ircClient, UserHostChanged(EventMetadata(TestConstants.time), user, "burn", "root.gibson"))
+
+        assertEquals("burn", userState["acidBurn"]?.details?.ident)
+        assertEquals("root.gibson", userState["acidBurn"]?.details?.hostname)
+    }
+
 }

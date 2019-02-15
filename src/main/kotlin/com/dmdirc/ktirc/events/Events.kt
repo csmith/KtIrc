@@ -122,6 +122,9 @@ class UserQuit(metadata: EventMetadata, val user: User, val reason: String = "")
 /** Raised when a user changes nickname. */
 class UserNickChanged(metadata: EventMetadata, val user: User, val newNick: String) : IrcEvent(metadata)
 
+/** Raised when a user changes hostname. */
+class UserHostChanged(metadata: EventMetadata, val user: User, val newIdent: String, val newHost: String) : IrcEvent(metadata)
+
 /**
  * Raised when a user's account changes (i.e., they auth'd or deauth'd with services).
  *

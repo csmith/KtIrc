@@ -22,6 +22,7 @@ internal val messageProcessors = listOf(
         AuthenticationProcessor(),
         BatchProcessor(),
         CapabilityProcessor(),
+        ChangeHostProcessor(),
         ISupportProcessor(),
         JoinProcessor(),
         KickProcessor(),
