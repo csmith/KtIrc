@@ -1,6 +1,8 @@
 vNEXT (in development)
 
  * Batch start and end events are no longer included in BatchReceived events
+ * Batches now expose complete metadata from their start event
+ * Added support for labelled-replies capability and label message tags
 
 v0.9.0
 

@@ -12,8 +12,13 @@ import java.time.LocalDateTime
  * @param time The best-guess time at which the event occurred.
  * @param batchId The ID of the batch this event is part of, if any.
  * @param messageId The unique ID of this message, if any.
+ * @param label The label of the command that this event was sent in response to, if any.
  */
-data class EventMetadata(val time: LocalDateTime, val batchId: String? = null, val messageId: String? = null)
+data class EventMetadata(
+        val time: LocalDateTime,
+        val batchId: String? = null,
+        val messageId: String? = null,
+        val label: String? = null)
 
 /** Base class for all events. */
 sealed class IrcEvent(val metadata: EventMetadata) {

@@ -80,11 +80,14 @@ sealed class Capability(val name: String) {
     object AccountAndRealNameInJoinMessages : Capability("extended-join")
 
     // Capabilities that affect how messages are sent/received:
+    /** Messages can be sent in batches, and potentially handled differently by the client. */
+    object Batch : Capability("batch")
+
     /** Messages sent by the client are echo'd back on successful delivery. */
     object EchoMessages : Capability("echo-message")
 
-    /** Messages can be sent in batches, and potentially handled differently by the client. */
-    object Batch : Capability("batch")
+    /** Allows us to label all outgoing messages and have the server identify the responses to them. */
+    object LabeledResponse : Capability("draft/labeled-response")
 
     // Capabilities that notify us of changes to other clients:
     /** Receive a notification when a user's account changes. */

@@ -1,5 +1,7 @@
 package com.dmdirc.ktirc.model
 
+import com.dmdirc.ktirc.TestConstants
+import com.dmdirc.ktirc.events.EventMetadata
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 
@@ -67,7 +69,8 @@ internal class ServerStateTest {
         features[ServerFeature.Network] = "gibson"
         capabilities.advertisedCapabilities[Capability.SaslAuthentication] = "sure"
         sasl.saslBuffer = "in progress"
-        batches["batch"] = Batch("type", emptyList())
+        batches["batch"] = Batch("type", emptyList(), EventMetadata(TestConstants.time))
+        labelCounter.set(100)
 
         reset()
 
@@ -79,6 +82,7 @@ internal class ServerStateTest {
         assertTrue(capabilities.advertisedCapabilities.isEmpty())
         assertEquals("", sasl.saslBuffer)
         assertTrue(batches.isEmpty())
+        assertEquals(0, labelCounter.get())
     }
 
 }

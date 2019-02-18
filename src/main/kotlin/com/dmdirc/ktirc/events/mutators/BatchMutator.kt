@@ -22,16 +22,16 @@ internal class BatchMutator : EventMutator {
 
     private fun startBatch(client: IrcClient, event: BatchStarted) {
         client.serverState.batches[event.referenceId] =
-                Batch(event.batchType, event.params.asList(), event.metadata.batchId, mutableListOf())
+                Batch(event.batchType, event.params.asList(), event.metadata, mutableListOf())
     }
 
     private fun finishBatch(client: IrcClient, event: BatchFinished): List<IrcEvent> {
         client.serverState.batches.remove(event.referenceId)?.let {
             val batch = BatchReceived(it.events[0].metadata, it.type, it.arguments.toTypedArray(), it.events)
-            if (it.parent == null) {
+            if (it.metadata.batchId == null) {
                 return listOf(batch)
             } else {
-                client.serverState.batches[it.parent]?.events?.add(batch)
+                client.serverState.batches[it.metadata.batchId]?.events?.add(batch)
             }
         }
 

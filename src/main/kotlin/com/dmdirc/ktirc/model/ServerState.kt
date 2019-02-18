@@ -1,9 +1,11 @@
 package com.dmdirc.ktirc.model
 
 import com.dmdirc.ktirc.SaslConfig
+import com.dmdirc.ktirc.events.EventMetadata
 import com.dmdirc.ktirc.events.IrcEvent
 import com.dmdirc.ktirc.io.CaseMapping
 import com.dmdirc.ktirc.util.logger
+import java.util.concurrent.atomic.AtomicLong
 import kotlin.reflect.KClass
 
 /**
@@ -70,6 +72,11 @@ class ServerState internal constructor(
     internal val batches = mutableMapOf<String, Batch>()
 
     /**
+     * Counter for ensuring sent labels are unique.
+     */
+    internal val labelCounter = AtomicLong(0)
+
+    /**
      * Determines if the given mode is one applied to a user of a channel, such as 'o' for operator.
      */
     fun isChannelUserMode(mode: Char) = channelModePrefixes.isMode(mode)
@@ -99,6 +106,7 @@ class ServerState internal constructor(
         capabilities.reset()
         sasl.reset()
         batches.clear()
+        labelCounter.set(0)
     }
 
 }
@@ -186,7 +194,7 @@ enum class ServerStatus {
 /**
  * Represents an in-progress batch.
  */
-internal data class Batch(val type: String, val arguments: List<String>, val parent: String? = null, val events: MutableList<IrcEvent> = mutableListOf())
+internal data class Batch(val type: String, val arguments: List<String>, val metadata: EventMetadata, val events: MutableList<IrcEvent> = mutableListOf())
 
 internal val serverFeatures: Map<String, ServerFeature<*>> by lazy {
     ServerFeature::class.nestedClasses.map { it.objectInstance as ServerFeature<*> }.associateBy { it.name }

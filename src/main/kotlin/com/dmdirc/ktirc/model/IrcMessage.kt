@@ -12,7 +12,11 @@ import java.time.LocalDateTime
 internal class IrcMessage(val tags: Map<MessageTag, String>, val prefix: ByteArray?, val command: String, val params: List<ByteArray>) {
 
     /** The time at which the message was sent, or our best guess at it. */
-    val metadata = EventMetadata(time, batchId, messageId)
+    val metadata = EventMetadata(
+            time = time,
+            batchId = tags[MessageTag.Batch],
+            messageId = tags[MessageTag.MessageId],
+            label = tags[MessageTag.Label])
 
     /** The user that generated the message, if any. */
     val sourceUser by lazy {
@@ -27,12 +31,6 @@ internal class IrcMessage(val tags: Map<MessageTag, String>, val prefix: ByteArr
             false -> currentTimeProvider()
         }
 
-    private val batchId
-        get() = tags[MessageTag.Batch]
-
-    private val messageId
-        get() = tags[MessageTag.MessageId]
-
 }
 
 /**
@@ -46,8 +44,8 @@ sealed class MessageTag(val name: String) {
     /** Specifies the ID that a batch message belongs to. */
     object Batch : MessageTag("batch")
 
-    /** Specifies the time the server received the message, if the `server-time` capability is negotiated. */
-    object ServerTime : MessageTag("time")
+    /** An arbitrary label to identify the response to messages we generate. */
+    object Label : MessageTag("draft/label")
 
     /** A unique ID for the message, used to reply, react, edit, delete, etc. */
     object MessageId : MessageTag("draft/msgid")
@@ -57,6 +55,9 @@ sealed class MessageTag(val name: String) {
 
     /** Used to specify a slack-like reaction to another message. */
     object React : MessageTag("+draft/react")
+
+    /** Specifies the time the server received the message, if the `server-time` capability is negotiated. */
+    object ServerTime : MessageTag("time")
 }
 
 internal val messageTags: Map<String, MessageTag> by lazy {

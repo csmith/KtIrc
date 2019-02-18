@@ -8,11 +8,9 @@ import com.dmdirc.ktirc.io.LineBufferedSocket
 import com.dmdirc.ktirc.io.MessageHandler
 import com.dmdirc.ktirc.io.MessageParser
 import com.dmdirc.ktirc.messages.*
-import com.dmdirc.ktirc.model.ChannelStateMap
-import com.dmdirc.ktirc.model.ServerState
-import com.dmdirc.ktirc.model.UserState
-import com.dmdirc.ktirc.model.toConnectionError
+import com.dmdirc.ktirc.model.*
 import com.dmdirc.ktirc.util.currentTimeProvider
+import com.dmdirc.ktirc.util.generateLabel
 import com.dmdirc.ktirc.util.logger
 import io.ktor.util.KtorExperimentalAPI
 import kotlinx.coroutines.*
@@ -52,6 +50,22 @@ internal class IrcClientImpl(private val config: IrcClientConfig) : IrcClient, C
         socket?.sendChannel?.offer(message.toByteArray()) ?: log.warning { "No send channel for message: $message" }
     }
 
+    // TODO: This will become sendAsync and return a Deferred<IrcEvent>
+    // TODO: Refactor so that send takes a map of tags and arguments; build the string separately
+    internal fun sendWithLabel(message: String) {
+        val messageToSend = if (Capability.LabeledResponse in serverState.capabilities.enabledCapabilities) {
+            val label = generateLabel(this)
+            "@draft/label=$label" + if (message.startsWith('@')) {
+                ";${message.substring(1)}"
+            } else {
+                " $message"
+            }
+        } else {
+            message
+        }
+        socket?.sendChannel?.offer(messageToSend.toByteArray()) ?: log.warning { "No send channel for message: $message" }
+    }
+
     override fun connect() {
         check(!connecting.getAndSet(true))
 
@@ -70,7 +84,7 @@ internal class IrcClientImpl(private val config: IrcClientConfig) : IrcClient, C
                     sendNickChange(config.profile.nickname)
                     sendUser(config.profile.username, config.profile.realName)
                     messageHandler.processMessages(this@IrcClientImpl, receiveChannel.map { parser.parse(it) })
-                } catch (ex : Exception) {
+                } catch (ex: Exception) {
                     emitEvent(ServerConnectionError(EventMetadata(currentTimeProvider()), ex.toConnectionError(), ex.localizedMessage))
                 }
 

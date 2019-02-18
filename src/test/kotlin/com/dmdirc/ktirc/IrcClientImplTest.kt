@@ -3,11 +3,9 @@ package com.dmdirc.ktirc
 import com.dmdirc.ktirc.events.*
 import com.dmdirc.ktirc.io.CaseMapping
 import com.dmdirc.ktirc.io.LineBufferedSocket
-import com.dmdirc.ktirc.model.ChannelState
-import com.dmdirc.ktirc.model.ConnectionError
-import com.dmdirc.ktirc.model.ServerFeature
-import com.dmdirc.ktirc.model.User
+import com.dmdirc.ktirc.model.*
 import com.dmdirc.ktirc.util.currentTimeProvider
+import com.dmdirc.ktirc.util.generateLabel
 import com.nhaarman.mockitokotlin2.*
 import io.ktor.util.KtorExperimentalAPI
 import kotlinx.coroutines.*
@@ -198,16 +196,44 @@ internal class IrcClientImplTest {
 
         client.send("testing 123")
 
-        assertEquals(true, withTimeoutOrNull(500) {
-            var found = false
-            for (line in sendLineChannel) {
-                if (String(line) == "testing 123") {
-                    found = true
-                    break
-                }
-            }
-            found
-        })
+        assertLineReceived("testing 123")
+    }
+
+    @Test
+    fun `sends text to socket without label if cap is missing`() = runBlocking {
+        val client = IrcClientImpl(normalConfig)
+        client.socketFactory = mockSocketFactory
+        client.connect()
+
+        client.sendWithLabel("testing 123")
+
+        assertLineReceived("testing 123")
+    }
+
+    @Test
+    fun `sends text to socket with added tags and label`() = runBlocking {
+        generateLabel = { "abc123" }
+        val client = IrcClientImpl(normalConfig)
+        client.socketFactory = mockSocketFactory
+        client.serverState.capabilities.enabledCapabilities[Capability.LabeledResponse] = ""
+        client.connect()
+
+        client.sendWithLabel("testing 123")
+
+        assertLineReceived("@draft/label=abc123 testing 123")
+    }
+
+    @Test
+    fun `sends tagged text to socket with label`() = runBlocking {
+        generateLabel = { "abc123" }
+        val client = IrcClientImpl(normalConfig)
+        client.socketFactory = mockSocketFactory
+        client.serverState.capabilities.enabledCapabilities[Capability.LabeledResponse] = ""
+        client.connect()
+
+        client.sendWithLabel("@+test=x testing 123")
+
+        assertLineReceived("@draft/label=abc123;+test=x testing 123")
     }
 
     @Test
@@ -336,6 +362,18 @@ internal class IrcClientImplTest {
         }
         mutex.lock()
         return value.get()
+    }
+
+    private suspend fun assertLineReceived(expected: String) {
+        assertEquals(true, withTimeoutOrNull(500) {
+            for (line in sendLineChannel.map { String(it) }) {
+                println(line)
+                if (line == expected) {
+                    return@withTimeoutOrNull true
+                }
+            }
+            false
+        }) { "Expected to receive $expected" }
     }
 
 

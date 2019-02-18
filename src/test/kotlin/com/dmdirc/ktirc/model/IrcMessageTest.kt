@@ -47,6 +47,13 @@ internal class IrcMessageTest {
     }
 
     @Test
+    fun `populates label if present`() {
+        currentTimeProvider = { TestConstants.time }
+        val message = IrcMessage(hashMapOf(MessageTag.Label to "abc123"), null, "", emptyList())
+        assertEquals("abc123", message.metadata.label)
+    }
+
+    @Test
     fun `Can parse the prefix as a source user`() {
         val message = IrcMessage(emptyMap(), "acidBurn!libby@root.localhost".toByteArray(), "", emptyList())
         val user = message.sourceUser!!
