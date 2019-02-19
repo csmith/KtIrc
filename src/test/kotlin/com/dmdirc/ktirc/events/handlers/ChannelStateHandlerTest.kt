@@ -145,7 +145,7 @@ internal class ChannelStateHandlerTest {
 
         handler.processEvent(ircClient, ChannelNamesFinished(EventMetadata(TestConstants.time), "#thegibson"))
 
-        verify(ircClient).send("MODE :#thegibson")
+        verify(ircClient).send("MODE", "#thegibson")
     }
 
     @Test
@@ -158,7 +158,7 @@ internal class ChannelStateHandlerTest {
 
         handler.processEvent(ircClient, ChannelNamesFinished(EventMetadata(TestConstants.time), "#thegibson"))
 
-        verify(ircClient, never()).send("MODE :#thegibson")
+        verify(ircClient, never()).send("MODE", "#thegibson")
     }
 
     @Test
@@ -170,7 +170,7 @@ internal class ChannelStateHandlerTest {
 
         handler.processEvent(ircClient, ChannelNamesFinished(EventMetadata(TestConstants.time), "#thegibson"))
 
-        verify(ircClient, never()).send("MODE :#thegibson")
+        verify(ircClient, never()).send("MODE", "#thegibson")
     }
 
     @Test

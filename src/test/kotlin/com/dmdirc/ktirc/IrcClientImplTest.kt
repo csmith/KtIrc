@@ -3,6 +3,7 @@ package com.dmdirc.ktirc
 import com.dmdirc.ktirc.events.*
 import com.dmdirc.ktirc.io.CaseMapping
 import com.dmdirc.ktirc.io.LineBufferedSocket
+import com.dmdirc.ktirc.messages.tagMap
 import com.dmdirc.ktirc.model.*
 import com.dmdirc.ktirc.util.currentTimeProvider
 import com.dmdirc.ktirc.util.generateLabel
@@ -122,7 +123,7 @@ internal class IrcClientImplTest {
         client.connect()
 
         assertEquals("CAP LS 302", String(sendLineChannel.receive()))
-        assertEquals("NICK :$NICK", String(sendLineChannel.receive()))
+        assertEquals("NICK $NICK", String(sendLineChannel.receive()))
         assertEquals("USER $USER_NAME 0 * :$REAL_NAME", String(sendLineChannel.receive()))
     }
 
@@ -137,7 +138,7 @@ internal class IrcClientImplTest {
         client.connect()
 
         assertEquals("CAP LS 302", String(sendLineChannel.receive()))
-        assertEquals("PASS :$PASSWORD", String(sendLineChannel.receive()))
+        assertEquals("PASS $PASSWORD", String(sendLineChannel.receive()))
     }
 
     @Test
@@ -200,12 +201,34 @@ internal class IrcClientImplTest {
     }
 
     @Test
+    fun `sends structured text to socket`() = runBlocking {
+        val client = IrcClientImpl(normalConfig)
+        client.socketFactory = mockSocketFactory
+        client.connect()
+
+        client.send("testing", "123", "456")
+
+        assertLineReceived("testing 123 456")
+    }
+
+    @Test
+    fun `sends structured text to socket with tags`() = runBlocking {
+        val client = IrcClientImpl(normalConfig)
+        client.socketFactory = mockSocketFactory
+        client.connect()
+
+        client.send(tagMap(MessageTag.AccountName to "acidB"), "testing", "123", "456")
+
+        assertLineReceived("@account=acidB testing 123 456")
+    }
+
+    @Test
     fun `sends text to socket without label if cap is missing`() = runBlocking {
         val client = IrcClientImpl(normalConfig)
         client.socketFactory = mockSocketFactory
         client.connect()
 
-        client.sendWithLabel("testing 123")
+        client.sendWithLabel(tagMap(), "testing", "123")
 
         assertLineReceived("testing 123")
     }
@@ -218,7 +241,7 @@ internal class IrcClientImplTest {
         client.serverState.capabilities.enabledCapabilities[Capability.LabeledResponse] = ""
         client.connect()
 
-        client.sendWithLabel("testing 123")
+        client.sendWithLabel(tagMap(), "testing", "123")
 
         assertLineReceived("@draft/label=abc123 testing 123")
     }
@@ -231,9 +254,9 @@ internal class IrcClientImplTest {
         client.serverState.capabilities.enabledCapabilities[Capability.LabeledResponse] = ""
         client.connect()
 
-        client.sendWithLabel("@+test=x testing 123")
+        client.sendWithLabel(tagMap(MessageTag.AccountName to "x"), "testing", "123")
 
-        assertLineReceived("@draft/label=abc123;+test=x testing 123")
+        assertLineReceived("@account=x;draft/label=abc123 testing 123")
     }
 
     @Test
@@ -254,7 +277,7 @@ internal class IrcClientImplTest {
         client.socketFactory = mockSocketFactory
         client.connect()
 
-        (0..100).forEach { client.send("TEST $it") }
+        (0..100).forEach { client.send("TEST", "$it") }
 
         assertEquals(100, withTimeoutOrNull(500) {
             var next = 0

@@ -14,7 +14,7 @@ internal class ExternalMechanismTest {
 
         mechanism.handleAuthenticationEvent(client, null)
 
-        verify(client).send("AUTHENTICATE +")
+        verify(client).send("AUTHENTICATE", "+")
     }
 
 }

@@ -64,14 +64,14 @@ internal class CapabilitiesHandlerTest {
 
         handler.processEvent(ircClient, ServerCapabilitiesFinished(EventMetadata(TestConstants.time)))
 
-        verify(ircClient).send(argThat { equals("CAP REQ :echo-message account-notify") || equals("CAP REQ :account-notify echo-message") })
+        verify(ircClient).send(eq("CAP"), eq("REQ"), argThat { equals("echo-message account-notify") || equals("account-notify echo-message") })
     }
 
     @Test
     fun `sends END when blank capabilities received`() {
         handler.processEvent(ircClient, ServerCapabilitiesFinished(EventMetadata(TestConstants.time)))
 
-        verify(ircClient).send("CAP END")
+        verify(ircClient).send("CAP", "END")
     }
 
     @Test
@@ -88,7 +88,7 @@ internal class CapabilitiesHandlerTest {
                 Capability.HostsInNamesReply to ""
         )))
 
-        verify(ircClient).send("CAP END")
+        verify(ircClient).send("CAP", "END")
     }
 
     @Test
@@ -99,7 +99,7 @@ internal class CapabilitiesHandlerTest {
                 Capability.HostsInNamesReply to ""
         )))
 
-        verify(ircClient).send("CAP END")
+        verify(ircClient).send("CAP", "END")
     }
 
     @Test
@@ -111,7 +111,7 @@ internal class CapabilitiesHandlerTest {
                 Capability.HostsInNamesReply to ""
         )))
 
-        verify(ircClient).send("CAP END")
+        verify(ircClient).send("CAP", "END")
     }
 
     @Test
@@ -147,7 +147,7 @@ internal class CapabilitiesHandlerTest {
                 Capability.HostsInNamesReply to ""
         )))
 
-        verify(ircClient).send("AUTHENTICATE mech1")
+        verify(ircClient).send("AUTHENTICATE", "mech1")
     }
 
     @Test
@@ -159,7 +159,7 @@ internal class CapabilitiesHandlerTest {
                 Capability.HostsInNamesReply to ""
         )))
 
-        verify(ircClient).send("AUTHENTICATE mech3")
+        verify(ircClient).send("AUTHENTICATE", "mech3")
     }
 
     @Test
@@ -201,7 +201,7 @@ internal class CapabilitiesHandlerTest {
         serverState.sasl.currentMechanism = null
         handler.processEvent(ircClient, AuthenticationMessage(EventMetadata(TestConstants.time), "+"))
 
-        verify(ircClient).send("AUTHENTICATE *")
+        verify(ircClient).send("AUTHENTICATE", "*")
     }
 
     @Test
@@ -267,7 +267,7 @@ internal class CapabilitiesHandlerTest {
     fun `sends END when SASL auth finished`() {
         handler.processEvent(ircClient, SaslFinished(EventMetadata(TestConstants.time), true))
 
-        verify(ircClient).send("CAP END")
+        verify(ircClient).send("CAP", "END")
     }
 
     @Test
@@ -299,7 +299,7 @@ internal class CapabilitiesHandlerTest {
         serverState.sasl.mechanisms.addAll(listOf(saslMech1, saslMech2, saslMech3))
         handler.processEvent(ircClient, SaslMechanismNotAvailableError(EventMetadata(TestConstants.time), listOf("mech1", "fake2")))
 
-        verify(ircClient).send("AUTHENTICATE mech1")
+        verify(ircClient).send("AUTHENTICATE", "mech1")
     }
 
     @Test
@@ -307,7 +307,7 @@ internal class CapabilitiesHandlerTest {
         serverState.sasl.mechanisms.addAll(listOf(saslMech1, saslMech2, saslMech3))
         handler.processEvent(ircClient, SaslMechanismNotAvailableError(EventMetadata(TestConstants.time), listOf("fake1", "fake2")))
 
-        verify(ircClient).send("CAP END")
+        verify(ircClient).send("CAP", "END")
     }
 
     @Test

@@ -3,10 +3,8 @@ package com.dmdirc.ktirc.events
 import com.dmdirc.ktirc.IrcClient
 import com.dmdirc.ktirc.TestConstants
 import com.dmdirc.ktirc.io.CaseMapping
-import com.dmdirc.ktirc.model.ModePrefixMapping
-import com.dmdirc.ktirc.model.ServerFeature
-import com.dmdirc.ktirc.model.ServerState
-import com.dmdirc.ktirc.model.User
+import com.dmdirc.ktirc.messages.tagMap
+import com.dmdirc.ktirc.model.*
 import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.verify
@@ -72,7 +70,7 @@ internal class EventUtilsTest {
         val message = MessageReceived(EventMetadata(TestConstants.time), User("acidBurn"), "Zerocool", "Hack the planet!")
 
         ircClient.reply(message, "OK")
-        verify(ircClient).send("PRIVMSG acidBurn :OK")
+        verify(ircClient).send(tagMap(), "PRIVMSG", "acidBurn", "OK")
     }
 
     @Test
@@ -80,7 +78,7 @@ internal class EventUtilsTest {
         val message = MessageReceived(EventMetadata(TestConstants.time), User("acidBurn"), "#TheGibson", "Hack the planet!")
 
         ircClient.reply(message, "OK")
-        verify(ircClient).send("PRIVMSG #TheGibson :OK")
+        verify(ircClient).send(tagMap(), "PRIVMSG", "#TheGibson", "OK")
     }
 
     @Test
@@ -88,7 +86,7 @@ internal class EventUtilsTest {
         val message = MessageReceived(EventMetadata(TestConstants.time), User("acidBurn"), "#TheGibson", "Hack the planet!")
 
         ircClient.reply(message, "OK", prefixWithNickname = true)
-        verify(ircClient).send("PRIVMSG #TheGibson :acidBurn: OK")
+        verify(ircClient).send(tagMap(), "PRIVMSG", "#TheGibson", "acidBurn: OK")
     }
 
     @Test
@@ -97,7 +95,7 @@ internal class EventUtilsTest {
         val message = MessageReceived(EventMetadata(TestConstants.time, messageId = "abc123"), User("acidBurn"), "Zerocool", "Hack the planet!")
 
         ircClient.reply(message, "OK")
-        verify(ircClient).send("@+draft/reply=abc123 PRIVMSG acidBurn :OK")
+        verify(ircClient).send(tagMap(MessageTag.Reply to "abc123"), "PRIVMSG", "acidBurn", "OK")
     }
 
     @Test
@@ -105,7 +103,7 @@ internal class EventUtilsTest {
         val message = MessageReceived(EventMetadata(TestConstants.time, messageId = "abc123"), User("acidBurn"), "#TheGibson", "Hack the planet!")
 
         ircClient.reply(message, "OK")
-        verify(ircClient).send("@+draft/reply=abc123 PRIVMSG #TheGibson :OK")
+        verify(ircClient).send(tagMap(MessageTag.Reply to "abc123"), "PRIVMSG", "#TheGibson", "OK")
     }
 
     @Test
@@ -113,7 +111,7 @@ internal class EventUtilsTest {
         val message = MessageReceived(EventMetadata(TestConstants.time, messageId = "abc123"), User("acidBurn"), "#TheGibson", "Hack the planet!")
 
         ircClient.reply(message, "OK", prefixWithNickname = true)
-        verify(ircClient).send("@+draft/reply=abc123 PRIVMSG #TheGibson :acidBurn: OK")
+        verify(ircClient).send(tagMap(MessageTag.Reply to "abc123"), "PRIVMSG", "#TheGibson", "acidBurn: OK")
     }
 
 
@@ -123,7 +121,7 @@ internal class EventUtilsTest {
         val message = MessageReceived(EventMetadata(TestConstants.time, messageId = "msgId"), User("acidBurn"), "Zerocool", "Hack the planet!")
 
         ircClient.react(message, ":P")
-        verify(ircClient).send("@+draft/react=:P;+draft/reply=msgId TAGMSG acidBurn")
+        verify(ircClient).send(tagMap(MessageTag.React to ":P", MessageTag.Reply to "msgId"), "TAGMSG", "acidBurn")
     }
 
     @Test
@@ -131,7 +129,7 @@ internal class EventUtilsTest {
         val message = MessageReceived(EventMetadata(TestConstants.time, messageId = "msgId"), User("acidBurn"), "#TheGibson", "Hack the planet!")
 
         ircClient.react(message, ":P")
-        verify(ircClient).send("@+draft/react=:P;+draft/reply=msgId TAGMSG #TheGibson")
+        verify(ircClient).send(tagMap(MessageTag.React to ":P", MessageTag.Reply to "msgId"), "TAGMSG", "#TheGibson")
     }
 
 }

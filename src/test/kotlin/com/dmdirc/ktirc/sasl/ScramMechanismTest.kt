@@ -26,7 +26,7 @@ internal class ScramMechanismTest {
         mechanism.handleAuthenticationEvent(ircClient, "+".toByteArray())
 
         val nonce = (serverState.sasl.mechanismState as ScramState).clientNonce
-        verify(ircClient).send("AUTHENTICATE ${"n,,n=user,r=$nonce".toByteArray().toBase64()}")
+        verify(ircClient).send("AUTHENTICATE", "n,,n=user,r=$nonce".toByteArray().toBase64())
     }
 
     @Test
@@ -40,7 +40,7 @@ internal class ScramMechanismTest {
 
         mechanism.handleAuthenticationEvent(ircClient, "m=future".toByteArray())
 
-        verify(ircClient).send("AUTHENTICATE *")
+        verify(ircClient).send("AUTHENTICATE", "*")
     }
 
     @Test
@@ -54,7 +54,7 @@ internal class ScramMechanismTest {
 
         mechanism.handleAuthenticationEvent(ircClient, "e=whoops".toByteArray())
 
-        verify(ircClient).send("AUTHENTICATE *")
+        verify(ircClient).send("AUTHENTICATE", "*")
     }
 
     @Test
@@ -68,7 +68,7 @@ internal class ScramMechanismTest {
 
         mechanism.handleAuthenticationEvent(ircClient, "r=fyko+d2lbbFgONRv9qkxdawL3rfcNHYJY1ZVvWVs7j,s=QSXCR+Q6sek8bf92".toByteArray())
 
-        verify(ircClient).send("AUTHENTICATE *")
+        verify(ircClient).send("AUTHENTICATE", "*")
     }
 
     @Test
@@ -82,7 +82,7 @@ internal class ScramMechanismTest {
 
         mechanism.handleAuthenticationEvent(ircClient, "r=fyko+d2lbbFgONRv9qkxdawL3rfcNHYJY1ZVvWVs7j,s=QSXCR+Q6sek8bf92,i=leet".toByteArray())
 
-        verify(ircClient).send("AUTHENTICATE *")
+        verify(ircClient).send("AUTHENTICATE", "*")
     }
 
     @Test
@@ -96,7 +96,7 @@ internal class ScramMechanismTest {
 
         mechanism.handleAuthenticationEvent(ircClient, "rs=QSXCR+Q6sek8bf92,i=4096".toByteArray())
 
-        verify(ircClient).send("AUTHENTICATE *")
+        verify(ircClient).send("AUTHENTICATE", "*")
     }
 
     @Test
@@ -110,7 +110,7 @@ internal class ScramMechanismTest {
 
         mechanism.handleAuthenticationEvent(ircClient, "r=fyko+d2lbbFgONRv9qkxdawL3rfcNHYJY1ZVvWVs7j,i=4096".toByteArray())
 
-        verify(ircClient).send("AUTHENTICATE *")
+        verify(ircClient).send("AUTHENTICATE", "*")
     }
 
     @Test
@@ -145,7 +145,7 @@ internal class ScramMechanismTest {
 
         mechanism.handleAuthenticationEvent(ircClient, "r=fyko+d2lbbFgONRv9qkxdawL3rfcNHYJY1ZVvWVs7j,s=QSXCR+Q6sek8bf92,i=4096".toByteArray())
 
-        verify(ircClient).send("AUTHENTICATE ${"c=biws,r=fyko+d2lbbFgONRv9qkxdawL3rfcNHYJY1ZVvWVs7j,p=v0X8v3Bz2T0CJGbJQyF0X+HI4Ts=".toByteArray().toBase64()}")
+        verify(ircClient).send("AUTHENTICATE", "c=biws,r=fyko+d2lbbFgONRv9qkxdawL3rfcNHYJY1ZVvWVs7j,p=v0X8v3Bz2T0CJGbJQyF0X+HI4Ts=".toByteArray().toBase64())
     }
 
     @Test
@@ -159,7 +159,7 @@ internal class ScramMechanismTest {
 
         mechanism.handleAuthenticationEvent(ircClient, "m=future".toByteArray())
 
-        verify(ircClient).send("AUTHENTICATE *")
+        verify(ircClient).send("AUTHENTICATE", "*")
     }
 
     @Test
@@ -173,7 +173,7 @@ internal class ScramMechanismTest {
 
         mechanism.handleAuthenticationEvent(ircClient, "e=whoops".toByteArray())
 
-        verify(ircClient).send("AUTHENTICATE *")
+        verify(ircClient).send("AUTHENTICATE", "*")
     }
 
     @Test
@@ -190,7 +190,7 @@ internal class ScramMechanismTest {
 
         mechanism.handleAuthenticationEvent(ircClient, "".toByteArray())
 
-        verify(ircClient).send("AUTHENTICATE *")
+        verify(ircClient).send("AUTHENTICATE", "*")
     }
 
     @Test
@@ -207,7 +207,7 @@ internal class ScramMechanismTest {
 
         mechanism.handleAuthenticationEvent(ircClient, "v=rmF9pqV8S7suAoZWja4dJRkF=".toByteArray())
 
-        verify(ircClient).send("AUTHENTICATE *")
+        verify(ircClient).send("AUTHENTICATE", "*")
     }
 
     @Test
@@ -224,7 +224,7 @@ internal class ScramMechanismTest {
 
         mechanism.handleAuthenticationEvent(ircClient, "v=rmF9pqV8S7suAoZWja4dJRkFsKQ=".toByteArray())
 
-        verify(ircClient).send("AUTHENTICATE +")
+        verify(ircClient).send("AUTHENTICATE", "+")
     }
 
 }

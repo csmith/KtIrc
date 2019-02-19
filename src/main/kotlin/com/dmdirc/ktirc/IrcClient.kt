@@ -4,6 +4,7 @@ import com.dmdirc.ktirc.events.IrcEvent
 import com.dmdirc.ktirc.io.CaseMapping
 import com.dmdirc.ktirc.messages.sendJoin
 import com.dmdirc.ktirc.model.*
+import com.dmdirc.ktirc.util.RemoveIn
 
 /**
  * Primary interface for interacting with KtIrc.
@@ -54,7 +55,32 @@ interface IrcClient {
      *
      * @param message The line to be sent to the IRC server.
      */
+    @Deprecated("Use structured send instead", ReplaceWith("send(command, arguments)"))
+    @RemoveIn("2.0.0")
     fun send(message: String)
+
+    /**
+     * Sends the given command to the IRC server.
+     *
+     * This should only be needed to send raw/custom commands; standard messages can be sent using the
+     * extension methods in [com.dmdirc.ktirc.messages] such as [sendJoin].
+     *
+     * @param tags The IRCv3 tags to prefix the message with, if any.
+     * @param command The command to be sent
+     * @param arguments The arguments to the command.
+     */
+    fun send(tags: Map<MessageTag, String>, command: String, vararg arguments: String)
+
+    /**
+     * Sends the given command to the IRC server.
+     *
+     * This should only be needed to send raw/custom commands; standard messages can be sent using the
+     * extension methods in [com.dmdirc.ktirc.messages] such as [sendJoin].
+     *
+     * @param command The command to be sent
+     * @param arguments The arguments to the command.
+     */
+    fun send(command: String, vararg arguments: String) = send(emptyMap(), command, *arguments)
 
     /**
      * Registers a new handler for all events on this connection.

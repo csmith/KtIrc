@@ -40,6 +40,7 @@ internal class IrcClientImpl(private val config: IrcClientConfig) : IrcClient, C
     override val userState = UserState { caseMapping }
 
     private val messageHandler = MessageHandler(messageProcessors, eventMutators, eventHandlers)
+    private val messageBuilder = MessageBuilder()
 
     private val parser = MessageParser()
     private var socket: LineBufferedSocket? = null
@@ -50,20 +51,20 @@ internal class IrcClientImpl(private val config: IrcClientConfig) : IrcClient, C
         socket?.sendChannel?.offer(message.toByteArray()) ?: log.warning { "No send channel for message: $message" }
     }
 
+    override fun send(tags: Map<MessageTag, String>, command: String, vararg arguments: String) {
+        socket?.sendChannel?.offer(messageBuilder.build(tags, command, arguments))
+                ?: log.warning { "No send channel for command: $command" }
+    }
+
     // TODO: This will become sendAsync and return a Deferred<IrcEvent>
-    // TODO: Refactor so that send takes a map of tags and arguments; build the string separately
-    internal fun sendWithLabel(message: String) {
-        val messageToSend = if (Capability.LabeledResponse in serverState.capabilities.enabledCapabilities) {
-            val label = generateLabel(this)
-            "@draft/label=$label" + if (message.startsWith('@')) {
-                ";${message.substring(1)}"
-            } else {
-                " $message"
-            }
+    internal fun sendWithLabel(tags: Map<MessageTag, String>, command: String, vararg arguments: String) {
+        val tagseToSend = if (Capability.LabeledResponse in serverState.capabilities.enabledCapabilities) {
+            tags + (MessageTag.Label to generateLabel(this))
         } else {
-            message
+            tags
         }
-        socket?.sendChannel?.offer(messageToSend.toByteArray()) ?: log.warning { "No send channel for message: $message" }
+        socket?.sendChannel?.offer(messageBuilder.build(tagseToSend, command, arguments))
+                ?: log.warning { "No send channel for command: $command" }
     }
 
     override fun connect() {

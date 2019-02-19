@@ -18,7 +18,7 @@ internal class PingHandlerTest {
     @Test
     fun `PingHandler responses to pings with a pong`() = runBlocking {
         handler.processEvent(ircClient, PingReceived(EventMetadata(TestConstants.time), "the_plague".toByteArray()))
-        verify(ircClient).send("PONG :the_plague")
+        verify(ircClient).send("PONG", "the_plague")
     }
 
 }

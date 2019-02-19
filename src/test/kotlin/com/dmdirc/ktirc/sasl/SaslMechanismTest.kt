@@ -31,7 +31,7 @@ internal class SaslMechanismTest {
     fun `base64 encodes authentication data`() {
         val client = mock<IrcClient>()
         client.sendAuthenticationData("abcdef")
-        verify(client).send("AUTHENTICATE YWJjZGVm")
+        verify(client).send("AUTHENTICATE", "YWJjZGVm")
     }
 
     @Test
@@ -39,8 +39,8 @@ internal class SaslMechanismTest {
         val client = mock<IrcClient>()
         client.sendAuthenticationData("abcdef".repeat(120))
         with (inOrder(client)) {
-            verify(client, times(2)).send("AUTHENTICATE ${"YWJjZGVm".repeat(50)}")
-            verify(client).send("AUTHENTICATE ${"YWJjZGVm".repeat(20)}")
+            verify(client, times(2)).send("AUTHENTICATE", "YWJjZGVm".repeat(50))
+            verify(client).send("AUTHENTICATE", "YWJjZGVm".repeat(20))
         }
     }
 
@@ -49,8 +49,8 @@ internal class SaslMechanismTest {
         val client = mock<IrcClient>()
         client.sendAuthenticationData("abcdef".repeat(50))
         with (inOrder(client)) {
-            verify(client).send("AUTHENTICATE ${"YWJjZGVm".repeat(50)}")
-            verify(client).send("AUTHENTICATE +")
+            verify(client).send("AUTHENTICATE", "YWJjZGVm".repeat(50))
+            verify(client).send("AUTHENTICATE", "+")
         }
     }
 

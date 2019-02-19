@@ -4,6 +4,7 @@ import com.dmdirc.ktirc.model.Capability
 import com.dmdirc.ktirc.model.ConnectionError
 import com.dmdirc.ktirc.model.ServerFeatureMap
 import com.dmdirc.ktirc.model.User
+import com.dmdirc.ktirc.util.RemoveIn
 import java.time.LocalDateTime
 
 /**
@@ -24,7 +25,8 @@ data class EventMetadata(
 sealed class IrcEvent(val metadata: EventMetadata) {
 
     /** The time at which the event occurred. */
-    @Deprecated("Moved to metadata; to be removed post-1.0.0", replaceWith = ReplaceWith("metadata.time"))
+    @Deprecated("Moved to metadata", replaceWith = ReplaceWith("metadata.time"))
+    @RemoveIn("2.0.0")
     val time: LocalDateTime
         get() = metadata.time
 
@@ -92,7 +94,8 @@ class ChannelTopicChanged(metadata: EventMetadata, val user: User, val channel: 
 class MessageReceived(metadata: EventMetadata, val user: User, val target: String, val message: String) : IrcEvent(metadata) {
 
     /** The message ID of this message. */
-    @Deprecated("Moved to metadata; to be removed post-1.0.0", replaceWith = ReplaceWith("metadata.messageId"))
+    @Deprecated("Moved to metadata", replaceWith = ReplaceWith("metadata.messageId"))
+    @RemoveIn("2.0.0")
     val messageId: String?
         get() = metadata.messageId
 
@@ -109,7 +112,8 @@ class NoticeReceived(metadata: EventMetadata, val user: User, val target: String
 class ActionReceived(metadata: EventMetadata, val user: User, val target: String, val action: String) : IrcEvent(metadata) {
 
     /** The message ID of this action. */
-    @Deprecated("Moved to metadata; to be removed post-1.0.0", replaceWith = ReplaceWith("metadata.messageId"))
+    @Deprecated("Moved to metadata", replaceWith = ReplaceWith("metadata.messageId"))
+    @RemoveIn("2.0.0")
     val messageId: String?
         get() = metadata.messageId
 
