@@ -39,7 +39,7 @@ internal class CapabilitiesHandler : EventHandler {
                 client.sendCapabilityEnd()
             } else {
                 negotiationState = CapabilitiesNegotiationState.AWAITING_ACK
-                advertisedCapabilities.keys.map { it.name }.let {
+                advertisedCapabilities.keys.map { it.names[0] }.let {
                     log.info { "Requesting capabilities: ${it.toList()}" }
                     client.sendCapabilityRequest(it)
                 }
@@ -50,7 +50,7 @@ internal class CapabilitiesHandler : EventHandler {
     private fun handleCapabilitiesAcknowledged(client: IrcClient, capabilities: Map<Capability, String>) {
         // TODO: Check if everything we wanted is enabled
         with(client.serverState.capabilities) {
-            log.info { "Acknowledged capabilities: ${capabilities.keys.map { it.name }.toList()}" }
+            log.info { "Acknowledged capabilities: ${capabilities.keys.map { it::class.simpleName }.toList()}" }
             enabledCapabilities.putAll(capabilities)
 
             if (client.serverState.sasl.mechanisms.isNotEmpty()) {

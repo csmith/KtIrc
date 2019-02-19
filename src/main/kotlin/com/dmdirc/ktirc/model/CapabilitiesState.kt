@@ -54,14 +54,14 @@ enum class CapabilitiesNegotiationState {
  * IRCv3 capabilities supported by the client.
  */
 @Suppress("unused")
-sealed class Capability(val name: String) {
+sealed class Capability(vararg val names:  String) {
     // Capabilities that introduce extra commands:
     /** Allows authentication using SASL via the AUTHENTICATE command. */
     object SaslAuthentication : Capability("sasl")
 
     // Capabilities that enable more information in message tags:
-    /** Draft version of message tags, enables client-only tags. */
-    object DraftMessageTags33 : Capability("draft/message-tags-0.2") // TODO: Add processor for TAGMSG
+    /** Generic support for message tags, including client-only tags. */
+    object DraftMessageTags33 : Capability("message-tags", "draft/message-tags-0.2") // TODO: Add processor for TAGMSG
 
     /** Messages are tagged with the server time they originated at. */
     object ServerTimeMessageTag : Capability("server-time")
@@ -102,5 +102,8 @@ sealed class Capability(val name: String) {
 }
 
 internal val capabilities: Map<String, Capability> by lazy {
-    Capability::class.nestedClasses.map { it.objectInstance as Capability }.associateBy { it.name }
+    Capability::class.nestedClasses
+            .map { it.objectInstance as Capability }
+            .flatMap { it.names.map { name -> name to it }  }
+            .toMap()
 }
