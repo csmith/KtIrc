@@ -8,6 +8,8 @@ vNEXT (in development)
    * send(command, arguments) is available if no tags are to be sent
    * the line is built automatically (with spaces/' :' added appropriately)
    * send(line) is deprecated and will be removed after v1.0.0
+ * Add 'alwaysEchoMessages' behaviour that makes it easier to deal with servers
+   that don't support the echo message capability
  * (Internal) Added annotation to track removal of deprecated methods
 
 v0.9.0

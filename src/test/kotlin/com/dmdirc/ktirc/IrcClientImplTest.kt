@@ -9,6 +9,7 @@ import com.dmdirc.ktirc.util.currentTimeProvider
 import com.dmdirc.ktirc.util.generateLabel
 import com.nhaarman.mockitokotlin2.*
 import io.ktor.util.KtorExperimentalAPI
+import io.mockk.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.filter
@@ -55,10 +56,12 @@ internal class IrcClientImplTest {
         username = USER_NAME
     }
 
-    private val normalConfig = IrcClientConfig(ServerConfig().apply {
+    private val serverConfig = ServerConfig().apply {
         host = HOST
         port = PORT
-    }, profileConfig, BehaviourConfig(), null)
+    }
+
+    private val normalConfig = IrcClientConfig(serverConfig, profileConfig, BehaviourConfig(), null)
 
     @BeforeEach
     fun setUp() {
@@ -190,6 +193,7 @@ internal class IrcClientImplTest {
     }
 
     @Test
+    @SuppressWarnings("deprecation")
     fun `sends text to socket`() = runBlocking {
         val client = IrcClientImpl(normalConfig)
         client.socketFactory = mockSocketFactory
@@ -209,6 +213,56 @@ internal class IrcClientImplTest {
         client.send("testing", "123", "456")
 
         assertLineReceived("testing 123 456")
+    }
+
+    @Test
+    fun `echoes message event when behaviour is set and cap is unsupported`() = runBlocking {
+        val config = IrcClientConfig(serverConfig, profileConfig, BehaviourConfig().apply { alwaysEchoMessages = true }, null)
+        val client = IrcClientImpl(config)
+        client.socketFactory = mockSocketFactory
+
+        val slot = slot<MessageReceived>()
+        val mockkEventHandler = mockk<(IrcEvent) -> Unit>(relaxed = true)
+        every { mockkEventHandler(capture(slot)) } just Runs
+
+        client.onEvent(mockkEventHandler)
+        client.connect()
+
+        client.send("PRIVMSG", "#thegibson", "Mess with the best, die like the rest")
+
+        assertTrue(slot.isCaptured)
+        val event = slot.captured
+        assertEquals("#thegibson", event.target)
+        assertEquals("Mess with the best, die like the rest", event.message)
+        assertEquals(NICK, event.user.nickname)
+        assertEquals(TestConstants.time, event.metadata.time)
+    }
+
+    @Test
+    fun `does not echo message event when behaviour is set and cap is supported`() = runBlocking {
+        val config = IrcClientConfig(serverConfig, profileConfig, BehaviourConfig().apply { alwaysEchoMessages = true }, null)
+        val client = IrcClientImpl(config)
+        client.socketFactory = mockSocketFactory
+        client.serverState.capabilities.enabledCapabilities[Capability.EchoMessages] = ""
+        client.connect()
+
+        client.onEvent(mockEventHandler)
+        client.send("PRIVMSG", "#thegibson", "Mess with the best, die like the rest")
+
+        verify(mockEventHandler, never()).invoke(isA<MessageReceived>())
+    }
+
+    @Test
+    fun `does not echo message event when behaviour is unset`() = runBlocking {
+        val config = IrcClientConfig(serverConfig, profileConfig, BehaviourConfig().apply { alwaysEchoMessages = false }, null)
+        val client = IrcClientImpl(config)
+        client.socketFactory = mockSocketFactory
+        client.connect()
+
+        client.onEvent(mockEventHandler)
+        client.send("PRIVMSG", "#thegibson", "Mess with the best, die like the rest")
+
+        verify(mockEventHandler, never()).invoke(isA<MessageReceived>())
     }
 
     @Test

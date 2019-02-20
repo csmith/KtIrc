@@ -129,6 +129,15 @@ interface ClientBehaviour {
     /** Whether or not to request channel modes when we join a channel. */
     val requestModesOnJoin: Boolean
 
+    /**
+     * If enabled, all messages (`PRIVMSG`s) sent by the client will always be "echoed" back as a MessageReceived
+     * event.
+     *
+     * This makes the behaviour consistent across ircds that support the echo-message capability and those that
+     * don't. If disabled, messages will only be echoed back when the server supports the capability.
+     */
+    val alwaysEchoMessages: Boolean
+
 }
 
 /**

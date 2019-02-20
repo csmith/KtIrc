@@ -33,6 +33,7 @@ internal data class IrcClientConfig(
  *
  * behaviour {
  *     requestModesOnJoin = true
+ *     alwaysEchoMessages = true
  * }
  *
  * sasl {
@@ -207,4 +208,5 @@ class SaslConfig {
 @IrcClientDsl
 class BehaviourConfig : ClientBehaviour {
     override var requestModesOnJoin = false
+    override var alwaysEchoMessages = false
 }

@@ -52,12 +52,14 @@ internal class IrcClientImpl(private val config: IrcClientConfig) : IrcClient, C
     }
 
     override fun send(tags: Map<MessageTag, String>, command: String, vararg arguments: String) {
+        maybeEchoMessage(command, arguments)
         socket?.sendChannel?.offer(messageBuilder.build(tags, command, arguments))
                 ?: log.warning { "No send channel for command: $command" }
     }
 
     // TODO: This will become sendAsync and return a Deferred<IrcEvent>
     internal fun sendWithLabel(tags: Map<MessageTag, String>, command: String, vararg arguments: String) {
+        maybeEchoMessage(command, arguments)
         val tagseToSend = if (Capability.LabeledResponse in serverState.capabilities.enabledCapabilities) {
             tags + (MessageTag.Label to generateLabel(this))
         } else {
@@ -103,6 +105,19 @@ internal class IrcClientImpl(private val config: IrcClientConfig) : IrcClient, C
 
     private fun emitEvent(event: IrcEvent) = messageHandler.handleEvent(this, event)
     private fun sendPasswordIfPresent() = config.server.password?.let(this::sendPassword)
+
+    private fun maybeEchoMessage(command: String, arguments: Array<out String>) {
+        // TODO: Is this the best place to do it? It'd be nicer to actually build the message and
+        //       reflect the raw line back through all the processors etc.
+        if (command == "PRIVMSG" && behaviour.alwaysEchoMessages && !serverState.capabilities.enabledCapabilities.contains(Capability.EchoMessages)) {
+            emitEvent(MessageReceived(
+                    EventMetadata(currentTimeProvider()),
+                    userState[serverState.localNickname]?.details ?: User(serverState.localNickname),
+                    arguments[0],
+                    arguments[1]
+            ))
+        }
+    }
 
     internal fun reset() {
         serverState.reset()
