@@ -39,18 +39,18 @@ internal class CapabilitiesHandlerTest {
     @Test
     fun `adds new capabilities to the state`() {
         handler.processEvent(ircClient, ServerCapabilitiesReceived(EventMetadata(TestConstants.time), hashMapOf(
-                Capability.EchoMessages to "",
-                Capability.HostsInNamesReply to "123"
+                Capability.EchoMessages.names[0] to "",
+                Capability.HostsInNamesReply.names[0] to "123"
         )))
 
         assertEquals(2, serverState.capabilities.advertisedCapabilities.size)
-        assertEquals("", serverState.capabilities.advertisedCapabilities[Capability.EchoMessages])
-        assertEquals("123", serverState.capabilities.advertisedCapabilities[Capability.HostsInNamesReply])
+        assertEquals("", serverState.capabilities.advertisedCapabilities[Capability.EchoMessages.names[0]])
+        assertEquals("123", serverState.capabilities.advertisedCapabilities[Capability.HostsInNamesReply.names[0]])
     }
 
     @Test
     fun `updates negotiation state when capabilities finished`() {
-        serverState.capabilities.advertisedCapabilities[Capability.EchoMessages] = ""
+        serverState.capabilities.advertisedCapabilities[Capability.EchoMessages.names[0]] = ""
 
         handler.processEvent(ircClient, ServerCapabilitiesFinished(EventMetadata(TestConstants.time)))
 
@@ -59,8 +59,8 @@ internal class CapabilitiesHandlerTest {
 
     @Test
     fun `sends REQ when capabilities received`() {
-        serverState.capabilities.advertisedCapabilities[Capability.EchoMessages] = ""
-        serverState.capabilities.advertisedCapabilities[Capability.AccountChangeMessages] = ""
+        serverState.capabilities.advertisedCapabilities[Capability.EchoMessages.names[0]] = ""
+        serverState.capabilities.advertisedCapabilities[Capability.AccountChangeMessages.names[0]] = ""
 
         handler.processEvent(ircClient, ServerCapabilitiesFinished(EventMetadata(TestConstants.time)))
 
@@ -84,8 +84,8 @@ internal class CapabilitiesHandlerTest {
     @Test
     fun `sends END when capabilities acknowledged and no enabled mechanisms`() {
         handler.processEvent(ircClient, ServerCapabilitiesAcknowledged(EventMetadata(TestConstants.time), hashMapOf(
-                Capability.EchoMessages to "",
-                Capability.HostsInNamesReply to ""
+                Capability.EchoMessages.names[0] to "",
+                Capability.HostsInNamesReply.names[0] to ""
         )))
 
         verify(ircClient).send("CAP", "END")
@@ -95,8 +95,8 @@ internal class CapabilitiesHandlerTest {
     fun `sends END when capabilities acknowledged and no sasl state`() {
         serverState.sasl.mechanisms.addAll(listOf(saslMech1, saslMech2, saslMech3))
         handler.processEvent(ircClient, ServerCapabilitiesAcknowledged(EventMetadata(TestConstants.time), hashMapOf(
-                Capability.EchoMessages to "",
-                Capability.HostsInNamesReply to ""
+                Capability.EchoMessages.names[0] to "",
+                Capability.HostsInNamesReply.names[0] to ""
         )))
 
         verify(ircClient).send("CAP", "END")
@@ -105,10 +105,10 @@ internal class CapabilitiesHandlerTest {
     @Test
     fun `sends END when capabilities acknowledged and no shared mechanism`() {
         serverState.sasl.mechanisms.addAll(listOf(saslMech1, saslMech2, saslMech3))
-        serverState.capabilities.advertisedCapabilities[Capability.SaslAuthentication] = "fake1,fake2"
+        serverState.capabilities.advertisedCapabilities[Capability.SaslAuthentication.names[0]] = "fake1,fake2"
         handler.processEvent(ircClient, ServerCapabilitiesAcknowledged(EventMetadata(TestConstants.time), hashMapOf(
-                Capability.SaslAuthentication to "",
-                Capability.HostsInNamesReply to ""
+                Capability.SaslAuthentication.names[0] to "",
+                Capability.HostsInNamesReply.names[0] to ""
         )))
 
         verify(ircClient).send("CAP", "END")
@@ -117,10 +117,10 @@ internal class CapabilitiesHandlerTest {
     @Test
     fun `sets current SASL mechanism when capabilities acknowledged with shared mechanism`() {
         serverState.sasl.mechanisms.addAll(listOf(saslMech1, saslMech2, saslMech3))
-        serverState.capabilities.advertisedCapabilities[Capability.SaslAuthentication] = "mech1,fake2"
+        serverState.capabilities.advertisedCapabilities[Capability.SaslAuthentication.names[0]] = "mech1,fake2"
         handler.processEvent(ircClient, ServerCapabilitiesAcknowledged(EventMetadata(TestConstants.time), hashMapOf(
-                Capability.SaslAuthentication to "",
-                Capability.HostsInNamesReply to ""
+                Capability.SaslAuthentication.names[0] to "",
+                Capability.HostsInNamesReply.names[0] to ""
         )))
 
         assertSame(saslMech1, serverState.sasl.currentMechanism)
@@ -129,10 +129,10 @@ internal class CapabilitiesHandlerTest {
     @Test
     fun `sets current SASL mechanism when capabilities acknowledged with no declared mechanisms`() {
         serverState.sasl.mechanisms.addAll(listOf(saslMech1, saslMech2, saslMech3))
-        serverState.capabilities.advertisedCapabilities[Capability.SaslAuthentication] = ""
+        serverState.capabilities.advertisedCapabilities[Capability.SaslAuthentication.names[0]] = ""
         handler.processEvent(ircClient, ServerCapabilitiesAcknowledged(EventMetadata(TestConstants.time), hashMapOf(
-                Capability.SaslAuthentication to "",
-                Capability.HostsInNamesReply to ""
+                Capability.SaslAuthentication.names[0] to "",
+                Capability.HostsInNamesReply.names[0] to ""
         )))
 
         assertSame(saslMech3, serverState.sasl.currentMechanism)
@@ -141,10 +141,10 @@ internal class CapabilitiesHandlerTest {
     @Test
     fun `sends authenticate when capabilities acknowledged with shared mechanism`() {
         serverState.sasl.mechanisms.addAll(listOf(saslMech1, saslMech2, saslMech3))
-        serverState.capabilities.advertisedCapabilities[Capability.SaslAuthentication] = "mech1,fake2"
+        serverState.capabilities.advertisedCapabilities[Capability.SaslAuthentication.names[0]] = "mech1,fake2"
         handler.processEvent(ircClient, ServerCapabilitiesAcknowledged(EventMetadata(TestConstants.time), hashMapOf(
-                Capability.SaslAuthentication to "",
-                Capability.HostsInNamesReply to ""
+                Capability.SaslAuthentication.names[0] to "",
+                Capability.HostsInNamesReply.names[0] to ""
         )))
 
         verify(ircClient).send("AUTHENTICATE", "mech1")
@@ -153,10 +153,10 @@ internal class CapabilitiesHandlerTest {
     @Test
     fun `sends authenticate when capabilities acknowledged with no declared mechanisms`() {
         serverState.sasl.mechanisms.addAll(listOf(saslMech1, saslMech2, saslMech3))
-        serverState.capabilities.advertisedCapabilities[Capability.SaslAuthentication] = ""
+        serverState.capabilities.advertisedCapabilities[Capability.SaslAuthentication.names[0]] = ""
         handler.processEvent(ircClient, ServerCapabilitiesAcknowledged(EventMetadata(TestConstants.time), hashMapOf(
-                Capability.SaslAuthentication to "",
-                Capability.HostsInNamesReply to ""
+                Capability.SaslAuthentication.names[0] to "",
+                Capability.HostsInNamesReply.names[0] to ""
         )))
 
         verify(ircClient).send("AUTHENTICATE", "mech3")
@@ -165,10 +165,10 @@ internal class CapabilitiesHandlerTest {
     @Test
     fun `updates negotiation state when capabilities acknowledged with shared mechanism`() {
         serverState.sasl.mechanisms.addAll(listOf(saslMech1, saslMech2, saslMech3))
-        serverState.capabilities.advertisedCapabilities[Capability.SaslAuthentication] = "mech1,fake2"
+        serverState.capabilities.advertisedCapabilities[Capability.SaslAuthentication.names[0]] = "mech1,fake2"
         handler.processEvent(ircClient, ServerCapabilitiesAcknowledged(EventMetadata(TestConstants.time), hashMapOf(
-                Capability.SaslAuthentication to "",
-                Capability.HostsInNamesReply to ""
+                Capability.SaslAuthentication.names[0] to "",
+                Capability.HostsInNamesReply.names[0] to ""
         )))
 
         assertEquals(CapabilitiesNegotiationState.AUTHENTICATING, serverState.capabilities.negotiationState)
@@ -177,8 +177,8 @@ internal class CapabilitiesHandlerTest {
     @Test
     fun `updates negotiation state when capabilities acknowledged`() {
         handler.processEvent(ircClient, ServerCapabilitiesAcknowledged(EventMetadata(TestConstants.time), hashMapOf(
-                Capability.EchoMessages to "",
-                Capability.HostsInNamesReply to "123"
+                Capability.EchoMessages.names[0] to "",
+                Capability.HostsInNamesReply.names[0] to "123"
         )))
 
         assertEquals(CapabilitiesNegotiationState.FINISHED, serverState.capabilities.negotiationState)
@@ -187,8 +187,8 @@ internal class CapabilitiesHandlerTest {
     @Test
     fun `stores enabled caps when capabilities acknowledged`() {
         handler.processEvent(ircClient, ServerCapabilitiesAcknowledged(EventMetadata(TestConstants.time), hashMapOf(
-                Capability.EchoMessages to "",
-                Capability.HostsInNamesReply to "123"
+                Capability.EchoMessages.names[0] to "",
+                Capability.HostsInNamesReply.names[0] to "123"
         )))
 
         assertEquals(2, serverState.capabilities.enabledCapabilities.size)

@@ -24,7 +24,7 @@ internal class KickProcessorTest {
 
         assertEquals(TestConstants.time, events[0].metadata.time)
         assertEquals(User("acidburn", "libby", "root.localhost"), events[0].user)
-        assertEquals("#crashandburn", events[0].channel)
+        assertEquals("#crashandburn", events[0].target)
         assertEquals("zeroCool", events[0].victim)
         assertEquals("", events[0].reason)
     }
@@ -37,7 +37,7 @@ internal class KickProcessorTest {
 
         assertEquals(TestConstants.time, events[0].metadata.time)
         assertEquals(User("acidburn", "libby", "root.localhost"), events[0].user)
-        assertEquals("#crashandburn", events[0].channel)
+        assertEquals("#crashandburn", events[0].target)
         assertEquals("zeroCool", events[0].victim)
         assertEquals("Hack the planet!", events[0].reason)
     }

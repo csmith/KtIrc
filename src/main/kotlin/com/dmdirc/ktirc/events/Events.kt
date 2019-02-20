@@ -1,6 +1,5 @@
 package com.dmdirc.ktirc.events
 
-import com.dmdirc.ktirc.model.Capability
 import com.dmdirc.ktirc.model.ConnectionError
 import com.dmdirc.ktirc.model.ServerFeatureMap
 import com.dmdirc.ktirc.model.User
@@ -32,6 +31,19 @@ sealed class IrcEvent(val metadata: EventMetadata) {
 
 }
 
+/**
+ * Base class for events that are targeted to a channel or user.
+ */
+sealed class TargetedEvent(metadata: EventMetadata, val target: String) : IrcEvent(metadata) {
+
+    /** The channel (or user!) this event was targeted at. */
+    @Deprecated("Use target instead", replaceWith = ReplaceWith("target"))
+    @RemoveIn("2.0.0")
+    val channel: String
+        get() = target
+
+}
+
 /** Raised when a connection to the server is being established. */
 class ServerConnecting(metadata: EventMetadata) : IrcEvent(metadata)
 
@@ -57,41 +69,41 @@ class ServerFeaturesUpdated(metadata: EventMetadata, val serverFeatures: ServerF
 class PingReceived(metadata: EventMetadata, val nonce: ByteArray) : IrcEvent(metadata)
 
 /** Raised when a user joins a channel. */
-class ChannelJoined(metadata: EventMetadata, val user: User, val channel: String) : IrcEvent(metadata)
+class ChannelJoined(metadata: EventMetadata, val user: User, channel: String) : TargetedEvent(metadata, channel)
 
 /** Raised when a user leaves a channel. */
-class ChannelParted(metadata: EventMetadata, val user: User, val channel: String, val reason: String = "") : IrcEvent(metadata)
+class ChannelParted(metadata: EventMetadata, val user: User, channel: String, val reason: String = "") : TargetedEvent(metadata, channel)
 
 /** Raised when a [victim] is kicked from a channel. */
-class ChannelUserKicked(metadata: EventMetadata, val user: User, val channel: String, val victim: String, val reason: String = "") : IrcEvent(metadata)
+class ChannelUserKicked(metadata: EventMetadata, val user: User, channel: String, val victim: String, val reason: String = "") : TargetedEvent(metadata, channel)
 
 /** Raised when a user quits, and is in a channel. */
-class ChannelQuit(metadata: EventMetadata, val user: User, val channel: String, val reason: String = "") : IrcEvent(metadata)
+class ChannelQuit(metadata: EventMetadata, val user: User, channel: String, val reason: String = "") : TargetedEvent(metadata, channel)
 
 /** Raised when a user changes nickname, and is in a channel. */
-class ChannelNickChanged(metadata: EventMetadata, val user: User, val channel: String, val newNick: String) : IrcEvent(metadata)
+class ChannelNickChanged(metadata: EventMetadata, val user: User, channel: String, val newNick: String) : TargetedEvent(metadata, channel)
 
 /** Raised when a batch of the channel's member list has been received. More batches may follow. */
-class ChannelNamesReceived(metadata: EventMetadata, val channel: String, val names: List<String>) : IrcEvent(metadata)
+class ChannelNamesReceived(metadata: EventMetadata, channel: String, val names: List<String>) : TargetedEvent(metadata, channel)
 
 /** Raised when the entirety of the channel's member list has been received. */
-class ChannelNamesFinished(metadata: EventMetadata, val channel: String) : IrcEvent(metadata)
+class ChannelNamesFinished(metadata: EventMetadata, channel: String) : TargetedEvent(metadata, channel)
 
 /** Raised when a channel topic is discovered (not changed). Usually followed by [ChannelTopicMetadataDiscovered] if the [topic] is non-null. */
-class ChannelTopicDiscovered(metadata: EventMetadata, val channel: String, val topic: String?) : IrcEvent(metadata)
+class ChannelTopicDiscovered(metadata: EventMetadata, channel: String, val topic: String?) : TargetedEvent(metadata, channel)
 
 /** Raised when a channel topic's metadata is discovered. */
-class ChannelTopicMetadataDiscovered(metadata: EventMetadata, val channel: String, val user: User, val setTime: LocalDateTime) : IrcEvent(metadata)
+class ChannelTopicMetadataDiscovered(metadata: EventMetadata, channel: String, val user: User, val setTime: LocalDateTime) : TargetedEvent(metadata, channel)
 
 /**
  * Raised when a channel's topic is changed.
  *
  * If the topic has been unset (cleared), [topic] will be `null`
  */
-class ChannelTopicChanged(metadata: EventMetadata, val user: User, val channel: String, val topic: String?) : IrcEvent(metadata)
+class ChannelTopicChanged(metadata: EventMetadata, val user: User, channel: String, val topic: String?) : TargetedEvent(metadata, channel)
 
 /** Raised when a message is received. */
-class MessageReceived(metadata: EventMetadata, val user: User, val target: String, val message: String) : IrcEvent(metadata) {
+class MessageReceived(metadata: EventMetadata, val user: User, target: String, val message: String) : TargetedEvent(metadata, target) {
 
     /** The message ID of this message. */
     @Deprecated("Moved to metadata", replaceWith = ReplaceWith("metadata.messageId"))
@@ -106,10 +118,10 @@ class MessageReceived(metadata: EventMetadata, val user: User, val target: Strin
  *
  * The [user] may in fact be a server, or have a nickname of `*` while connecting.
  */
-class NoticeReceived(metadata: EventMetadata, val user: User, val target: String, val message: String) : IrcEvent(metadata)
+class NoticeReceived(metadata: EventMetadata, val user: User, target: String, val message: String) : TargetedEvent(metadata, target)
 
 /** Raised when an action is received. */
-class ActionReceived(metadata: EventMetadata, val user: User, val target: String, val action: String) : IrcEvent(metadata) {
+class ActionReceived(metadata: EventMetadata, val user: User, target: String, val action: String) : TargetedEvent(metadata, target) {
 
     /** The message ID of this action. */
     @Deprecated("Moved to metadata", replaceWith = ReplaceWith("metadata.messageId"))
@@ -120,10 +132,10 @@ class ActionReceived(metadata: EventMetadata, val user: User, val target: String
 }
 
 /** Raised when a CTCP is received. */
-class CtcpReceived(metadata: EventMetadata, val user: User, val target: String, val type: String, val content: String) : IrcEvent(metadata)
+class CtcpReceived(metadata: EventMetadata, val user: User, target: String, val type: String, val content: String) : TargetedEvent(metadata, target)
 
 /** Raised when a CTCP reply is received. */
-class CtcpReplyReceived(metadata: EventMetadata, val user: User, val target: String, val type: String, val content: String) : IrcEvent(metadata)
+class CtcpReplyReceived(metadata: EventMetadata, val user: User, target: String, val type: String, val content: String) : TargetedEvent(metadata, target)
 
 /** Raised when a user quits. */
 class UserQuit(metadata: EventMetadata, val user: User, val reason: String = "") : IrcEvent(metadata)
@@ -142,10 +154,10 @@ class UserHostChanged(metadata: EventMetadata, val user: User, val newIdent: Str
 class UserAccountChanged(metadata: EventMetadata, val user: User, val newAccount: String?) : IrcEvent(metadata)
 
 /** Raised when available server capabilities are received. More batches may follow. */
-class ServerCapabilitiesReceived(metadata: EventMetadata, val capabilities: Map<Capability, String>) : IrcEvent(metadata)
+class ServerCapabilitiesReceived(metadata: EventMetadata, val capabilities: Map<String, String>) : IrcEvent(metadata)
 
 /** Raised when our requested capabilities are acknowledged. More batches may follow. */
-class ServerCapabilitiesAcknowledged(metadata: EventMetadata, val capabilities: Map<Capability, String>) : IrcEvent(metadata)
+class ServerCapabilitiesAcknowledged(metadata: EventMetadata, val capabilities: Map<String, String>) : IrcEvent(metadata)
 
 /** Raised when the server has finished sending us capabilities. */
 class ServerCapabilitiesFinished(metadata: EventMetadata) : IrcEvent(metadata)
@@ -163,7 +175,7 @@ class MotdFinished(metadata: EventMetadata, val missing: Boolean = false) : IrcE
  * and the given modes are thus exhaustive. Otherwise, the modes are a sequence of changes to apply to the existing
  * state.
  */
-class ModeChanged(metadata: EventMetadata, val target: String, val modes: String, val arguments: Array<String>, val discovered: Boolean = false) : IrcEvent(metadata)
+class ModeChanged(metadata: EventMetadata, target: String, val modes: String, val arguments: Array<String>, val discovered: Boolean = false) : TargetedEvent(metadata, target)
 
 /** Raised when an AUTHENTICATION message is received. [argument] is `null` if the server sent an empty reply ("+") */
 class AuthenticationMessage(metadata: EventMetadata, val argument: String?) : IrcEvent(metadata)

@@ -11,7 +11,7 @@ class CapabilitiesState {
 
     // TODO: These should only be mutable internally
     /** The capabilities that were advertised by the server. */
-    val advertisedCapabilities = HashMap<Capability, String>()
+    val advertisedCapabilities = HashMap<String, String>()
     /** The capabilities that we have agreed to enable. */
     val enabledCapabilities = HashMap<Capability, String>()
 

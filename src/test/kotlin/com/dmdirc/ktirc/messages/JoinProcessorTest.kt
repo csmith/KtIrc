@@ -24,7 +24,7 @@ internal class JoinProcessorTest {
 
         assertEquals(TestConstants.time, events[0].metadata.time)
         assertEquals(User("acidburn", "libby", "root.localhost"), events[0].user)
-        assertEquals("#crashandburn", events[0].channel)
+        assertEquals("#crashandburn", events[0].target)
     }
 
     @Test
@@ -42,7 +42,7 @@ internal class JoinProcessorTest {
 
         assertEquals(TestConstants.time, events[0].metadata.time)
         assertEquals(User("acidburn", "libby", "root.localhost", account = "acidBurn", realName = "Libby"), events[0].user)
-        assertEquals("#crashandburn", events[0].channel)
+        assertEquals("#crashandburn", events[0].target)
     }
 
     @Test
@@ -53,7 +53,7 @@ internal class JoinProcessorTest {
 
         assertEquals(TestConstants.time, events[0].metadata.time)
         assertEquals(User("acidburn", "libby", "root.localhost", realName = "Libby"), events[0].user)
-        assertEquals("#crashandburn", events[0].channel)
+        assertEquals("#crashandburn", events[0].target)
     }
 
 }

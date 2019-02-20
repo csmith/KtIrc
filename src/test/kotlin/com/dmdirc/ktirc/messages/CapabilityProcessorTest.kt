@@ -3,7 +3,6 @@ package com.dmdirc.ktirc.messages
 import com.dmdirc.ktirc.events.ServerCapabilitiesAcknowledged
 import com.dmdirc.ktirc.events.ServerCapabilitiesFinished
 import com.dmdirc.ktirc.events.ServerCapabilitiesReceived
-import com.dmdirc.ktirc.model.Capability
 import com.dmdirc.ktirc.model.IrcMessage
 import com.dmdirc.ktirc.params
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -36,8 +35,8 @@ internal class CapabilityProcessorTest {
 
         val receivedEvent = events.filterIsInstance<ServerCapabilitiesReceived>()[0]
         assertEquals(2, receivedEvent.capabilities.size)
-        assertTrue(Capability.HostChangeMessages in receivedEvent.capabilities)
-        assertTrue(Capability.AccountAndRealNameInJoinMessages in receivedEvent.capabilities)
+        assertTrue("chghost" in receivedEvent.capabilities)
+        assertTrue("extended-join" in receivedEvent.capabilities)
     }
 
     @Test
@@ -46,8 +45,8 @@ internal class CapabilityProcessorTest {
 
         val receivedEvent = events.filterIsInstance<ServerCapabilitiesReceived>()[0]
         assertEquals(2, receivedEvent.capabilities.size)
-        assertEquals("test123", receivedEvent.capabilities[Capability.HostChangeMessages])
-        assertEquals("abc=def", receivedEvent.capabilities[Capability.AccountAndRealNameInJoinMessages])
+        assertEquals("test123", receivedEvent.capabilities["chghost"])
+        assertEquals("abc=def", receivedEvent.capabilities["extended-join"])
     }
 
     @Test
@@ -56,7 +55,7 @@ internal class CapabilityProcessorTest {
 
         val receivedEvent = events.filterIsInstance<ServerCapabilitiesReceived>()[0]
         assertEquals(1, receivedEvent.capabilities.size)
-        assertEquals("456", receivedEvent.capabilities[Capability.HostChangeMessages])
+        assertEquals("456", receivedEvent.capabilities["chghost"])
     }
 
 
@@ -66,8 +65,8 @@ internal class CapabilityProcessorTest {
 
         val receivedEvent = events.filterIsInstance<ServerCapabilitiesReceived>()[0]
         assertEquals(2, receivedEvent.capabilities.size)
-        assertTrue(Capability.HostChangeMessages in receivedEvent.capabilities)
-        assertTrue(Capability.AccountAndRealNameInJoinMessages in receivedEvent.capabilities)
+        assertTrue("chghost" in receivedEvent.capabilities)
+        assertTrue("extended-join" in receivedEvent.capabilities)
     }
 
     @Test
@@ -84,8 +83,8 @@ internal class CapabilityProcessorTest {
 
         val receivedEvent = events.filterIsInstance<ServerCapabilitiesAcknowledged>()[0]
         assertEquals(2, receivedEvent.capabilities.size)
-        assertEquals("test123", receivedEvent.capabilities[Capability.HostChangeMessages])
-        assertEquals("abc=def", receivedEvent.capabilities[Capability.AccountAndRealNameInJoinMessages])
+        assertEquals("test123", receivedEvent.capabilities["chghost"])
+        assertEquals("abc=def", receivedEvent.capabilities["extended-join"])
     }
 
 }

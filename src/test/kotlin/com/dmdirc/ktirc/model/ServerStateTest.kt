@@ -67,7 +67,7 @@ internal class ServerStateTest {
         localNickname = "acidBurn3"
         serverName = "root.the.gibson"
         features[ServerFeature.Network] = "gibson"
-        capabilities.advertisedCapabilities[Capability.SaslAuthentication] = "sure"
+        capabilities.advertisedCapabilities["sasl"] = "sure"
         sasl.saslBuffer = "in progress"
         batches["batch"] = Batch("type", emptyList(), EventMetadata(TestConstants.time))
         labelCounter.set(100)

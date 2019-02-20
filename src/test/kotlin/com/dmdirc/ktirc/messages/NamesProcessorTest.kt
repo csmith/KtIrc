@@ -16,7 +16,7 @@ internal class NamesProcessorTest {
         val events = processor.process(IrcMessage(emptyMap(), ":the.gibson".toByteArray(), "366", params("AcidBurn", "#root", "End of /NAMES list")))
 
         assertEquals(1, events.size)
-        assertEquals("#root", (events[0] as ChannelNamesFinished).channel)
+        assertEquals("#root", (events[0] as ChannelNamesFinished).target)
     }
 
     @Test
@@ -25,7 +25,7 @@ internal class NamesProcessorTest {
 
         assertEquals(1, events.size)
         val event = events[0] as ChannelNamesReceived
-        assertEquals("#root", event.channel)
+        assertEquals("#root", event.target)
         assertEquals(listOf("AcidBurn", "@ZeroCool", "+ThePlague"), event.names)
     }
 

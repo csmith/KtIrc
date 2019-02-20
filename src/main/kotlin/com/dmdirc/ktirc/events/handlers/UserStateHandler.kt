@@ -20,18 +20,18 @@ internal class UserStateHandler : EventHandler {
     }
 
     private fun handleJoin(state: UserState, event: ChannelJoined) {
-        state.addToChannel(event.user, event.channel)
+        state.addToChannel(event.user, event.target)
         state.update(event.user)
     }
 
     private fun handlePart(client: IrcClient, event: ChannelParted) {
         if (client.isLocalUser(event.user)) {
             // Remove channel from all users
-            client.userState.forEach { it.channels -= event.channel }
+            client.userState.forEach { it.channels -= event.target }
             client.userState.removeIf { it.channels.isEmpty() && !client.isLocalUser(it.details) }
         } else {
             client.userState[event.user]?.channels?.let {
-                it -= event.channel
+                it -= event.target
                 if (it.isEmpty()) {
                     client.userState -= event.user
                 }
@@ -42,11 +42,11 @@ internal class UserStateHandler : EventHandler {
     private fun handleKick(client: IrcClient, event: ChannelUserKicked) {
         if (client.isLocalUser(event.victim)) {
             // Remove channel from all users
-            client.userState.forEach { it.channels -= event.channel }
+            client.userState.forEach { it.channels -= event.target }
             client.userState.removeIf { it.channels.isEmpty() && !client.isLocalUser(it.details) }
         } else {
             client.userState[event.victim]?.channels?.let {
-                it -= event.channel
+                it -= event.target
                 if (it.isEmpty()) {
                     client.userState -= event.victim
                 }
@@ -56,7 +56,7 @@ internal class UserStateHandler : EventHandler {
 
     private fun handleNamesReceived(client: IrcClient, event: ChannelNamesReceived) {
         event.toModesAndUsers(client).forEach { (_, user) ->
-            client.userState.addToChannel(user, event.channel)
+            client.userState.addToChannel(user, event.target)
             client.userState.update(user)
         }
     }

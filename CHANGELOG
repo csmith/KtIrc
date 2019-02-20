@@ -3,6 +3,7 @@ vNEXT (in development)
  * Batch start and end events are no longer included in BatchReceived events
  * Batches now expose complete metadata from their start event
  * Added support for labelled-replies capability and label message tags
+ * Added support for message-tags capability after it moved from draft
  * Added new methods for sending raw lines to the IRC server
    * send(tagMap(...), command, arguments) replaces send(line)
    * send(command, arguments) is available if no tags are to be sent
@@ -10,6 +11,8 @@ vNEXT (in development)
    * send(line) is deprecated and will be removed after v1.0.0
  * Add 'alwaysEchoMessages' behaviour that makes it easier to deal with servers
    that don't support the echo message capability
+ * Added TargetedEvent, a subclass of IrcEvent, for all events that are
+   targeted to a user or channel
  * (Internal) Added annotation to track removal of deprecated methods
 
 v0.9.0

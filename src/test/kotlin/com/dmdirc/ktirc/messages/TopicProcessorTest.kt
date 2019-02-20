@@ -30,7 +30,7 @@ internal class TopicProcessorTest {
 
         val event = events[0] as ChannelTopicDiscovered
         assertEquals(TestConstants.time, event.metadata.time)
-        assertEquals("#thegibson", event.channel)
+        assertEquals("#thegibson", event.target)
         assertEquals("Hack the planet!", event.topic)
     }
 
@@ -41,7 +41,7 @@ internal class TopicProcessorTest {
 
         val event = events[0] as ChannelTopicDiscovered
         assertEquals(TestConstants.time, event.metadata.time)
-        assertEquals("#thegibson", event.channel)
+        assertEquals("#thegibson", event.target)
         assertNull(event.topic)
     }
 
@@ -52,7 +52,7 @@ internal class TopicProcessorTest {
 
         val event = events[0] as ChannelTopicMetadataDiscovered
         assertEquals(TestConstants.time, event.metadata.time)
-        assertEquals("#thegibson", event.channel)
+        assertEquals("#thegibson", event.target)
         assertEquals("zeroCool", event.user.nickname)
         assertEquals(TestConstants.otherTime, event.setTime)
     }
@@ -65,7 +65,7 @@ internal class TopicProcessorTest {
         val event = events[0] as ChannelTopicChanged
         assertEquals(TestConstants.time, event.metadata.time)
         assertEquals(User("acidBurn", "acidB", "the.gibson"), event.user)
-        assertEquals("#thegibson", event.channel)
+        assertEquals("#thegibson", event.target)
         assertEquals("Hack the planet!", event.topic)
     }
 

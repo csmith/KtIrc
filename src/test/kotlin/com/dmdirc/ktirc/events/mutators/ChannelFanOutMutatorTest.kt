@@ -55,7 +55,7 @@ internal class ChannelFanOutMutatorTest {
                 Assertions.assertEquals(TestConstants.time, it.metadata.time)
                 Assertions.assertEquals("zerocool", it.user.nickname)
                 Assertions.assertEquals("Hack the planet!", it.reason)
-                names.add(it.channel)
+                names.add(it.target)
             }
         }
 
@@ -91,7 +91,7 @@ internal class ChannelFanOutMutatorTest {
                 Assertions.assertEquals(TestConstants.time, it.metadata.time)
                 Assertions.assertEquals("zerocool", it.user.nickname)
                 Assertions.assertEquals("zer0c00l", it.newNick)
-                names.add(it.channel)
+                names.add(it.target)
             }
         }
 

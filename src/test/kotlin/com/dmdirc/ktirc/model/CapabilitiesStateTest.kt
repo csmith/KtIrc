@@ -13,7 +13,7 @@ internal class CapabilitiesStateTest {
 
     @Test
     fun `reset clears all state`() = with(CapabilitiesState()) {
-        advertisedCapabilities[Capability.SaslAuthentication] = "foo"
+        advertisedCapabilities["sasl"] = "foo"
         enabledCapabilities[Capability.SaslAuthentication] = "foo"
         negotiationState = CapabilitiesNegotiationState.FINISHED
 

@@ -8,6 +8,7 @@ import com.dmdirc.ktirc.messages.sendCapabilityRequest
 import com.dmdirc.ktirc.model.CapabilitiesNegotiationState
 import com.dmdirc.ktirc.model.CapabilitiesState
 import com.dmdirc.ktirc.model.Capability
+import com.dmdirc.ktirc.model.capabilities
 import com.dmdirc.ktirc.sasl.fromBase64
 import com.dmdirc.ktirc.util.logger
 
@@ -26,7 +27,7 @@ internal class CapabilitiesHandler : EventHandler {
         }
     }
 
-    private fun handleCapabilitiesReceived(state: CapabilitiesState, capabilities: Map<Capability, String>) {
+    private fun handleCapabilitiesReceived(state: CapabilitiesState, capabilities: Map<String, String>) {
         state.advertisedCapabilities.putAll(capabilities)
     }
 
@@ -39,7 +40,7 @@ internal class CapabilitiesHandler : EventHandler {
                 client.sendCapabilityEnd()
             } else {
                 negotiationState = CapabilitiesNegotiationState.AWAITING_ACK
-                advertisedCapabilities.keys.map { it.names[0] }.let {
+                advertisedCapabilities.keys.let {
                     log.info { "Requesting capabilities: ${it.toList()}" }
                     client.sendCapabilityRequest(it)
                 }
@@ -47,14 +48,19 @@ internal class CapabilitiesHandler : EventHandler {
         }
     }
 
-    private fun handleCapabilitiesAcknowledged(client: IrcClient, capabilities: Map<Capability, String>) {
+    private fun handleCapabilitiesAcknowledged(client: IrcClient, ackedCapabilities: Map<String, String>) {
         // TODO: Check if everything we wanted is enabled
         with(client.serverState.capabilities) {
-            log.info { "Acknowledged capabilities: ${capabilities.keys.map { it::class.simpleName }.toList()}" }
-            enabledCapabilities.putAll(capabilities)
+            log.info { "Acknowledged capabilities: ${ackedCapabilities.keys.toList()}" }
+            ackedCapabilities.forEach { n, v ->
+                capabilities[n]?.let {
+                    enabledCapabilities[it] = v
+                }
+            }
 
             if (client.serverState.sasl.mechanisms.isNotEmpty()) {
-                advertisedCapabilities[Capability.SaslAuthentication]?.let { serverCaps ->
+                // TODO: Icky. What if SASL had multiple names?
+                advertisedCapabilities[Capability.SaslAuthentication.names[0]]?.let { serverCaps ->
                     if (startSaslAuth(client, if (serverCaps.isEmpty()) emptyList() else serverCaps.split(','))) {
                         return
                     }
