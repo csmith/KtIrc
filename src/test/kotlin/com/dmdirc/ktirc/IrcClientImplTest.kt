@@ -7,7 +7,6 @@ import com.dmdirc.ktirc.messages.tagMap
 import com.dmdirc.ktirc.model.*
 import com.dmdirc.ktirc.util.currentTimeProvider
 import com.dmdirc.ktirc.util.generateLabel
-import com.nhaarman.mockitokotlin2.*
 import io.ktor.util.KtorExperimentalAPI
 import io.mockk.*
 import kotlinx.coroutines.*
@@ -39,16 +38,18 @@ internal class IrcClientImplTest {
     private val readLineChannel = Channel<ByteArray>(Channel.UNLIMITED)
     private val sendLineChannel = Channel<ByteArray>(Channel.UNLIMITED)
 
-    private val mockSocket = mock<LineBufferedSocket> {
-        on { receiveChannel } doReturn readLineChannel
-        on { sendChannel } doReturn sendLineChannel
+    private val mockSocket = mockk<LineBufferedSocket> {
+        every { receiveChannel } returns readLineChannel
+        every { sendChannel } returns sendLineChannel
     }
 
-    private val mockSocketFactory = mock<(CoroutineScope, String, Int, Boolean) -> LineBufferedSocket> {
-        on { invoke(any(), eq(HOST), eq(PORT), any()) } doReturn mockSocket
+    private val mockSocketFactory = mockk<(CoroutineScope, String, Int, Boolean) -> LineBufferedSocket> {
+        every { this@mockk.invoke(any(), eq(HOST), eq(PORT), any()) } returns mockSocket
     }
 
-    private val mockEventHandler = mock<(IrcEvent) -> Unit>()
+    private val mockEventHandler = mockk<(IrcEvent) -> Unit> {
+        every { this@mockk.invoke(any()) } just Runs
+    }
 
     private val profileConfig = ProfileConfig().apply {
         nickname = NICK
@@ -74,7 +75,7 @@ internal class IrcClientImplTest {
         client.socketFactory = mockSocketFactory
         client.connect()
 
-        verify(mockSocketFactory, timeout(500)).invoke(client, HOST, PORT, false)
+        verify(timeout = 500) { mockSocketFactory(client, HOST, PORT, false) }
     }
 
     @Test
@@ -87,7 +88,7 @@ internal class IrcClientImplTest {
         client.socketFactory = mockSocketFactory
         client.connect()
 
-        verify(mockSocketFactory, timeout(500)).invoke(client, HOST, PORT, true)
+        verify(timeout = 500) { mockSocketFactory(client, HOST, PORT, true) }
     }
 
     @Test
@@ -104,19 +105,25 @@ internal class IrcClientImplTest {
     @Test
     fun `emits connection events with local time`() = runBlocking {
         currentTimeProvider = { TestConstants.time }
+
+        val connectingSlot = slot<ServerConnecting>()
+        val connectedSlot = slot<ServerConnected>()
+
+        every { mockEventHandler.invoke(capture(connectingSlot)) } just Runs
+        every { mockEventHandler.invoke(capture(connectedSlot)) } just Runs
+
         val client = IrcClientImpl(normalConfig)
         client.socketFactory = mockSocketFactory
         client.onEvent(mockEventHandler)
         client.connect()
 
-        val captor = argumentCaptor<IrcEvent>()
-        verify(mockEventHandler, timeout(500).atLeast(2)).invoke(captor.capture())
+        verify(timeout = 500) {
+            mockEventHandler(ofType<ServerConnecting>())
+            mockEventHandler(ofType<ServerConnected>())
+        }
 
-        assertTrue(captor.firstValue is ServerConnecting)
-        assertEquals(TestConstants.time, captor.firstValue.metadata.time)
-
-        assertTrue(captor.secondValue is ServerConnected)
-        assertEquals(TestConstants.time, captor.secondValue.metadata.time)
+        assertEquals(TestConstants.time, connectingSlot.captured.metadata.time)
+        assertEquals(TestConstants.time, connectedSlot.captured.metadata.time)
     }
 
     @Test
@@ -156,7 +163,9 @@ internal class IrcClientImplTest {
 
         client.connect()
 
-        verify(mockEventHandler, timeout(500)).invoke(isA<ServerWelcome>())
+        verify(timeout = 500) {
+            mockEventHandler(ofType<ServerWelcome>())
+        }
     }
 
     @Test
@@ -249,7 +258,9 @@ internal class IrcClientImplTest {
         client.onEvent(mockEventHandler)
         client.send("PRIVMSG", "#thegibson", "Mess with the best, die like the rest")
 
-        verify(mockEventHandler, never()).invoke(isA<MessageReceived>())
+        verify(inverse = true) {
+            mockEventHandler(ofType<MessageReceived>())
+        }
     }
 
     @Test
@@ -262,8 +273,9 @@ internal class IrcClientImplTest {
         client.onEvent(mockEventHandler)
         client.send("PRIVMSG", "#thegibson", "Mess with the best, die like the rest")
 
-        verify(mockEventHandler, never()).invoke(isA<MessageReceived>())
-    }
+        verify(inverse = true) {
+            mockEventHandler(ofType<MessageReceived>())
+        }    }
 
     @Test
     fun `sends structured text to socket with tags`() = runBlocking {
@@ -321,7 +333,9 @@ internal class IrcClientImplTest {
 
         client.disconnect()
 
-        verify(mockSocket, timeout(500)).disconnect()
+        verify(timeout = 500) {
+            mockSocket.disconnect()
+        }
     }
 
     @Test
@@ -384,7 +398,7 @@ internal class IrcClientImplTest {
 
     @Test
     fun `sends connect error when host is unresolvable`() = runBlocking {
-        whenever(mockSocket.connect()).doThrow(UnresolvedAddressException())
+        every { mockSocket.connect() } throws UnresolvedAddressException()
         with(IrcClientImpl(normalConfig)) {
             socketFactory = mockSocketFactory
             withTimeout(500) {
@@ -400,7 +414,7 @@ internal class IrcClientImplTest {
 
     @Test
     fun `sends connect error when tls certificate is bad`() = runBlocking {
-        whenever(mockSocket.connect()).doThrow(CertificateException("Boooo"))
+        every { mockSocket.connect() } throws CertificateException("Boooo")
         with(IrcClientImpl(normalConfig)) {
             socketFactory = mockSocketFactory
             withTimeout(500) {

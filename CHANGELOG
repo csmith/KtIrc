@@ -14,6 +14,7 @@ vNEXT (in development)
  * Added TargetedEvent, a subclass of IrcEvent, for all events that are
    targeted to a user or channel
  * (Internal) Added annotation to track removal of deprecated methods
+ * (Internal) Migrate unit tests to use Mockk instead of Mockito
 
 v0.9.0
 

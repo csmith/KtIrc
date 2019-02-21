@@ -1,26 +1,26 @@
 package com.dmdirc.ktirc.model
 
 import com.dmdirc.ktirc.sasl.SaslMechanism
-import com.nhaarman.mockitokotlin2.doReturn
-import com.nhaarman.mockitokotlin2.mock
+import io.mockk.every
+import io.mockk.mockk
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 
 internal class SaslStateTest {
 
-    private val mech1 = mock<SaslMechanism> {
-        on { priority } doReturn 1
-        on { ircName } doReturn "mech1"
+    private val mech1 = mockk<SaslMechanism> {
+        every { priority } returns 1
+        every { ircName } returns "mech1"
     }
 
-    private val mech2 = mock<SaslMechanism> {
-        on { priority } doReturn 2
-        on { ircName } doReturn "mech2"
+    private val mech2 = mockk<SaslMechanism> {
+        every { priority } returns 2
+        every { ircName } returns "mech2"
     }
 
-    private val mech3 = mock<SaslMechanism> {
-        on { priority } doReturn 3
-        on { ircName } doReturn "mech3"
+    private val mech3 = mockk<SaslMechanism> {
+        every { priority } returns 3
+        every { ircName } returns "mech3"
     }
 
     private val mechanisms = listOf(mech1, mech2, mech3)

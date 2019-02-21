@@ -40,10 +40,9 @@ dependencies {
     implementation("io.ktor:ktor-network:1.1.2")
     implementation("io.ktor:ktor-network-tls:1.1.2")
 
-    testImplementation("com.nhaarman.mockitokotlin2:mockito-kotlin:2.1.0")
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.4.0")
     testImplementation("org.junit.jupiter:junit-jupiter-params:5.4.0")
-    testImplementation("io.mockk:mockk:1.9")
+    testImplementation("io.mockk:mockk:1.9.1")
     testRuntime("org.junit.jupiter:junit-jupiter-engine:5.4.0")
 }
 

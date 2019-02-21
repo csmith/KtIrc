@@ -7,25 +7,30 @@ import com.dmdirc.ktirc.events.handlers.EventHandler
 import com.dmdirc.ktirc.events.mutators.EventMutator
 import com.dmdirc.ktirc.messages.MessageProcessor
 import com.dmdirc.ktirc.model.IrcMessage
-import com.nhaarman.mockitokotlin2.*
+import io.mockk.*
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Test
 
 internal class MessageHandlerTest {
 
-    private val ircClient = mock<IrcClient>()
+    private val ircClient = mockk<IrcClient>()
 
-    private val nickProcessor = mock<MessageProcessor> {
-        on { commands } doReturn arrayOf("FOO", "NICK")
+    private val nickProcessor = mockk<MessageProcessor> {
+        every { commands } returns arrayOf("FOO", "NICK")
+        every { process(any()) } returns emptyList()
     }
 
-    private val joinProcessor = mock<MessageProcessor> {
-        on { commands } doReturn arrayOf("BAR", "JOIN")
+    private val joinProcessor = mockk<MessageProcessor> {
+        every { commands } returns arrayOf("BAR", "JOIN")
+        every { process(any()) } returns emptyList()
     }
+
+    private val eventHandler1 = mockk<EventHandler>()
+    private val eventHandler2 = mockk<EventHandler>()
 
     @Test
-    fun `passes message on to correct processor`() = runBlocking<Unit> {
+    fun `passes message on to correct processor`() = runBlocking {
         val handler = MessageHandler(listOf(joinProcessor, nickProcessor), emptyList(), mutableListOf())
         val message = IrcMessage(emptyMap(), null, "JOIN", emptyList())
 
@@ -35,11 +40,13 @@ internal class MessageHandlerTest {
             handler.processMessages(ircClient, this)
         }
 
-        verify(joinProcessor).process(message)
+        verify {
+            joinProcessor.process(message)
+        }
     }
 
     @Test
-    fun `reads multiple messages`() = runBlocking<Unit> {
+    fun `reads multiple messages`() = runBlocking {
         val handler = MessageHandler(listOf(joinProcessor, nickProcessor), emptyList(), mutableListOf())
         val joinMessage = IrcMessage(emptyMap(), null, "JOIN", emptyList())
         val nickMessage = IrcMessage(emptyMap(), null, "NICK", emptyList())
@@ -53,19 +60,18 @@ internal class MessageHandlerTest {
             handler.processMessages(ircClient, this)
         }
 
-        with(inOrder(joinProcessor, nickProcessor)) {
-            verify(joinProcessor).process(joinMessage)
-            verify(nickProcessor).process(nickMessage)
+        verifyOrder {
+            joinProcessor.process(joinMessage)
+            nickProcessor.process(nickMessage)
         }
     }
 
     @Test
     fun `invokes all event handler with all returned events`() = runBlocking {
-        val eventHandler1 = mock<EventHandler>()
-        val eventHandler2 = mock<EventHandler>()
         val handler = MessageHandler(listOf(joinProcessor, nickProcessor), emptyList(), mutableListOf(eventHandler1, eventHandler2))
         val joinMessage = IrcMessage(emptyMap(), null, "JOIN", emptyList())
-        whenever(joinProcessor.process(any())).thenReturn(listOf(ServerConnected(EventMetadata(TestConstants.time)), ServerWelcome(EventMetadata(TestConstants.time), "the.gibson", "acidBurn")))
+
+        every { joinProcessor.process(any()) } returns listOf(ServerConnected(EventMetadata(TestConstants.time)), ServerWelcome(EventMetadata(TestConstants.time), "the.gibson", "acidBurn"))
 
         with(Channel<IrcMessage>(1)) {
             send(joinMessage)
@@ -73,110 +79,123 @@ internal class MessageHandlerTest {
             handler.processMessages(ircClient, this)
         }
 
-        verify(eventHandler1).processEvent(same(ircClient), isA<ServerConnected>())
-        verify(eventHandler1).processEvent(same(ircClient), isA<ServerWelcome>())
-        verify(eventHandler2).processEvent(same(ircClient), isA<ServerConnected>())
-        verify(eventHandler2).processEvent(same(ircClient), isA<ServerWelcome>())
+        verify {
+            eventHandler1.processEvent(refEq(ircClient), ofType<ServerConnected>())
+            eventHandler1.processEvent(refEq(ircClient), ofType<ServerWelcome>())
+            eventHandler2.processEvent(refEq(ircClient), ofType<ServerConnected>())
+            eventHandler2.processEvent(refEq(ircClient), ofType<ServerWelcome>())
+        }
     }
 
     @Test
     fun `sends custom events to all handlers`() {
-        val eventHandler1 = mock<EventHandler>()
-        val eventHandler2 = mock<EventHandler>()
         val handler = MessageHandler(emptyList(), emptyList(), mutableListOf(eventHandler1, eventHandler2))
         handler.handleEvent(ircClient, ServerWelcome(EventMetadata(TestConstants.time), "the.gibson", "acidBurn"))
 
-        verify(eventHandler1).processEvent(same(ircClient), isA<ServerWelcome>())
-        verify(eventHandler2).processEvent(same(ircClient), isA<ServerWelcome>())
+        verify {
+            eventHandler1.processEvent(refEq(ircClient), ofType<ServerWelcome>())
+            eventHandler2.processEvent(refEq(ircClient), ofType<ServerWelcome>())
+        }
     }
 
     @Test
     fun `sends custom events to all emitters`() {
         val handler = MessageHandler(emptyList(), emptyList(), emptyList())
-        val emitter1 = mock<(IrcEvent) -> Unit>()
-        val emitter2 = mock<(IrcEvent) -> Unit>()
+        val emitter1 = mockk<(IrcEvent) -> Unit> {
+            every { this@mockk(any<IrcEvent>()) } just Runs
+        }
+        val emitter2 = mockk<(IrcEvent) -> Unit>  {
+            every { this@mockk(any<IrcEvent>()) } just Runs
+        }
         handler.addEmitter(emitter1)
         handler.addEmitter(emitter2)
         handler.handleEvent(ircClient, ServerWelcome(EventMetadata(TestConstants.time), "the.gibson", "acidBurn"))
 
-        verify(emitter1).invoke(isA<ServerWelcome>())
-        verify(emitter2).invoke(isA<ServerWelcome>())
+        verify {
+            emitter1(ofType<ServerWelcome>())
+            emitter2(ofType<ServerWelcome>())
+        }
     }
 
     @Test
     fun `sends events to handlers but not mutators or emitters if process only is true`() {
-        val mutator = mock<EventMutator>()
-        val eventHandler1 = mock<EventHandler>()
-        val eventHandler2 = mock<EventHandler>()
+        val mutator = mockk<EventMutator>()
         val handler = MessageHandler(emptyList(), listOf(mutator), listOf(eventHandler1, eventHandler2))
-        val emitter = mock<(IrcEvent) -> Unit>()
+        val emitter = mockk<(IrcEvent) -> Unit>()
         handler.addEmitter(emitter)
 
         handler.handleEvent(ircClient, ServerWelcome(EventMetadata(TestConstants.time), "the.gibson", "acidBurn"), true)
 
-        verify(eventHandler1).processEvent(same(ircClient), isA<ServerWelcome>())
-        verify(eventHandler2).processEvent(same(ircClient), isA<ServerWelcome>())
-        verify(emitter, never()).invoke(any())
-        verify(mutator, never()).mutateEvent(any(), any(), any())
+        verify {
+            eventHandler1.processEvent(refEq(ircClient), ofType<ServerWelcome>())
+            eventHandler2.processEvent(refEq(ircClient), ofType<ServerWelcome>())
+        }
+        verify(inverse = true) {
+            emitter.invoke(any())
+            mutator.mutateEvent(any(), any(), any())
+        }
     }
 
     @Test
     fun `mutates events in order`() {
-        val eventMutator1 = mock<EventMutator> {
-            on { mutateEvent(any(), any(), isA<ServerWelcome>()) } doReturn listOf(ServerReady(EventMetadata(TestConstants.time)))
+        val eventMutator1 = mockk<EventMutator> {
+            every { mutateEvent(any(), any(), ofType<ServerWelcome>()) } returns listOf(ServerReady(EventMetadata(TestConstants.time)))
         }
-        val eventMutator2 = mock<EventMutator> {
-            on { mutateEvent(any(), any(), isA<ServerReady>()) } doReturn listOf(ServerConnected(EventMetadata(TestConstants.time)))
+        val eventMutator2 = mockk<EventMutator> {
+            every { mutateEvent(any(), any(), ofType<ServerReady>()) } returns  listOf(ServerConnected(EventMetadata(TestConstants.time)))
         }
-        val eventHandler = mock<EventHandler>()
+        val eventHandler = mockk<EventHandler>()
 
         val handler = MessageHandler(emptyList(), listOf(eventMutator1, eventMutator2), mutableListOf(eventHandler))
         handler.handleEvent(ircClient, ServerWelcome(EventMetadata(TestConstants.time), "the.gibson", "acidBurn"))
 
-        verify(eventMutator1).mutateEvent(same(ircClient), same(handler), isA<ServerWelcome>())
-        verify(eventMutator2).mutateEvent(same(ircClient), same(handler), isA<ServerReady>())
-        verify(eventHandler).processEvent(same(ircClient), isA<ServerConnected>())
-        verifyNoMoreInteractions(eventHandler)
+        verifyAll {
+            eventMutator1.mutateEvent(refEq(ircClient), refEq(handler), ofType<ServerWelcome>())
+            eventMutator2.mutateEvent(refEq(ircClient), refEq(handler), ofType<ServerReady>())
+            eventHandler.processEvent(refEq(ircClient), ofType<ServerConnected>())
+        }
     }
 
     @Test
     fun `allows mutators to fan out events`() {
-        val eventMutator1 = mock<EventMutator> {
-            on { mutateEvent(any(), any(), isA<ServerWelcome>()) } doReturn listOf(
+        val eventMutator1 = mockk<EventMutator> {
+            every { mutateEvent(any(), any(), ofType<ServerWelcome>()) } returns listOf(
                     ServerReady(EventMetadata(TestConstants.time)),
                     ServerConnected(EventMetadata(TestConstants.time))
             )
         }
-        val eventMutator2 = mock<EventMutator> {
-            on { mutateEvent(any(), any(), isA<ServerReady>()) } doReturn listOf(ServerReady(EventMetadata(TestConstants.time)))
-            on { mutateEvent(any(), any(), isA<ServerConnected>()) } doReturn listOf(ServerConnected(EventMetadata(TestConstants.time)))
+        val eventMutator2 = mockk<EventMutator> {
+            every { mutateEvent(any(), any(), ofType<ServerReady>()) } returns listOf(ServerReady(EventMetadata(TestConstants.time)))
+            every { mutateEvent(any(), any(), ofType<ServerConnected>()) } returns listOf(ServerConnected(EventMetadata(TestConstants.time)))
         }
-        val eventHandler = mock<EventHandler>()
+        val eventHandler = mockk<EventHandler>()
 
         val handler = MessageHandler(emptyList(), listOf(eventMutator1, eventMutator2), mutableListOf(eventHandler))
         handler.handleEvent(ircClient, ServerWelcome(EventMetadata(TestConstants.time), "the.gibson", "acidBurn"))
 
-        with(inOrder(eventMutator2, eventHandler)) {
-            verify(eventMutator2).mutateEvent(same(ircClient), same(handler), isA<ServerReady>())
-            verify(eventMutator2).mutateEvent(same(ircClient), same(handler), isA<ServerConnected>())
-            verify(eventHandler).processEvent(same(ircClient), isA<ServerReady>())
-            verify(eventHandler).processEvent(same(ircClient), isA<ServerConnected>())
+        verifyOrder {
+            eventMutator2.mutateEvent(refEq(ircClient), refEq(handler), ofType<ServerReady>())
+            eventMutator2.mutateEvent(refEq(ircClient), refEq(handler), ofType<ServerConnected>())
+            eventHandler.processEvent(refEq(ircClient), ofType<ServerReady>())
+            eventHandler.processEvent(refEq(ircClient), ofType<ServerConnected>())
         }
     }
 
     @Test
     fun `allows mutators to suppress events`() {
-        val eventMutator1 = mock<EventMutator> {
-            on { mutateEvent(any(), any(), isA<ServerWelcome>()) } doReturn emptyList()
+        val eventMutator1 = mockk<EventMutator> {
+            every { mutateEvent(any(), any(), ofType<ServerWelcome>()) } returns emptyList()
         }
-        val eventMutator2 = mock<EventMutator>()
-        val eventHandler = mock<EventHandler>()
+        val eventMutator2 = mockk<EventMutator>()
+        val eventHandler = mockk<EventHandler>()
 
         val handler = MessageHandler(emptyList(), listOf(eventMutator1, eventMutator2), mutableListOf(eventHandler))
         handler.handleEvent(ircClient, ServerWelcome(EventMetadata(TestConstants.time), "the.gibson", "acidBurn"))
 
-        verify(eventMutator2, never()).mutateEvent(any(), same(handler), any())
-        verify(eventHandler, never()).processEvent(any(), any())
+        verify(inverse = true) {
+            eventMutator2.mutateEvent(any(), refEq(handler), any())
+            eventHandler.processEvent(any(), any())
+        }
     }
 
 }

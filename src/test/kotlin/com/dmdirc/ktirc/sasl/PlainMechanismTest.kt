@@ -3,15 +3,15 @@ package com.dmdirc.ktirc.sasl
 import com.dmdirc.ktirc.IrcClient
 import com.dmdirc.ktirc.SaslConfig
 import com.dmdirc.ktirc.model.ServerState
-import com.nhaarman.mockitokotlin2.*
+import io.mockk.*
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 
 internal class PlainMechanismTest {
 
-    private val serverState = ServerState("", "")
-    private val ircClient = mock<IrcClient> {
-        on { serverState } doReturn serverState
+    private val fakeServerState = ServerState("", "")
+    private val ircClient = mockk<IrcClient> {
+        every { serverState } returns fakeServerState
     }
 
     private val mechanism = PlainMechanism(SaslConfig().apply {
@@ -21,11 +21,11 @@ internal class PlainMechanismTest {
 
     @Test
     fun `sends encoded username and password when first message received`() {
+        val slot = slot<String>()
+        every { ircClient.send(eq("AUTHENTICATE"), capture(slot)) } just Runs
         mechanism.handleAuthenticationEvent(ircClient, null)
 
-        val captor = argumentCaptor<String>()
-        verify(ircClient).send(eq("AUTHENTICATE"), captor.capture())
-        val data = String(captor.firstValue.fromBase64()).split('\u0000')
+        val data = String(slot.captured.fromBase64()).split('\u0000')
         assertEquals("acidB", data[0])
         assertEquals("acidB", data[1])
         assertEquals("HackThePlan3t!", data[2])
