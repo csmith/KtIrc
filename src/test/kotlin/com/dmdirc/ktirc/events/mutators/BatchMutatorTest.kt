@@ -7,7 +7,9 @@ import com.dmdirc.ktirc.io.MessageEmitter
 import com.dmdirc.ktirc.model.Batch
 import com.dmdirc.ktirc.model.ServerState
 import com.dmdirc.ktirc.model.User
-import com.nhaarman.mockitokotlin2.*
+import io.mockk.every
+import io.mockk.mockk
+import io.mockk.verify
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 
@@ -15,10 +17,10 @@ internal class BatchMutatorTest {
 
     private val mutator = BatchMutator()
 
-    private val serverState = ServerState("", "")
-    private val messageEmitter = mock<MessageEmitter>()
-    private val ircClient = mock<IrcClient> {
-        on { serverState } doReturn serverState
+    private val messageEmitter = mockk<MessageEmitter>()
+    private val fakeServerState = ServerState("", "")
+    private val ircClient = mockk<IrcClient> {
+        every { serverState } returns fakeServerState
     }
 
     @Test
@@ -36,8 +38,8 @@ internal class BatchMutatorTest {
         val events = mutator.mutateEvent(ircClient, messageEmitter, event)
 
         assertTrue(events.isEmpty())
-        assertNotNull(serverState.batches["abcdef"])
-        serverState.batches["abcdef"]?.let {
+        assertNotNull(fakeServerState.batches["abcdef"])
+        fakeServerState.batches["abcdef"]?.let {
             assertEquals(listOf("foo", "bar"), it.arguments)
             assertEquals("netsplit", it.type)
             assertTrue(it.events.isEmpty())
@@ -47,17 +49,17 @@ internal class BatchMutatorTest {
 
     @Test
     fun `adds to batch when event has a batch ID`() {
-        serverState.batches["abcdef"] = Batch("netsplit", emptyList(), EventMetadata(TestConstants.time))
+        fakeServerState.batches["abcdef"] = Batch("netsplit", emptyList(), EventMetadata(TestConstants.time))
 
         val event = UserNickChanged(EventMetadata(TestConstants.time, "abcdef"), User("zeroCool"), "crashOverride")
         mutator.mutateEvent(ircClient, messageEmitter, event)
 
-        assertEquals(listOf(event), serverState.batches["abcdef"]!!.events)
+        assertEquals(listOf(event), fakeServerState.batches["abcdef"]!!.events)
     }
 
     @Test
     fun `suppresses event when it has a batch ID`() {
-        serverState.batches["abcdef"] = Batch("netsplit", emptyList(), EventMetadata(TestConstants.time))
+        fakeServerState.batches["abcdef"] = Batch("netsplit", emptyList(), EventMetadata(TestConstants.time))
 
         val event = UserNickChanged(EventMetadata(TestConstants.time, "abcdef"), User("zeroCool"), "crashOverride")
         val events = mutator.mutateEvent(ircClient, messageEmitter, event)
@@ -67,17 +69,19 @@ internal class BatchMutatorTest {
 
     @Test
     fun `passes event for processing only when it has a batch ID`() {
-        serverState.batches["abcdef"] = Batch("netsplit", emptyList(), EventMetadata(TestConstants.time))
+        fakeServerState.batches["abcdef"] = Batch("netsplit", emptyList(), EventMetadata(TestConstants.time))
 
         val event = UserNickChanged(EventMetadata(TestConstants.time, "abcdef"), User("zeroCool"), "crashOverride")
         mutator.mutateEvent(ircClient, messageEmitter, event)
 
-        verify(messageEmitter).handleEvent(any(), same(event), eq(true))
+        verify {
+            messageEmitter.handleEvent(any(), refEq(event), eq(true))
+        }
     }
 
     @Test
     fun `sends a batch when it finishes and the parent is null`() {
-        serverState.batches["abcdef"] = Batch("netsplit", listOf("p1", "p2"), EventMetadata(TestConstants.time), events = mutableListOf(ServerConnected(EventMetadata(TestConstants.time, "abcdef"))))
+        fakeServerState.batches["abcdef"] = Batch("netsplit", listOf("p1", "p2"), EventMetadata(TestConstants.time), events = mutableListOf(ServerConnected(EventMetadata(TestConstants.time, "abcdef"))))
 
         val events = mutator.mutateEvent(ircClient, messageEmitter, BatchFinished(EventMetadata(TestConstants.time), "abcdef"))
 
@@ -92,14 +96,14 @@ internal class BatchMutatorTest {
 
     @Test
     fun `adds a batch to its parent when it finishes`() {
-        serverState.batches["12345"] = Batch("history", emptyList(), EventMetadata(TestConstants.time))
-        serverState.batches["abcdef"] = Batch("netsplit", emptyList(), EventMetadata(TestConstants.time, batchId = "12345"), mutableListOf(ServerConnected(EventMetadata(TestConstants.time, "abcdef"))))
+        fakeServerState.batches["12345"] = Batch("history", emptyList(), EventMetadata(TestConstants.time))
+        fakeServerState.batches["abcdef"] = Batch("netsplit", emptyList(), EventMetadata(TestConstants.time, batchId = "12345"), mutableListOf(ServerConnected(EventMetadata(TestConstants.time, "abcdef"))))
 
         val events = mutator.mutateEvent(ircClient, messageEmitter, BatchFinished(EventMetadata(TestConstants.time), "abcdef"))
 
         assertEquals(0, events.size)
 
-        val parent = serverState.batches["12345"]?.events
+        val parent = fakeServerState.batches["12345"]?.events
         assertEquals(1, parent?.size)
 
         val event = parent?.get(0) as BatchReceived
@@ -109,11 +113,11 @@ internal class BatchMutatorTest {
 
     @Test
     fun `deletes batch when it finishes`() {
-        serverState.batches["abcdef"] = Batch("netsplit", emptyList(), EventMetadata(TestConstants.time), events = mutableListOf(ServerConnected(EventMetadata(TestConstants.time, "abcdef"))))
+        fakeServerState.batches["abcdef"] = Batch("netsplit", emptyList(), EventMetadata(TestConstants.time), events = mutableListOf(ServerConnected(EventMetadata(TestConstants.time, "abcdef"))))
 
         mutator.mutateEvent(ircClient, messageEmitter, BatchFinished(EventMetadata(TestConstants.time), "abcdef"))
 
-        assertNull(serverState.batches["abcdef"])
+        assertNull(fakeServerState.batches["abcdef"])
     }
 
 }

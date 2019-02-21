@@ -7,17 +7,17 @@ import com.dmdirc.ktirc.io.MessageEmitter
 import com.dmdirc.ktirc.model.ServerState
 import com.dmdirc.ktirc.model.ServerStatus
 import com.dmdirc.ktirc.model.User
-import com.nhaarman.mockitokotlin2.doReturn
-import com.nhaarman.mockitokotlin2.mock
+import io.mockk.every
+import io.mockk.mockk
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 
 internal class ServerReadyMutatorTest {
 
-    private val serverState = ServerState("", "")
-    private val messageEmitter = mock<MessageEmitter>()
-    private val ircClient = mock<IrcClient> {
-        on { serverState } doReturn serverState
+    private val messageEmitter = mockk<MessageEmitter>()
+    private val fakeServerState = ServerState("", "")
+    private val ircClient = mockk<IrcClient> {
+        every { serverState } returns fakeServerState
     }
 
     private val mutator = ServerReadyMutator()

@@ -7,16 +7,16 @@ import com.dmdirc.ktirc.model.ServerFeature
 import com.dmdirc.ktirc.model.ServerFeatureMap
 import com.dmdirc.ktirc.model.ServerState
 import com.dmdirc.ktirc.model.ServerStatus
-import com.nhaarman.mockitokotlin2.doReturn
-import com.nhaarman.mockitokotlin2.mock
+import io.mockk.every
+import io.mockk.mockk
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 
 internal class ServerStateHandlerTest {
 
-    private val serverState = ServerState("", "")
-    private val ircClient = mock<IrcClient> {
-        on { serverState } doReturn serverState
+    private val fakeServerState = ServerState("", "")
+    private val ircClient = mockk<IrcClient> {
+        every { serverState } returns fakeServerState
     }
 
     private val handler = ServerStateHandler()
@@ -24,44 +24,44 @@ internal class ServerStateHandlerTest {
     @Test
     fun `sets local nickname on welcome event`() {
         handler.processEvent(ircClient, ServerWelcome(EventMetadata(TestConstants.time), "the.gibson", "acidBurn"))
-        assertEquals("acidBurn", serverState.localNickname)
+        assertEquals("acidBurn", fakeServerState.localNickname)
     }
 
     @Test
     fun `sets server name on welcome event`() {
         handler.processEvent(ircClient, ServerWelcome(EventMetadata(TestConstants.time), "the.gibson", "acidBurn"))
-        assertEquals("the.gibson", serverState.serverName)
+        assertEquals("the.gibson", fakeServerState.serverName)
     }
 
     @Test
     fun `sets receivedWelcome on welcome event`() {
         handler.processEvent(ircClient, ServerWelcome(EventMetadata(TestConstants.time), "the.gibson", "acidBurn"))
-        assertTrue(serverState.receivedWelcome)
+        assertTrue(fakeServerState.receivedWelcome)
     }
 
     @Test
     fun `sets state to connecting on event`() {
         handler.processEvent(ircClient, ServerConnecting(EventMetadata(TestConstants.time)))
-        assertEquals(ServerStatus.Connecting, serverState.status)
+        assertEquals(ServerStatus.Connecting, fakeServerState.status)
     }
 
     @Test
     fun `sets state to disconnected on event`() {
-        serverState.status = ServerStatus.Ready
+        fakeServerState.status = ServerStatus.Ready
         handler.processEvent(ircClient, ServerDisconnected(EventMetadata(TestConstants.time)))
-        assertEquals(ServerStatus.Disconnected, serverState.status)
+        assertEquals(ServerStatus.Disconnected, fakeServerState.status)
     }
 
     @Test
     fun `sets state to negotiating on connected`() {
         handler.processEvent(ircClient, ServerConnected(EventMetadata(TestConstants.time)))
-        assertEquals(ServerStatus.Negotiating, serverState.status)
+        assertEquals(ServerStatus.Negotiating, fakeServerState.status)
     }
 
     @Test
     fun `sets state to ready on ServerReady`() {
         handler.processEvent(ircClient, ServerReady(EventMetadata(TestConstants.time)))
-        assertEquals(ServerStatus.Ready, serverState.status)
+        assertEquals(ServerStatus.Ready, fakeServerState.status)
     }
 
     @Test
@@ -72,8 +72,8 @@ internal class ServerStateHandlerTest {
 
         handler.processEvent(ircClient, ServerFeaturesUpdated(EventMetadata(TestConstants.time), features))
 
-        assertArrayEquals(arrayOf("abc", "def"), serverState.features[ServerFeature.ChannelModes])
-        assertEquals(true, serverState.features[ServerFeature.WhoxSupport])
+        assertArrayEquals(arrayOf("abc", "def"), fakeServerState.features[ServerFeature.ChannelModes])
+        assertEquals(true, fakeServerState.features[ServerFeature.WhoxSupport])
     }
 
 }

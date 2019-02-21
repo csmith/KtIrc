@@ -5,24 +5,24 @@ import com.dmdirc.ktirc.TestConstants
 import com.dmdirc.ktirc.io.CaseMapping
 import com.dmdirc.ktirc.messages.tagMap
 import com.dmdirc.ktirc.model.*
-import com.nhaarman.mockitokotlin2.doReturn
-import com.nhaarman.mockitokotlin2.mock
-import com.nhaarman.mockitokotlin2.verify
+import io.mockk.every
+import io.mockk.mockk
+import io.mockk.verify
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
 internal class EventUtilsTest {
 
-    private val serverState = ServerState("", "")
-    private val ircClient = mock<IrcClient> {
-        on { serverState } doReturn serverState
-        on { caseMapping } doReturn CaseMapping.Ascii
+    private val fakeServerState = ServerState("", "")
+    private val ircClient = mockk<IrcClient> {
+        every { serverState } returns fakeServerState
+        every { caseMapping } returns CaseMapping.Ascii
     }
 
     @BeforeEach
     fun setUp() {
-        serverState.features[ServerFeature.ModePrefixes] = ModePrefixMapping("ov", "@+")
+        fakeServerState.features[ServerFeature.ModePrefixes] = ModePrefixMapping("ov", "@+")
     }
 
     @Test
@@ -66,11 +66,13 @@ internal class EventUtilsTest {
 
     @Test
     fun `reply sends response to user when message is private`() {
-        serverState.localNickname = "zeroCool"
+        fakeServerState.localNickname = "zeroCool"
         val message = MessageReceived(EventMetadata(TestConstants.time), User("acidBurn"), "Zerocool", "Hack the planet!")
 
         ircClient.reply(message, "OK")
-        verify(ircClient).send(tagMap(), "PRIVMSG", "acidBurn", "OK")
+        verify {
+            ircClient.send(tagMap(), "PRIVMSG", "acidBurn", "OK")
+        }
     }
 
     @Test
@@ -78,7 +80,9 @@ internal class EventUtilsTest {
         val message = MessageReceived(EventMetadata(TestConstants.time), User("acidBurn"), "#TheGibson", "Hack the planet!")
 
         ircClient.reply(message, "OK")
-        verify(ircClient).send(tagMap(), "PRIVMSG", "#TheGibson", "OK")
+        verify {
+            ircClient.send(tagMap(), "PRIVMSG", "#TheGibson", "OK")
+        }
     }
 
     @Test
@@ -86,16 +90,20 @@ internal class EventUtilsTest {
         val message = MessageReceived(EventMetadata(TestConstants.time), User("acidBurn"), "#TheGibson", "Hack the planet!")
 
         ircClient.reply(message, "OK", prefixWithNickname = true)
-        verify(ircClient).send(tagMap(), "PRIVMSG", "#TheGibson", "acidBurn: OK")
+        verify {
+            ircClient.send(tagMap(), "PRIVMSG", "#TheGibson", "acidBurn: OK")
+        }
     }
 
     @Test
     fun `reply sends response with message ID to user when message is private`() {
-        serverState.localNickname = "zeroCool"
+        fakeServerState.localNickname = "zeroCool"
         val message = MessageReceived(EventMetadata(TestConstants.time, messageId = "abc123"), User("acidBurn"), "Zerocool", "Hack the planet!")
 
         ircClient.reply(message, "OK")
-        verify(ircClient).send(tagMap(MessageTag.Reply to "abc123"), "PRIVMSG", "acidBurn", "OK")
+        verify {
+            ircClient.send(tagMap(MessageTag.Reply to "abc123"), "PRIVMSG", "acidBurn", "OK")
+        }
     }
 
     @Test
@@ -103,7 +111,9 @@ internal class EventUtilsTest {
         val message = MessageReceived(EventMetadata(TestConstants.time, messageId = "abc123"), User("acidBurn"), "#TheGibson", "Hack the planet!")
 
         ircClient.reply(message, "OK")
-        verify(ircClient).send(tagMap(MessageTag.Reply to "abc123"), "PRIVMSG", "#TheGibson", "OK")
+        verify {
+            ircClient.send(tagMap(MessageTag.Reply to "abc123"), "PRIVMSG", "#TheGibson", "OK")
+        }
     }
 
     @Test
@@ -111,17 +121,21 @@ internal class EventUtilsTest {
         val message = MessageReceived(EventMetadata(TestConstants.time, messageId = "abc123"), User("acidBurn"), "#TheGibson", "Hack the planet!")
 
         ircClient.reply(message, "OK", prefixWithNickname = true)
-        verify(ircClient).send(tagMap(MessageTag.Reply to "abc123"), "PRIVMSG", "#TheGibson", "acidBurn: OK")
+        verify {
+            ircClient.send(tagMap(MessageTag.Reply to "abc123"), "PRIVMSG", "#TheGibson", "acidBurn: OK")
+        }
     }
 
 
     @Test
     fun `react sends response to user when message is private`() {
-        serverState.localNickname = "zeroCool"
+        fakeServerState.localNickname = "zeroCool"
         val message = MessageReceived(EventMetadata(TestConstants.time, messageId = "msgId"), User("acidBurn"), "Zerocool", "Hack the planet!")
 
         ircClient.react(message, ":P")
-        verify(ircClient).send(tagMap(MessageTag.React to ":P", MessageTag.Reply to "msgId"), "TAGMSG", "acidBurn")
+        verify {
+            ircClient.send(tagMap(MessageTag.React to ":P", MessageTag.Reply to "msgId"), "TAGMSG", "acidBurn")
+        }
     }
 
     @Test
@@ -129,7 +143,9 @@ internal class EventUtilsTest {
         val message = MessageReceived(EventMetadata(TestConstants.time, messageId = "msgId"), User("acidBurn"), "#TheGibson", "Hack the planet!")
 
         ircClient.react(message, ":P")
-        verify(ircClient).send(tagMap(MessageTag.React to ":P", MessageTag.Reply to "msgId"), "TAGMSG", "#TheGibson")
+        verify {
+            ircClient.send(tagMap(MessageTag.React to ":P", MessageTag.Reply to "msgId"), "TAGMSG", "#TheGibson")
+        }
     }
 
 }

@@ -7,85 +7,86 @@ import com.dmdirc.ktirc.events.*
 import com.dmdirc.ktirc.io.CaseMapping
 import com.dmdirc.ktirc.io.MessageEmitter
 import com.dmdirc.ktirc.model.*
-import com.nhaarman.mockitokotlin2.doReturn
-import com.nhaarman.mockitokotlin2.mock
+import io.mockk.every
+import io.mockk.mockk
 import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 
 internal class ChannelFanOutMutatorTest {
 
     private val mutator = ChannelFanOutMutator()
-    private val channelStateMap = ChannelStateMap { CaseMapping.Rfc }
-    private val serverState = ServerState("", "")
-    private val behaviour = BehaviourConfig()
-    private val messageEmitter = mock<MessageEmitter>()
-    private val ircClient = mock<IrcClient> {
-        on { serverState } doReturn serverState
-        on { channelState } doReturn channelStateMap
-        on { behaviour } doReturn behaviour
-        on { isLocalUser(User("acidburn", "libby", "root.localhost")) } doReturn true
-        on { isLocalUser("acidburn") } doReturn  true
+    private val fakeServerState = ServerState("", "")
+    private val fakeChannelStateMap = ChannelStateMap { CaseMapping.Rfc }
+    private val fakeBehaviour = BehaviourConfig()
+    private val messageEmitter = mockk<MessageEmitter>()
+    private val ircClient = mockk<IrcClient> {
+        every { serverState } returns fakeServerState
+        every { channelState } returns fakeChannelStateMap
+        every { behaviour } returns fakeBehaviour
+        every { isLocalUser(any<User>()) } answers { arg<User>(0) == User("acidburn", "libby", "root.localhost") }
+        every { isLocalUser(any<String>()) } answers { arg<String>(0) == "acidburn" }
     }
 
     @Test
     fun `raises ChannelQuit event for each channel a user quits from`() {
         with (ChannelState("#thegibson") { CaseMapping.Rfc }) {
             users += ChannelUser("ZeroCool")
-            channelStateMap += this
+            fakeChannelStateMap += this
         }
 
         with (ChannelState("#dumpsterdiving") { CaseMapping.Rfc }) {
             users += ChannelUser("ZeroCool")
-            channelStateMap += this
+            fakeChannelStateMap += this
         }
 
         with (ChannelState("#chat") { CaseMapping.Rfc }) {
             users += ChannelUser("AcidBurn")
-            channelStateMap += this
+            fakeChannelStateMap += this
         }
 
         val quitEvent = UserQuit(EventMetadata(TestConstants.time), User("zerocool", "dade", "root.localhost"), "Hack the planet!")
         val events = mutator.mutateEvent(ircClient, messageEmitter, quitEvent)
 
         val names = mutableListOf<String>()
-        Assertions.assertEquals(3, events.size)
-        Assertions.assertSame(quitEvent, events[0])
+        assertEquals(3, events.size)
+        assertSame(quitEvent, events[0])
         events.subList(1, events.size).forEach { event ->
             (event as ChannelQuit).let {
-                Assertions.assertEquals(TestConstants.time, it.metadata.time)
-                Assertions.assertEquals("zerocool", it.user.nickname)
-                Assertions.assertEquals("Hack the planet!", it.reason)
+                assertEquals(TestConstants.time, it.metadata.time)
+                assertEquals("zerocool", it.user.nickname)
+                assertEquals("Hack the planet!", it.reason)
                 names.add(it.target)
             }
         }
 
-        Assertions.assertTrue("#thegibson" in names)
-        Assertions.assertTrue("#dumpsterdiving" in names)
+        assertTrue("#thegibson" in names)
+        assertTrue("#dumpsterdiving" in names)
     }
 
     @Test
     fun `raises ChannelNickChanged event for each channel a user changes nicks in`() {
         with (ChannelState("#thegibson") { CaseMapping.Rfc }) {
             users += ChannelUser("ZeroCool")
-            channelStateMap += this
+            fakeChannelStateMap += this
         }
 
         with (ChannelState("#dumpsterdiving") { CaseMapping.Rfc }) {
             users += ChannelUser("ZeroCool")
-            channelStateMap += this
+            fakeChannelStateMap += this
         }
 
         with (ChannelState("#chat") { CaseMapping.Rfc }) {
             users += ChannelUser("AcidBurn")
-            channelStateMap += this
+            fakeChannelStateMap += this
         }
 
         val nickEvent = UserNickChanged(EventMetadata(TestConstants.time), User("zerocool", "dade", "root.localhost"), "zer0c00l")
         val events = mutator.mutateEvent(ircClient, messageEmitter, nickEvent)
 
         val names = mutableListOf<String>()
-        Assertions.assertEquals(3, events.size)
-        Assertions.assertSame(nickEvent, events[0])
+        assertEquals(3, events.size)
+        assertSame(nickEvent, events[0])
         events.subList(1, events.size).forEach { event ->
             (event as ChannelNickChanged).let {
                 Assertions.assertEquals(TestConstants.time, it.metadata.time)
@@ -95,7 +96,7 @@ internal class ChannelFanOutMutatorTest {
             }
         }
 
-        Assertions.assertTrue("#thegibson" in names)
-        Assertions.assertTrue("#dumpsterdiving" in names)
+        assertTrue("#thegibson" in names)
+        assertTrue("#dumpsterdiving" in names)
     }
 }
