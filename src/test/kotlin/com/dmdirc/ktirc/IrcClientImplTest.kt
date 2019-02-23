@@ -294,7 +294,7 @@ internal class IrcClientImplTest {
         client.socketFactory = mockSocketFactory
         client.connect()
 
-        client.sendWithLabel(tagMap(), "testing", "123")
+        client.sendAsync(tagMap(), "testing", "123")
 
         assertLineReceived("testing 123")
     }
@@ -307,7 +307,7 @@ internal class IrcClientImplTest {
         client.serverState.capabilities.enabledCapabilities[Capability.LabeledResponse] = ""
         client.connect()
 
-        client.sendWithLabel(tagMap(), "testing", "123")
+        client.sendAsync(tagMap(), "testing", "123")
 
         assertLineReceived("@draft/label=abc123 testing 123")
     }
@@ -320,7 +320,7 @@ internal class IrcClientImplTest {
         client.serverState.capabilities.enabledCapabilities[Capability.LabeledResponse] = ""
         client.connect()
 
-        client.sendWithLabel(tagMap(MessageTag.AccountName to "x"), "testing", "123")
+        client.sendAsync(tagMap(MessageTag.AccountName to "x"), "testing", "123")
 
         assertLineReceived("@account=x;draft/label=abc123 testing 123")
     }

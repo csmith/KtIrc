@@ -5,7 +5,7 @@ import com.dmdirc.ktirc.TestConstants
 import com.dmdirc.ktirc.events.*
 import com.dmdirc.ktirc.events.handlers.EventHandler
 import com.dmdirc.ktirc.events.mutators.EventMutator
-import com.dmdirc.ktirc.messages.MessageProcessor
+import com.dmdirc.ktirc.messages.processors.MessageProcessor
 import com.dmdirc.ktirc.model.IrcMessage
 import io.mockk.*
 import kotlinx.coroutines.channels.Channel

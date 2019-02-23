@@ -95,6 +95,19 @@ internal class BatchMutatorTest {
     }
 
     @Test
+    fun `sends finished batch with correct metadata`() {
+        val metadata = EventMetadata(TestConstants.time, label = "1234")
+        fakeServerState.batches["abcdef"] = Batch("netsplit", listOf("p1", "p2"), metadata, events = mutableListOf(ServerConnected(EventMetadata(TestConstants.time, "abcdef"))))
+
+        val events = mutator.mutateEvent(ircClient, messageEmitter, BatchFinished(EventMetadata(TestConstants.time), "abcdef"))
+
+        assertEquals(1, events.size)
+        assertTrue(events[0] is BatchReceived)
+        val event = events[0] as BatchReceived
+        assertSame(metadata, event.metadata)
+    }
+
+    @Test
     fun `adds a batch to its parent when it finishes`() {
         fakeServerState.batches["12345"] = Batch("history", emptyList(), EventMetadata(TestConstants.time))
         fakeServerState.batches["abcdef"] = Batch("netsplit", emptyList(), EventMetadata(TestConstants.time, batchId = "12345"), mutableListOf(ServerConnected(EventMetadata(TestConstants.time, "abcdef"))))

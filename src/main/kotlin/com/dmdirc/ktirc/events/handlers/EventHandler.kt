@@ -15,5 +15,6 @@ internal val eventHandlers = listOf(
         ChannelStateHandler(),
         PingHandler(),
         ServerStateHandler(),
-        UserStateHandler()
+        UserStateHandler(),
+        LabelledResponseHandler()
 )

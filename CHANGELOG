@@ -1,5 +1,7 @@
 vNEXT (in development)
 
+ * (Internal) Moved message processors into their own package
+
 v0.10.0
 
  * Batch start and end events are no longer included in BatchReceived events

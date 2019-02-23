@@ -5,6 +5,7 @@ import com.dmdirc.ktirc.events.EventMetadata
 import com.dmdirc.ktirc.events.IrcEvent
 import com.dmdirc.ktirc.io.CaseMapping
 import com.dmdirc.ktirc.util.logger
+import kotlinx.coroutines.channels.SendChannel
 import java.util.concurrent.atomic.AtomicLong
 import kotlin.reflect.KClass
 
@@ -77,6 +78,17 @@ class ServerState internal constructor(
     internal val labelCounter = AtomicLong(0)
 
     /**
+     * Whether or not the server supports labeled responses.
+     */
+    internal val supportsLabeledResponses: Boolean
+        get() = Capability.LabeledResponse in capabilities.enabledCapabilities
+
+    /**
+     * Channels waiting for a label to be received.
+     */
+    internal val labelChannels = mutableMapOf<String, SendChannel<IrcEvent>>()
+
+    /**
      * Determines if the given mode is one applied to a user of a channel, such as 'o' for operator.
      */
     fun isChannelUserMode(mode: Char) = channelModePrefixes.isMode(mode)
@@ -107,6 +119,7 @@ class ServerState internal constructor(
         sasl.reset()
         batches.clear()
         labelCounter.set(0)
+        labelChannels.clear()
     }
 
 }
@@ -122,7 +135,8 @@ class ServerFeatureMap {
      * Gets the value, or the default value, of the given feature.
      */
     @Suppress("UNCHECKED_CAST")
-    operator fun <T : Any> get(feature: ServerFeature<T>) = features.getOrDefault(feature, feature.default) as? T? ?: feature.default
+    operator fun <T : Any> get(feature: ServerFeature<T>) = features.getOrDefault(feature, feature.default) as? T?
+            ?: feature.default
 
     internal operator fun set(feature: ServerFeature<*>, value: Any) {
         require(feature.type.isInstance(value)) {
@@ -146,10 +160,13 @@ data class ModePrefixMapping(val modes: String, val prefixes: String) {
 
     /** Determines whether the given character is a mode prefix (e.g. "@", "+"). */
     fun isPrefix(char: Char) = prefixes.contains(char)
+
     /** Determines whether the given character is a channel user mode (e.g. "o", "v"). */
     fun isMode(char: Char) = modes.contains(char)
+
     /** Gets the mode corresponding to the given prefix (e.g. "@" -> "o"). */
     fun getMode(prefix: Char) = modes[prefixes.indexOf(prefix)]
+
     /** Gets the modes corresponding to the given prefixes (e.g. "@+" -> "ov"). */
     fun getModes(prefixes: String) = String(prefixes.map(this::getMode).toCharArray())
 
@@ -161,18 +178,25 @@ data class ModePrefixMapping(val modes: String, val prefixes: String) {
 sealed class ServerFeature<T : Any>(val name: String, val type: KClass<T>, val default: T? = null) {
     /** The network the server says it belongs to. */
     object Network : ServerFeature<String>("NETWORK", String::class)
+
     /** The case mapping the server uses, defaulting to RFC. */
     object ServerCaseMapping : ServerFeature<CaseMapping>("CASEMAPPING", CaseMapping::class, CaseMapping.Rfc)
+
     /** The mode prefixes the server uses, defaulting to ov/@+. */
     object ModePrefixes : ServerFeature<ModePrefixMapping>("PREFIX", ModePrefixMapping::class, ModePrefixMapping("ov", "@+"))
+
     /** The maximum number of channels a client may join. */
     object MaximumChannels : ServerFeature<Int>("MAXCHANNELS", Int::class) // TODO: CHANLIMIT also exists
+
     /** The modes supported in channels. */
     object ChannelModes : ServerFeature<Array<String>>("CHANMODES", Array<String>::class)
+
     /** The types of channels supported. */
     object ChannelTypes : ServerFeature<String>("CHANTYPES", String::class, "#&")
+
     /** The maximum length of a channel name, defaulting to 200. */
     object MaximumChannelNameLength : ServerFeature<Int>("CHANNELLEN", Int::class, 200)
+
     /** Whether or not the server supports extended who. */
     object WhoxSupport : ServerFeature<Boolean>("WHOX", Boolean::class, false)
 }

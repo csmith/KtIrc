@@ -4,7 +4,7 @@ import com.dmdirc.ktirc.IrcClient
 import com.dmdirc.ktirc.events.IrcEvent
 import com.dmdirc.ktirc.events.handlers.EventHandler
 import com.dmdirc.ktirc.events.mutators.EventMutator
-import com.dmdirc.ktirc.messages.MessageProcessor
+import com.dmdirc.ktirc.messages.processors.MessageProcessor
 import com.dmdirc.ktirc.model.IrcMessage
 import com.dmdirc.ktirc.util.logger
 import kotlinx.coroutines.channels.ReceiveChannel

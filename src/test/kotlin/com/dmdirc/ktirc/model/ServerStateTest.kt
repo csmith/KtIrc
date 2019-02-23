@@ -2,6 +2,7 @@ package com.dmdirc.ktirc.model
 
 import com.dmdirc.ktirc.TestConstants
 import com.dmdirc.ktirc.events.EventMetadata
+import kotlinx.coroutines.channels.Channel
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 
@@ -61,6 +62,19 @@ internal class ServerStateTest {
     }
 
     @Test
+    fun `indicates labels are enabled when cap is present`() {
+        val serverState = ServerState("acidBurn", "")
+        serverState.capabilities.enabledCapabilities[Capability.LabeledResponse] = ""
+        assertTrue(serverState.supportsLabeledResponses)
+    }
+
+    @Test
+    fun `indicates labels are not enabled when cap is absent`() {
+        val serverState = ServerState("acidBurn", "")
+        assertFalse(serverState.supportsLabeledResponses)
+    }
+
+    @Test
     fun `reset clears all state`() = with(ServerState("acidBurn", "")) {
         receivedWelcome = true
         status = ServerStatus.Connecting
@@ -71,6 +85,7 @@ internal class ServerStateTest {
         sasl.saslBuffer = "in progress"
         batches["batch"] = Batch("type", emptyList(), EventMetadata(TestConstants.time))
         labelCounter.set(100)
+        labelChannels["#thegibson"] = Channel(1)
 
         reset()
 
@@ -83,6 +98,7 @@ internal class ServerStateTest {
         assertEquals("", sasl.saslBuffer)
         assertTrue(batches.isEmpty())
         assertEquals(0, labelCounter.get())
+        assertTrue(labelChannels.isEmpty())
     }
 
 }

@@ -8,14 +8,19 @@ import com.dmdirc.ktirc.io.LineBufferedSocket
 import com.dmdirc.ktirc.io.MessageHandler
 import com.dmdirc.ktirc.io.MessageParser
 import com.dmdirc.ktirc.messages.*
+import com.dmdirc.ktirc.messages.processors.messageProcessors
 import com.dmdirc.ktirc.model.*
 import com.dmdirc.ktirc.util.currentTimeProvider
 import com.dmdirc.ktirc.util.generateLabel
 import com.dmdirc.ktirc.util.logger
 import io.ktor.util.KtorExperimentalAPI
 import kotlinx.coroutines.*
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.map
+import kotlinx.coroutines.time.withTimeoutOrNull
+import java.time.Duration
 import java.util.concurrent.atomic.AtomicBoolean
+import java.util.logging.Level
 
 /**
  * Concrete implementation of an [IrcClient].
@@ -32,6 +37,8 @@ internal class IrcClientImpl(private val config: IrcClientConfig) : IrcClient, C
     @ExperimentalCoroutinesApi
     @KtorExperimentalAPI
     internal var socketFactory: (CoroutineScope, String, Int, Boolean) -> LineBufferedSocket = ::KtorLineBufferedSocket
+
+    internal var asyncTimeout = Duration.ofSeconds(20)
 
     override var behaviour = config.behaviour
 
@@ -57,16 +64,17 @@ internal class IrcClientImpl(private val config: IrcClientConfig) : IrcClient, C
                 ?: log.warning { "No send channel for command: $command" }
     }
 
-    // TODO: This will become sendAsync and return a Deferred<IrcEvent>
-    internal fun sendWithLabel(tags: Map<MessageTag, String>, command: String, vararg arguments: String) {
-        maybeEchoMessage(command, arguments)
-        val tagseToSend = if (Capability.LabeledResponse in serverState.capabilities.enabledCapabilities) {
-            tags + (MessageTag.Label to generateLabel(this))
+    override fun sendAsync(tags: Map<MessageTag, String>, command: String, vararg arguments: String) = async {
+        if (serverState.supportsLabeledResponses) {
+            val label = generateLabel(this@IrcClientImpl)
+            val channel = Channel<IrcEvent>(1)
+            serverState.labelChannels[label] = channel
+            send(tags + (MessageTag.Label to label), command, *arguments)
+            withTimeoutOrNull(asyncTimeout) { channel.receive() }.also { serverState.labelChannels.remove(label) }
         } else {
-            tags
+            send(tags, command, *arguments)
+            null
         }
-        socket?.sendChannel?.offer(messageBuilder.build(tagseToSend, command, arguments))
-                ?: log.warning { "No send channel for command: $command" }
     }
 
     override fun connect() {
@@ -88,6 +96,7 @@ internal class IrcClientImpl(private val config: IrcClientConfig) : IrcClient, C
                     sendUser(config.profile.username, config.profile.realName)
                     messageHandler.processMessages(this@IrcClientImpl, receiveChannel.map { parser.parse(it) })
                 } catch (ex: Exception) {
+                    log.log(Level.SEVERE, ex) { "Error connecting to ${config.server.host}:${config.server.port}" }
                     emitEvent(ServerConnectionError(EventMetadata(currentTimeProvider()), ex.toConnectionError(), ex.localizedMessage))
                 }
 

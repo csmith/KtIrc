@@ -37,8 +37,8 @@ repositories {
 dependencies {
     implementation(kotlin("stdlib-jdk8", "1.3.21"))
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.1.1")
-    implementation("io.ktor:ktor-network:1.1.2")
-    implementation("io.ktor:ktor-network-tls:1.1.2")
+    implementation("io.ktor:ktor-network:1.1.3")
+    implementation("io.ktor:ktor-network-tls:1.1.3")
 
     testImplementation("org.junit.jupiter:junit-jupiter-api:5.4.0")
     testImplementation("org.junit.jupiter:junit-jupiter-params:5.4.0")
