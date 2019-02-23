@@ -1,5 +1,6 @@
 vNEXT (in development)
 
+* Added NickChangeFailed event for when nicknames are in use, banned, etc
  * (Internal) Moved message processors into their own package
 
 v0.10.0

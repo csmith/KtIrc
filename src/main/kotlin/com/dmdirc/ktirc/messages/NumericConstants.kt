@@ -16,6 +16,10 @@ internal const val RPL_MOTDSTART = "375"
 internal const val RPL_ENDOFMOTD = "376"
 
 internal const val ERR_NOMOTD = "422"
+internal const val ERR_NONICKNAMEGIVEN = "431"
+internal const val ERR_ERRONEUSNICKNAME = "432"
+internal const val ERR_NICKNAMEINUSE = "433"
+internal const val ERR_NICKCOLLISION = "436"
 
 internal const val RPL_SASLSUCCESS = "903"
 internal const val ERR_SASLFAIL = "904"

@@ -29,6 +29,7 @@ internal val messageProcessors = listOf(
         ModeProcessor(),
         MotdProcessor(),
         NamesProcessor(),
+        NickChangeErrorProcessor(),
         NickProcessor(),
         NoticeProcessor(),
         PartProcessor(),
