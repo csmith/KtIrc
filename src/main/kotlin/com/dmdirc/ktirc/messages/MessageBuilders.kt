@@ -10,10 +10,15 @@ internal fun IrcClient.sendCapabilityList() = send("CAP", "LS", "302")
 internal fun IrcClient.sendCapabilityEnd() = send("CAP", "END")
 
 /** Sends a message requesting the specified caps are enabled. */
-internal fun IrcClient.sendCapabilityRequest(capabilities: Collection<String>) = send("CAP", "REQ", capabilities.joinToString(" "))
+internal fun IrcClient.sendCapabilityRequest(capabilities: Collection<String>) =
+        send("CAP", "REQ", capabilities.joinToString(" "))
 
 /** Sends a request to join the given channel. */
 fun IrcClient.sendJoin(channel: String) = send("JOIN", channel)
+
+/** Sends a request to part the given channel. */
+fun IrcClient.sendPart(channel: String, reason: String? = null) =
+        reason?.let { send("PART", channel, reason) } ?: send("PART", channel)
 
 /** Sends a request to see the modes of a given target. */
 fun IrcClient.sendModeRequest(target: String) = send("MODE", target)

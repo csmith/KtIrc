@@ -29,6 +29,18 @@ internal class MessageBuildersTest {
     }
 
     @Test
+    fun `sendPart sends correct PART message without reason`() {
+        mockClient.sendPart("#TheGibson")
+        verify { mockClient.send("PART", "#TheGibson") }
+    }
+
+    @Test
+    fun `sendPart sends correct PART message with reason`() {
+        mockClient.sendPart("#TheGibson", "Mess with the best...")
+        verify { mockClient.send("PART", "#TheGibson", "Mess with the best...") }
+    }
+
+    @Test
     fun `sendModeRequest sends correct MODE message`() {
         mockClient.sendModeRequest("#TheGibson")
         verify { mockClient.send("MODE", "#TheGibson") }
