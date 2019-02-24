@@ -1,5 +1,7 @@
 vNEXT (in development)
 
+v0.10.1
+
  * Added NickChangeFailed event for when nicknames are in use, banned, etc
  * Added sendPart method
  * Fix occasional ConcurrentModificationException when adding state
