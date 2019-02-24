@@ -27,7 +27,7 @@ import java.util.logging.Level
  */
 // TODO: How should alternative nicknames work?
 // TODO: Should IRC Client take a pool of servers and rotate through, or make the caller do that?
-internal class IrcClientImpl(private val config: IrcClientConfig) : IrcClient, CoroutineScope {
+internal class IrcClientImpl(private val config: IrcClientConfig) : ExperimentalIrcClient, CoroutineScope {
 
     private val log by logger()
 

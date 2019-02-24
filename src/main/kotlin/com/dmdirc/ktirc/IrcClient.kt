@@ -90,39 +90,6 @@ interface IrcClient {
     fun send(command: String, vararg arguments: String) = send(emptyMap(), command, *arguments)
 
     /**
-     * Sends the given command to the IRC server, and waits for a response back.
-     *
-     * This should only be needed to send raw/custom commands; standard messages can be sent using the
-     * extension methods in [com.dmdirc.ktirc.messages] such as TODO: sendJoinAsync.
-     *
-     * This method will return immediately. If the server supports the labeled-responses capability,
-     * the returned [Deferred] will be eventually populated with the response from the server. If
-     * the server does not support the capability, or the response times out, `null` will be supplied.
-     *
-     * @param command The command to be sent.
-     * @param arguments The arguments to the command.
-     * @return A deferred [IrcEvent]? that contains the server's response to the command.
-     */
-    fun sendAsync(command: String, vararg arguments: String) = sendAsync(emptyMap(),  command, *arguments)
-
-    /**
-     * Sends the given command to the IRC server, and waits for a response back.
-     *
-     * This should only be needed to send raw/custom commands; standard messages can be sent using the
-     * extension methods in [com.dmdirc.ktirc.messages] such as TODO: sendJoinAsync.
-     *
-     * This method will return immediately. If the server supports the labeled-responses capability,
-     * the returned [Deferred] will be eventually populated with the response from the server. If
-     * the server does not support the capability, or the response times out, `null` will be supplied.
-     *
-     * @param tags The IRCv3 tags to prefix the message with, if any.
-     * @param command The command to be sent.
-     * @param arguments The arguments to the command.
-     * @return A deferred [IrcEvent]? that contains the server's response to the command.
-     */
-    fun sendAsync(tags: Map<MessageTag, String>, command: String, vararg arguments: String): Deferred<IrcEvent?>
-
-    /**
      * Registers a new handler for all events on this connection.
      *
      * All events are subclasses of [IrcEvent]; the idiomatic way to handle them is using a `when` statement:
@@ -158,6 +125,43 @@ interface IrcClient {
      * [com.dmdirc.ktirc.events.ServerReady] event has been received.
      */
     fun isChannel(target: String) = target.isNotEmpty() && serverState.channelTypes.contains(target[0])
+
+}
+
+internal interface ExperimentalIrcClient : IrcClient {
+
+    /**
+     * Sends the given command to the IRC server, and waits for a response back.
+     *
+     * This should only be needed to send raw/custom commands; standard messages can be sent using the
+     * extension methods in [com.dmdirc.ktirc.messages] such as TODO: sendJoinAsync.
+     *
+     * This method will return immediately. If the server supports the labeled-responses capability,
+     * the returned [Deferred] will be eventually populated with the response from the server. If
+     * the server does not support the capability, or the response times out, `null` will be supplied.
+     *
+     * @param command The command to be sent.
+     * @param arguments The arguments to the command.
+     * @return A deferred [IrcEvent]? that contains the server's response to the command.
+     */
+    fun sendAsync(command: String, vararg arguments: String) = sendAsync(emptyMap(),  command, *arguments)
+
+    /**
+     * Sends the given command to the IRC server, and waits for a response back.
+     *
+     * This should only be needed to send raw/custom commands; standard messages can be sent using the
+     * extension methods in [com.dmdirc.ktirc.messages] such as TODO: sendJoinAsync.
+     *
+     * This method will return immediately. If the server supports the labeled-responses capability,
+     * the returned [Deferred] will be eventually populated with the response from the server. If
+     * the server does not support the capability, or the response times out, `null` will be supplied.
+     *
+     * @param tags The IRCv3 tags to prefix the message with, if any.
+     * @param command The command to be sent.
+     * @param arguments The arguments to the command.
+     * @return A deferred [IrcEvent]? that contains the server's response to the command.
+     */
+    fun sendAsync(tags: Map<MessageTag, String>, command: String, vararg arguments: String): Deferred<IrcEvent?>
 
 }
 

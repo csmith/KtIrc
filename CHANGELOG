@@ -4,6 +4,7 @@ vNEXT (in development)
  * Added sendPart method
  * Fix occasional ConcurrentModificationException when adding state
  * (Internal) Moved message processors into their own package
+ * (Internal) Added ExperimentalIrcClient interface for features not yet ready for release
 
 v0.10.0
 
