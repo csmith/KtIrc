@@ -1,13 +1,14 @@
 package com.dmdirc.ktirc.model
 
 import com.dmdirc.ktirc.io.CaseMapping
+import java.util.*
 
 /**
  * Provides a case-insensitive mapping from a String to some value, according to the provided [CaseMapping].
  */
 abstract class CaseInsensitiveMap<T>(private val caseMappingProvider: () -> CaseMapping, private val nameOf: (T) -> String) : Iterable<T> {
 
-    private val values = HashSet<T>()
+    private val values = Collections.synchronizedSet(HashSet<T>())
 
     /** Gets the value of the given key, if present. */
     operator fun get(name: String) = values.find { caseMappingProvider().areEquivalent(nameOf(it), name) }
