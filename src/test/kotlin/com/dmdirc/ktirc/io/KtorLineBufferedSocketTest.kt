@@ -114,6 +114,25 @@ internal class KtorLineBufferedSocketTest {
     }
 
     @Test
+    fun `KtorLineBufferedSocket can receive multiple long lines of text`() = runBlocking {
+        ServerSocket(12321).use { serverSocket ->
+            val socket = KtorLineBufferedSocket(GlobalScope, "localhost", 12321)
+            val line1 = "abcdefghijklmnopqrstuvwxyz".repeat(500)
+            val line2 = "1234567890987654321[];'#,.".repeat(500)
+            val line3 = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".repeat(500)
+            GlobalScope.launch {
+                serverSocket.accept().getOutputStream().write("$line1\r\n$line2\r$line3\n".toByteArray())
+            }
+
+            socket.connect()
+            val lineProducer = socket.receiveChannel
+            assertEquals(line1, String(lineProducer.receive()))
+            assertEquals(line2, String(lineProducer.receive()))
+            assertEquals(line3, String(lineProducer.receive()))
+        }
+    }
+
+    @Test
     fun `KtorLineBufferedSocket can receive one line of text over multiple packets`() = runBlocking {
         ServerSocket(12321).use { serverSocket ->
             val socket = KtorLineBufferedSocket(GlobalScope, "localhost", 12321)

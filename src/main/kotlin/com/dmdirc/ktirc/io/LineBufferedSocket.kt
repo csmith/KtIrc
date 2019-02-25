@@ -80,23 +80,23 @@ internal class KtorLineBufferedSocket(coroutineScope: CoroutineScope, private va
 
     override val receiveChannel
         get() = produce {
-            val lineBuffer = ByteArray(4096)
-            var index = 0
+            val lineBuffer = ByteArray(16384)
+            var nextByteOffset = 0
             while (!readChannel.isClosedForRead) {
-                var start = index
-                val count = readChannel.readAvailable(lineBuffer, index, lineBuffer.size - index)
-                for (i in index until index + count) {
+                var lineStart = 0
+                val bytesRead = readChannel.readAvailable(lineBuffer, nextByteOffset, lineBuffer.size - nextByteOffset)
+                for (i in nextByteOffset until nextByteOffset + bytesRead) {
                     if (lineBuffer[i] == CARRIAGE_RETURN || lineBuffer[i] == LINE_FEED) {
-                        if (start < i) {
-                            val line = lineBuffer.sliceArray(start until i)
+                        if (lineStart < i) {
+                            val line = lineBuffer.sliceArray(lineStart until i)
                             log.fine { "<<< ${String(line)}" }
                             send(line)
                         }
-                        start = i + 1
+                        lineStart = i + 1
                     }
                 }
-                lineBuffer.copyInto(lineBuffer, 0, start)
-                index = count + index - start
+                lineBuffer.copyInto(lineBuffer, 0, lineStart)
+                nextByteOffset += bytesRead - lineStart
             }
         }
 
