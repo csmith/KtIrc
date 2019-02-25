@@ -11,14 +11,14 @@ abstract class CaseInsensitiveMap<T>(private val caseMappingProvider: () -> Case
     private val values = Collections.synchronizedSet(HashSet<T>())
 
     /** Gets the value of the given key, if present. */
-    operator fun get(name: String) = values.find { caseMappingProvider().areEquivalent(nameOf(it), name) }
+    operator fun get(name: String) = synchronized(values) { values.find { caseMappingProvider().areEquivalent(nameOf(it), name) } }
 
-    internal operator fun plusAssign(value: T) {
-        require(get(nameOf(value)) == null) { "Value already registered: ${nameOf(value)}"}
+    internal operator fun plusAssign(value: T): Unit = synchronized(values) {
+        require(get(nameOf(value)) == null) { "Value already registered: ${nameOf(value)}" }
         values.add(value)
     }
 
-    internal operator fun minusAssign(name: String) {
+    internal operator fun minusAssign(name: String): Unit = synchronized(values) {
         values.removeIf { caseMappingProvider().areEquivalent(nameOf(it), name) }
     }
 
@@ -26,11 +26,13 @@ abstract class CaseInsensitiveMap<T>(private val caseMappingProvider: () -> Case
     operator fun contains(name: String) = get(name) != null
 
     /** Provides a read-only iterator over the values in this map. */
-    override fun iterator() = values.iterator().iterator()
+    override fun iterator() = HashSet(values).iterator().iterator()
 
     internal fun clear() = values.clear()
 
-    internal fun removeIf(predicate: (T) -> Boolean) = values.removeIf(predicate)
+    internal fun removeIf(predicate: (T) -> Boolean): Unit = synchronized(values) {
+        values.removeIf(predicate)
+    }
 
 }
 
