@@ -1,5 +1,7 @@
 vNEXT (in development)
 
+v0.10.2
+
  * Fix handling of multiple long lines sometimes dropping part of the line
  * Support lines with 8191 bytes of tags, as allowed by the message-tags spec
  * Fix a few more instances of occasional ConcurrentModificationExceptions
