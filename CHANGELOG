@@ -1,5 +1,7 @@
 vNEXT (in development)
 
+v0.10.3
+
  * Fix issue parsing CTCPs when the content contained multi-byte chars
  * Fixed multiple issues when receiving malformed input from the server:
    * Invalid server-time tags are now ignored and the current time used
