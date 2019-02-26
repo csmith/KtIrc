@@ -3,7 +3,6 @@ package com.dmdirc.ktirc.model
 import com.dmdirc.ktirc.io.CaseMapping
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
 
 internal class CaseInsensitiveMapTest {
 
@@ -13,7 +12,7 @@ internal class CaseInsensitiveMapTest {
     private val map = object : CaseInsensitiveMap<Wrapper>({ caseMapping }, { it -> it.name }) {}
 
     @Test
-    fun `CaseInsensitiveMap stores values`() {
+    fun `stores values`() {
         val value = Wrapper("acidBurn")
 
         map += value
@@ -22,18 +21,18 @@ internal class CaseInsensitiveMapTest {
     }
 
     @Test
-    fun `CaseInsensitiveMap disallows the same value twice`() {
+    fun `ignores the same value twice`() {
         val value = Wrapper("acidBurn")
 
         map += value
+        map += value
 
-        assertThrows<IllegalArgumentException> {
-            map += value
-        }
+        assertSame(value, map["acidBurn"])
+        assertEquals(1, map.count())
     }
 
     @Test
-    fun `CaseInsensitiveMap retrieves values using differently cased keys`() {
+    fun `retrieves values using differently cased keys`() {
         val value = Wrapper("[acidBurn]")
         map += value
 

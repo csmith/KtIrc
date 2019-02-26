@@ -18,12 +18,31 @@ internal class WelcomeProcessorTest {
     }
 
     @Test
-    fun `WelcomeProcessor returns server welcome event`() {
+    fun `returns server welcome event`() {
         val events = processor.process(IrcMessage(emptyMap(), "thegibson.com".toByteArray(), "001", params(
                 "acidBurn", "Welcome to the Internet Relay Network, acidBurn!burn@hacktheplanet.com")))
         assertEquals(1, events.size)
         assertEquals(TestConstants.time, events[0].metadata.time)
         assertEquals("acidBurn", events[0].localNick)
+        assertEquals("thegibson.com", events[0].server)
+    }
+
+    @Test
+    fun `returns blank server if no prefix is specified`() {
+        val events = processor.process(IrcMessage(emptyMap(), null, "001", params(
+                "acidBurn", "Welcome to the Internet Relay Network, acidBurn!burn@hacktheplanet.com")))
+        assertEquals(1, events.size)
+        assertEquals(TestConstants.time, events[0].metadata.time)
+        assertEquals("acidBurn", events[0].localNick)
+        assertEquals("", events[0].server)
+    }
+
+    @Test
+    fun `returns blank local nickname if no parameters provided`() {
+        val events = processor.process(IrcMessage(emptyMap(), "thegibson.com".toByteArray(), "001", params()))
+        assertEquals(1, events.size)
+        assertEquals(TestConstants.time, events[0].metadata.time)
+        assertEquals("", events[0].localNick)
         assertEquals("thegibson.com", events[0].server)
     }
 

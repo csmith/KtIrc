@@ -127,4 +127,11 @@ internal class ModeProcessorTest {
         assertFalse(events[0].discovered)
     }
 
+    @Test
+    fun `ignores mode changes with a missing target`() {
+        val events = ModeProcessor().process(
+                IrcMessage(emptyMap(), "acidburn!libby@root.localhost".toByteArray(), "MODE", params("+hax")))
+        assertEquals(0, events.size)
+    }
+
 }

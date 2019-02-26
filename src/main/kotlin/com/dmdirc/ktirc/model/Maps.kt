@@ -14,7 +14,6 @@ abstract class CaseInsensitiveMap<T>(private val caseMappingProvider: () -> Case
     operator fun get(name: String) = synchronized(values) { values.find { caseMappingProvider().areEquivalent(nameOf(it), name) } }
 
     internal operator fun plusAssign(value: T): Unit = synchronized(values) {
-        require(get(nameOf(value)) == null) { "Value already registered: ${nameOf(value)}" }
         values.add(value)
     }
 

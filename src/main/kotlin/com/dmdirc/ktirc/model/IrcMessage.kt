@@ -23,17 +23,19 @@ internal class IrcMessage(val tags: Map<MessageTag, String>, val prefix: ByteArr
             label = tags[MessageTag.Label])
 
     /** The user that generated the message, if any. */
-    val sourceUser by lazy {
-        prefix?.asUser()?.apply {
-            tags[MessageTag.AccountName]?.let { account = it }
-        }
+    val sourceUser = prefix?.asUser()?.apply {
+        tags[MessageTag.AccountName]?.let { account = it }
     }
 
     private fun String.toLocalDateOrNull() = try {
         LocalDateTime.ofInstant(Instant.parse(this), currentTimeZoneProvider())
-    } catch(e: Exception) {
+    } catch (e: Exception) {
         log.log(Level.WARNING, e) { "Received unparsable server-time tag: $this" }
         null
+    }
+
+    override fun toString(): String {
+        return "IrcMessage(tags=$tags, prefix=${prefix?.let { String(prefix) }}, command='$command', params=${params.map { String(it) }}, metadata=$metadata, sourceUser=$sourceUser)"
     }
 
 }

@@ -75,6 +75,12 @@ internal class TopicProcessorTest {
         assertEquals(0, events.size)
     }
 
+    @Test
+    fun `does nothing when topic is changed with no channel`() {
+        val events = processor.process(IrcMessage(emptyMap(), "acidBurn!acidB@the.gibson".toByteArray(), "TOPIC", params("Hack the planet!")))
+        assertEquals(0, events.size)
+    }
+
     private fun unixtime() = TestConstants.otherTime.toEpochSecond(currentTimeZoneProvider().rules.getOffset(TestConstants.time)).toString()
 
 }

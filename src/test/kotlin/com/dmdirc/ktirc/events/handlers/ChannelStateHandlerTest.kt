@@ -48,6 +48,17 @@ internal class ChannelStateHandlerTest {
     }
 
     @Test
+    fun `ignores duplicate joiners`() {
+        fakeChannelState += ChannelState("#thegibson") { CaseMapping.Rfc }
+
+        handler.processEvent(ircClient, ChannelJoined(EventMetadata(TestConstants.time), User("zerocool", "dade", "root.localhost"), "#thegibson"))
+        handler.processEvent(ircClient, ChannelJoined(EventMetadata(TestConstants.time), User("zerocool", "dade", "root.localhost"), "#thegibson"))
+
+        assertTrue("zerocool" in fakeChannelState["#thegibson"]?.users!!)
+        assertEquals(1, fakeChannelState["#thegibson"]?.users?.count())
+    }
+
+    @Test
     fun `clears existing users when getting a new list`() {
         val channel = ChannelState("#thegibson") { CaseMapping.Rfc }
         channel.users += ChannelUser("acidBurn")

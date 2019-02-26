@@ -92,4 +92,11 @@ internal class NoticeProcessorTest {
                 IrcMessage(emptyMap(), null, "NOTICE", params("#crashandburn", "\u0001BORK\u0001")))
         assertEquals(0, events.size)
     }
+
+    @Test
+    fun `does nothing if target missing for CTCP replies`() {
+        val events = NoticeProcessor().process(
+                IrcMessage(emptyMap(), "acidburn!libby@root.localhost".toByteArray(), "NOTICE", params("\u0001BORK\u0001")))
+        assertEquals(0, events.size)
+    }
 }

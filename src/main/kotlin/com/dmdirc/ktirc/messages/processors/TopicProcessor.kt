@@ -9,10 +9,13 @@ import com.dmdirc.ktirc.messages.RPL_TOPICWHOTIME
 import com.dmdirc.ktirc.model.IrcMessage
 import com.dmdirc.ktirc.model.asUser
 import com.dmdirc.ktirc.util.currentTimeZoneProvider
+import com.dmdirc.ktirc.util.logger
 import java.time.Instant
 import java.time.LocalDateTime
 
 internal class TopicProcessor : MessageProcessor {
+
+    private val log by logger()
 
     override val commands = arrayOf(RPL_TOPIC, RPL_TOPICWHOTIME, RPL_NOTOPIC, "TOPIC")
 
@@ -22,7 +25,13 @@ internal class TopicProcessor : MessageProcessor {
             RPL_NOTOPIC -> yield(ChannelTopicDiscovered(message.metadata, message.channel, null))
             RPL_TOPICWHOTIME -> yield(ChannelTopicMetadataDiscovered(
                     message.metadata, message.channel, message.params[2].asUser(), message.topicSetTime))
-            "TOPIC" -> message.sourceUser?.let { yield(ChannelTopicChanged(message.metadata, it, String(message.params[0]), String(message.params[1]))) }
+            "TOPIC" -> message.sourceUser?.let {
+                if (message.params.size >= 2) {
+                    yield(ChannelTopicChanged(message.metadata, it, String(message.params[0]), String(message.params[1])))
+                } else {
+                    log.warning { "Discarding TOPIC line with insufficient parameters: $message" }
+                }
+            }
         }
     }.toList()
 

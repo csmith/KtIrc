@@ -14,14 +14,21 @@ internal class CapabilityProcessorTest {
     private val processor = CapabilityProcessor()
 
     @Test
-    fun `CapabilityProcessor does nothing for unknown subcommand`() {
+    fun `does nothing for unknown subcommand`() {
         val events = processor.process(IrcMessage(emptyMap(), "the.gibson".toByteArray(), "CAP", params("*", "FOO")))
 
         assertTrue(events.isEmpty())
     }
 
     @Test
-    fun `CapabilityProcessor raises ServerCapabilitiesReceived event given no capabilities`() {
+    fun `does nothing for missing subcommand`() {
+        val events = processor.process(IrcMessage(emptyMap(), "the.gibson".toByteArray(), "CAP", params("*")))
+
+        assertTrue(events.isEmpty())
+    }
+
+    @Test
+    fun `raises ServerCapabilitiesReceived event given no capabilities`() {
         val events = processor.process(IrcMessage(emptyMap(), "the.gibson".toByteArray(), "CAP", params("*", "LS", "")))
 
         val receivedEvent = events.filterIsInstance<ServerCapabilitiesReceived>()[0]
@@ -30,7 +37,7 @@ internal class CapabilityProcessorTest {
 
 
     @Test
-    fun `CapabilityProcessor raises ServerCapabilitiesReceived event with known capabilities`() {
+    fun `raises ServerCapabilitiesReceived event with known capabilities`() {
         val events = processor.process(IrcMessage(emptyMap(), "the.gibson".toByteArray(), "CAP", params("*", "LS", "chghost extended-join invalid")))
 
         val receivedEvent = events.filterIsInstance<ServerCapabilitiesReceived>()[0]
@@ -40,7 +47,7 @@ internal class CapabilityProcessorTest {
     }
 
     @Test
-    fun `CapabilityProcessor raises ServerCapabilitiesReceived event with values for capabilities`() {
+    fun `raises ServerCapabilitiesReceived event with values for capabilities`() {
         val events = processor.process(IrcMessage(emptyMap(), "the.gibson".toByteArray(), "CAP", params("*", "LS", "chghost=test123 extended-join=abc=def invalid")))
 
         val receivedEvent = events.filterIsInstance<ServerCapabilitiesReceived>()[0]
@@ -50,7 +57,7 @@ internal class CapabilityProcessorTest {
     }
 
     @Test
-    fun `CapabilityProcessor overwrites earlier values with later ones for identical capabilities`() {
+    fun `overwrites earlier values with later ones for identical capabilities`() {
         val events = processor.process(IrcMessage(emptyMap(), "the.gibson".toByteArray(), "CAP", params("*", "LS", "chghost=test123 chghost chghost=456")))
 
         val receivedEvent = events.filterIsInstance<ServerCapabilitiesReceived>()[0]
@@ -60,7 +67,7 @@ internal class CapabilityProcessorTest {
 
 
     @Test
-    fun `CapabilityProcessor raises ServerCapabilitiesReceived event with known capabilities for multi-line responses`() {
+    fun `raises ServerCapabilitiesReceived event with known capabilities for multi-line responses`() {
         val events = processor.process(IrcMessage(emptyMap(), "the.gibson".toByteArray(), "CAP", params("*", "LS", "*", "chghost extended-join invalid")))
 
         val receivedEvent = events.filterIsInstance<ServerCapabilitiesReceived>()[0]
@@ -70,7 +77,7 @@ internal class CapabilityProcessorTest {
     }
 
     @Test
-    fun `CapabilityProcessor raises ServerCapabilitiesFinished event for final LS responses`() {
+    fun `raises ServerCapabilitiesFinished event for final LS responses`() {
         val events = processor.process(IrcMessage(emptyMap(), "the.gibson".toByteArray(), "CAP", params("*", "LS", "chghost extended-join invalid")))
 
         assertEquals(2, events.size)
@@ -78,7 +85,7 @@ internal class CapabilityProcessorTest {
     }
 
     @Test
-    fun `CapabilityProcessor raises ServerCapabilitiesAcknowledged event`() {
+    fun `raises ServerCapabilitiesAcknowledged event`() {
         val events = processor.process(IrcMessage(emptyMap(), "the.gibson".toByteArray(), "CAP", params("*", "ACK", "chghost=test123 extended-join=abc=def invalid")))
 
         val receivedEvent = events.filterIsInstance<ServerCapabilitiesAcknowledged>()[0]

@@ -14,10 +14,17 @@ internal class CapabilityProcessor : MessageProcessor {
 
     override val commands = arrayOf("CAP")
 
-    override fun process(message: IrcMessage) = when (message.subCommand) {
-        "LS" -> handleList(message.metadata, message.subCommandArguments)
-        "ACK" -> listOf(ServerCapabilitiesAcknowledged(message.metadata, message.params.capabilities))
-        else -> emptyList()
+    override fun process(message: IrcMessage) = when {
+        message.params.size < 2 -> {
+            log.warning { "Discarding CAP with insufficient args: $message" }
+            emptyList()
+        }
+        message.subCommand == "LS" -> handleList(message.metadata, message.subCommandArguments)
+        message.subCommand == "ACK" -> listOf(ServerCapabilitiesAcknowledged(message.metadata, message.params.capabilities))
+        else -> {
+            log.warning { "Discarding CAP with unknown subcommand: $message" }
+            emptyList()
+        }
     }
 
     private fun handleList(metadata: EventMetadata, lsParams: List<ByteArray>) = sequence {

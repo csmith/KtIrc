@@ -8,8 +8,12 @@ internal class WelcomeProcessor : MessageProcessor {
 
     override val commands = arrayOf(RPL_WELCOME)
 
-    override fun process(message: IrcMessage) = listOf(ServerWelcome(message.metadata, message.serverName(), String(message.params[0])))
+    override fun process(message: IrcMessage) = listOf(ServerWelcome(
+            message.metadata,
+            message.serverName(),
+            message.localNick()))
 
     private fun IrcMessage.serverName() = prefix?.let { String(it) } ?: ""
+    private fun IrcMessage.localNick() = if (params.isEmpty()) "" else String(params[0])
 
 }

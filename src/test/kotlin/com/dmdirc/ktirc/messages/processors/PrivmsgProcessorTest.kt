@@ -119,4 +119,11 @@ internal class PrivmsgProcessorTest {
                 IrcMessage(emptyMap(), null, "PRIVMSG", params("#crashandburn", "hack the planet!")))
         assertEquals(0, events.size)
     }
+
+    @Test
+    fun `does nothing if arguments missing`() {
+        val events = PrivmsgProcessor().process(
+                IrcMessage(emptyMap(), "acidburn!libby@root.localhost".toByteArray(), "PRIVMSG", params("hack the planet!")))
+        assertEquals(0, events.size)
+    }
 }
