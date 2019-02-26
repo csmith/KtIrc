@@ -3,17 +3,21 @@ package com.dmdirc.ktirc.model
 import com.dmdirc.ktirc.events.EventMetadata
 import com.dmdirc.ktirc.util.currentTimeProvider
 import com.dmdirc.ktirc.util.currentTimeZoneProvider
+import com.dmdirc.ktirc.util.logger
 import java.time.Instant
 import java.time.LocalDateTime
+import java.util.logging.Level
 
 /**
  * Represents an IRC protocol message.
  */
 internal class IrcMessage(val tags: Map<MessageTag, String>, val prefix: ByteArray?, val command: String, val params: List<ByteArray>) {
 
+    private val log by logger()
+
     /** The time at which the message was sent, or our best guess at it. */
     val metadata = EventMetadata(
-            time = time,
+            time = tags[MessageTag.ServerTime]?.toLocalDateOrNull() ?: currentTimeProvider(),
             batchId = tags[MessageTag.Batch],
             messageId = tags[MessageTag.MessageId],
             label = tags[MessageTag.Label])
@@ -25,11 +29,12 @@ internal class IrcMessage(val tags: Map<MessageTag, String>, val prefix: ByteArr
         }
     }
 
-    private val time
-        get() = when (MessageTag.ServerTime in tags) {
-            true -> LocalDateTime.ofInstant(Instant.parse(tags[MessageTag.ServerTime]), currentTimeZoneProvider())
-            false -> currentTimeProvider()
-        }
+    private fun String.toLocalDateOrNull() = try {
+        LocalDateTime.ofInstant(Instant.parse(this), currentTimeZoneProvider())
+    } catch(e: Exception) {
+        log.log(Level.WARNING, e) { "Received unparsable server-time tag: $this" }
+        null
+    }
 
 }
 

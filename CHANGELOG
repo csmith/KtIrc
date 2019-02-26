@@ -1,6 +1,7 @@
 vNEXT (in development)
 
  * Fix issue parsing CTCPs when the content contained multi-byte chars
+ * If the server provides an invalid timestamp, the event now defaults to the current time
 
 v0.10.2
 
