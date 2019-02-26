@@ -60,7 +60,7 @@ internal class NoticeProcessorTest {
 
     @Test
     fun `raises CTCP reply received event with content when containing unicode chars`() {
-        val events = PrivmsgProcessor().process(
+        val events = NoticeProcessor().process(
                 IrcMessage(emptyMap(), "acidburn!libby@root.localhost".toByteArray(), "NOTICE", params("#crashandburn", "\u0001PING 👩‍💻\u0001")))
         assertEquals(1, events.size)
 
