@@ -44,6 +44,16 @@ sealed class TargetedEvent(metadata: EventMetadata, val target: String) : IrcEve
 
 }
 
+/**
+ * Interface implemented by events that come from a particular user.
+ */
+interface SourcedEvent {
+
+    /** The user that caused the event. */
+    val user: User
+
+}
+
 /** Raised when a connection to the server is being established. */
 class ServerConnecting(metadata: EventMetadata) : IrcEvent(metadata)
 
@@ -69,19 +79,19 @@ class ServerFeaturesUpdated(metadata: EventMetadata, val serverFeatures: ServerF
 class PingReceived(metadata: EventMetadata, val nonce: ByteArray) : IrcEvent(metadata)
 
 /** Raised when a user joins a channel. */
-class ChannelJoined(metadata: EventMetadata, val user: User, channel: String) : TargetedEvent(metadata, channel)
+class ChannelJoined(metadata: EventMetadata, override val user: User, channel: String) : TargetedEvent(metadata, channel), SourcedEvent
 
 /** Raised when a user leaves a channel. */
-class ChannelParted(metadata: EventMetadata, val user: User, channel: String, val reason: String = "") : TargetedEvent(metadata, channel)
+class ChannelParted(metadata: EventMetadata, override val user: User, channel: String, val reason: String = "") : TargetedEvent(metadata, channel), SourcedEvent
 
 /** Raised when a [victim] is kicked from a channel. */
-class ChannelUserKicked(metadata: EventMetadata, val user: User, channel: String, val victim: String, val reason: String = "") : TargetedEvent(metadata, channel)
+class ChannelUserKicked(metadata: EventMetadata, override val user: User, channel: String, val victim: String, val reason: String = "") : TargetedEvent(metadata, channel), SourcedEvent
 
 /** Raised when a user quits, and is in a channel. */
-class ChannelQuit(metadata: EventMetadata, val user: User, channel: String, val reason: String = "") : TargetedEvent(metadata, channel)
+class ChannelQuit(metadata: EventMetadata, override val user: User, channel: String, val reason: String = "") : TargetedEvent(metadata, channel), SourcedEvent
 
 /** Raised when a user changes nickname, and is in a channel. */
-class ChannelNickChanged(metadata: EventMetadata, val user: User, channel: String, val newNick: String) : TargetedEvent(metadata, channel)
+class ChannelNickChanged(metadata: EventMetadata, override val user: User, channel: String, val newNick: String) : TargetedEvent(metadata, channel), SourcedEvent
 
 /** Raised when a batch of the channel's member list has been received. More batches may follow. */
 class ChannelNamesReceived(metadata: EventMetadata, channel: String, val names: List<String>) : TargetedEvent(metadata, channel)
@@ -100,10 +110,10 @@ class ChannelTopicMetadataDiscovered(metadata: EventMetadata, channel: String, v
  *
  * If the topic has been unset (cleared), [topic] will be `null`
  */
-class ChannelTopicChanged(metadata: EventMetadata, val user: User, channel: String, val topic: String?) : TargetedEvent(metadata, channel)
+class ChannelTopicChanged(metadata: EventMetadata, override val user: User, channel: String, val topic: String?) : TargetedEvent(metadata, channel), SourcedEvent
 
 /** Raised when a message is received. */
-class MessageReceived(metadata: EventMetadata, val user: User, target: String, val message: String) : TargetedEvent(metadata, target) {
+class MessageReceived(metadata: EventMetadata, override val user: User, target: String, val message: String) : TargetedEvent(metadata, target), SourcedEvent {
 
     /** The message ID of this message. */
     @Deprecated("Moved to metadata", replaceWith = ReplaceWith("metadata.messageId"))
@@ -118,10 +128,10 @@ class MessageReceived(metadata: EventMetadata, val user: User, target: String, v
  *
  * The [user] may in fact be a server, or have a nickname of `*` while connecting.
  */
-class NoticeReceived(metadata: EventMetadata, val user: User, target: String, val message: String) : TargetedEvent(metadata, target)
+class NoticeReceived(metadata: EventMetadata, override val user: User, target: String, val message: String) : TargetedEvent(metadata, target), SourcedEvent
 
 /** Raised when an action is received. */
-class ActionReceived(metadata: EventMetadata, val user: User, target: String, val action: String) : TargetedEvent(metadata, target) {
+class ActionReceived(metadata: EventMetadata, override val user: User, target: String, val action: String) : TargetedEvent(metadata, target), SourcedEvent {
 
     /** The message ID of this action. */
     @Deprecated("Moved to metadata", replaceWith = ReplaceWith("metadata.messageId"))
@@ -132,26 +142,26 @@ class ActionReceived(metadata: EventMetadata, val user: User, target: String, va
 }
 
 /** Raised when a CTCP is received. */
-class CtcpReceived(metadata: EventMetadata, val user: User, target: String, val type: String, val content: String) : TargetedEvent(metadata, target)
+class CtcpReceived(metadata: EventMetadata, override val user: User, target: String, val type: String, val content: String) : TargetedEvent(metadata, target), SourcedEvent
 
 /** Raised when a CTCP reply is received. */
-class CtcpReplyReceived(metadata: EventMetadata, val user: User, target: String, val type: String, val content: String) : TargetedEvent(metadata, target)
+class CtcpReplyReceived(metadata: EventMetadata, override val user: User, target: String, val type: String, val content: String) : TargetedEvent(metadata, target), SourcedEvent
 
 /** Raised when a user quits. */
-class UserQuit(metadata: EventMetadata, val user: User, val reason: String = "") : IrcEvent(metadata)
+class UserQuit(metadata: EventMetadata, override val user: User, val reason: String = "") : IrcEvent(metadata), SourcedEvent
 
 /** Raised when a user changes nickname. */
-class UserNickChanged(metadata: EventMetadata, val user: User, val newNick: String) : IrcEvent(metadata)
+class UserNickChanged(metadata: EventMetadata, override val user: User, val newNick: String) : IrcEvent(metadata), SourcedEvent
 
 /** Raised when a user changes hostname. */
-class UserHostChanged(metadata: EventMetadata, val user: User, val newIdent: String, val newHost: String) : IrcEvent(metadata)
+class UserHostChanged(metadata: EventMetadata, override val user: User, val newIdent: String, val newHost: String) : IrcEvent(metadata), SourcedEvent
 
 /**
  * Raised when a user's account changes (i.e., they auth'd or deauth'd with services).
  *
  * This event is only raised if the server supports the `account-notify` capability.
  */
-class UserAccountChanged(metadata: EventMetadata, val user: User, val newAccount: String?) : IrcEvent(metadata)
+class UserAccountChanged(metadata: EventMetadata, override val user: User, val newAccount: String?) : IrcEvent(metadata), SourcedEvent
 
 /** Raised when available server capabilities are received. More batches may follow. */
 class ServerCapabilitiesReceived(metadata: EventMetadata, val capabilities: Map<String, String>) : IrcEvent(metadata)
