@@ -1,5 +1,7 @@
 vNEXT (in development)
 
+ * Fix issue parsing CTCPs when the content contained multi-byte chars
+
 v0.10.2
 
  * Fix handling of multiple long lines sometimes dropping part of the line

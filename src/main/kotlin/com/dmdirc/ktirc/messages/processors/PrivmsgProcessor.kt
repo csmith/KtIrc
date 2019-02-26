@@ -20,7 +20,7 @@ internal class PrivmsgProcessor : MessageProcessor {
     } ?: emptyList()
 
     private fun handleCtcp(message: IrcMessage, user: User): IrcEvent {
-        val content = String(message.params[1]).substring(1 until message.params[1].size - 1)
+        val content = String(message.params[1].sliceArray(1 until message.params[1].size - 1))
         val parts = content.split(' ', limit=2)
         val body = if (parts.size == 2) parts[1] else ""
         return when (parts[0].toUpperCase()) {

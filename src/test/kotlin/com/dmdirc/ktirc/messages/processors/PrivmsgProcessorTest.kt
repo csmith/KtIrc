@@ -86,6 +86,20 @@ internal class PrivmsgProcessorTest {
     }
 
     @Test
+    fun `raises CTCP received event with content when containing unicode chars`() {
+        val events = PrivmsgProcessor().process(
+                IrcMessage(emptyMap(), "acidburn!libby@root.localhost".toByteArray(), "PRIVMSG", params("#crashandburn", "\u0001PING 👩‍💻\u0001")))
+        assertEquals(1, events.size)
+
+        val event = events[0] as CtcpReceived
+        assertEquals(TestConstants.time, event.metadata.time)
+        assertEquals(User("acidburn", "libby", "root.localhost"), event.user)
+        assertEquals("#crashandburn", event.target)
+        assertEquals("PING", event.type)
+        assertEquals("👩‍💻", event.content)
+    }
+
+    @Test
     fun `raises CTCP received event without content`() {
         val events = PrivmsgProcessor().process(
                 IrcMessage(emptyMap(), "acidburn!libby@root.localhost".toByteArray(), "PRIVMSG", params("#crashandburn", "\u0001PING\u0001")))

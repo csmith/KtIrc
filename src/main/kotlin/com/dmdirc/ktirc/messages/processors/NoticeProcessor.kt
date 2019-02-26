@@ -18,7 +18,7 @@ internal class NoticeProcessor : MessageProcessor {
 
     private fun handleCtcp(message: IrcMessage, user: User?): List<IrcEvent> {
         user ?: return emptyList()
-        val content = String(message.params[1]).substring(1 until message.params[1].size - 1)
+        val content = String(message.params[1].sliceArray(1 until message.params[1].size - 1))
         val parts = content.split(' ', limit=2)
         val body = if (parts.size == 2) parts[1] else ""
         return listOf(CtcpReplyReceived(message.metadata, user, String(message.params[0]), parts[0], body))
