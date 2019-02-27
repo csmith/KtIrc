@@ -8,11 +8,13 @@ import kotlinx.coroutines.launch
 internal class LabelledResponseHandler : EventHandler {
 
     override fun processEvent(client: IrcClient, event: IrcEvent) {
-        event.metadata.label?.let {
-            GlobalScope.launch {
-                client.serverState.labelChannels[it]?.send(event)
-            }
-        }
+        client.serverState.asyncResponseState.pendingResponses.values
+                .filter { it.second(event) }
+                .forEach {
+                    GlobalScope.launch {
+                        it.first.send(event)
+                    }
+                }
     }
 
 }

@@ -8,7 +8,7 @@ internal var generateLabel: (IrcClient) -> String = ::defaultGenerateLabel
 
 internal fun defaultGenerateLabel(ircClient: IrcClient): String {
     val time = currentTimeProvider().toEpochSecond(ZoneOffset.UTC)
-    val counter = ircClient.serverState.labelCounter.incrementAndGet()
+    val counter = ircClient.serverState.asyncResponseState.labelCounter.incrementAndGet()
     return ByteArray(6) {
         when {
             it < 3 -> (time shr it and 0xff).toByte()

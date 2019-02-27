@@ -64,17 +64,21 @@ internal class IrcClientImpl(private val config: IrcClientConfig) : Experimental
                 ?: log.warning { "No send channel for command: $command" }
     }
 
-    override fun sendAsync(tags: Map<MessageTag, String>, command: String, vararg arguments: String) = async {
-        if (serverState.supportsLabeledResponses) {
-            val label = generateLabel(this@IrcClientImpl)
-            val channel = Channel<IrcEvent>(1)
-            serverState.labelChannels[label] = channel
+    override fun sendAsync(tags: Map<MessageTag, String>, command: String, arguments: Array<String>, matcher: (IrcEvent) -> Boolean) = async {
+        val label = generateLabel(this@IrcClientImpl)
+        val channel = Channel<IrcEvent>(1)
+
+        if (serverState.asyncResponseState.supportsLabeledResponses) {
+            serverState.asyncResponseState.pendingResponses[label] = channel to { event -> event.metadata.label == label }
             send(tags + (MessageTag.Label to label), command, *arguments)
-            withTimeoutOrNull(asyncTimeout) { channel.receive() }.also { serverState.labelChannels.remove(label) }
         } else {
+            serverState.asyncResponseState.pendingResponses[label] = channel to matcher
             send(tags, command, *arguments)
-            null
         }
+
+        withTimeoutOrNull(asyncTimeout) {
+            channel.receive()
+        }.also { serverState.asyncResponseState.pendingResponses.remove(label) }
     }
 
     override fun connect() {

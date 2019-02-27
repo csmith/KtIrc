@@ -2,6 +2,7 @@ package com.dmdirc.ktirc.model
 
 import com.dmdirc.ktirc.TestConstants
 import com.dmdirc.ktirc.events.EventMetadata
+import com.dmdirc.ktirc.events.IrcEvent
 import kotlinx.coroutines.channels.Channel
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
@@ -65,13 +66,13 @@ internal class ServerStateTest {
     fun `indicates labels are enabled when cap is present`() {
         val serverState = ServerState("acidBurn", "")
         serverState.capabilities.enabledCapabilities[Capability.LabeledResponse] = ""
-        assertTrue(serverState.supportsLabeledResponses)
+        assertTrue(serverState.asyncResponseState.supportsLabeledResponses)
     }
 
     @Test
     fun `indicates labels are not enabled when cap is absent`() {
         val serverState = ServerState("acidBurn", "")
-        assertFalse(serverState.supportsLabeledResponses)
+        assertFalse(serverState.asyncResponseState.supportsLabeledResponses)
     }
 
     @Test
@@ -84,8 +85,8 @@ internal class ServerStateTest {
         capabilities.advertisedCapabilities["sasl"] = "sure"
         sasl.saslBuffer = "in progress"
         batches["batch"] = Batch("type", emptyList(), EventMetadata(TestConstants.time))
-        labelCounter.set(100)
-        labelChannels["#thegibson"] = Channel(1)
+        asyncResponseState.labelCounter.set(100)
+        asyncResponseState.pendingResponses["#thegibson"] = Pair<Channel<IrcEvent>, (IrcEvent) -> Boolean>(Channel(1)) { false }
 
         reset()
 
@@ -97,8 +98,8 @@ internal class ServerStateTest {
         assertTrue(capabilities.advertisedCapabilities.isEmpty())
         assertEquals("", sasl.saslBuffer)
         assertTrue(batches.isEmpty())
-        assertEquals(0, labelCounter.get())
-        assertTrue(labelChannels.isEmpty())
+        assertEquals(0, asyncResponseState.labelCounter.get())
+        assertTrue(asyncResponseState.pendingResponses.isEmpty())
     }
 
 }

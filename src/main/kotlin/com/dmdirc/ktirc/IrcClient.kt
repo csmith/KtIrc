@@ -3,6 +3,7 @@ package com.dmdirc.ktirc
 import com.dmdirc.ktirc.events.IrcEvent
 import com.dmdirc.ktirc.io.CaseMapping
 import com.dmdirc.ktirc.messages.sendJoin
+import com.dmdirc.ktirc.messages.tagMap
 import com.dmdirc.ktirc.model.*
 import com.dmdirc.ktirc.util.RemoveIn
 import kotlinx.coroutines.Deferred
@@ -143,15 +144,19 @@ internal interface ExperimentalIrcClient : IrcClient {
      * This should only be needed to send raw/custom commands; standard messages can be sent using the
      * extension methods in [com.dmdirc.ktirc.messages] such as TODO: sendJoinAsync.
      *
-     * This method will return immediately. If the server supports the labeled-responses capability,
-     * the returned [Deferred] will be eventually populated with the response from the server. If
-     * the server does not support the capability, or the response times out, `null` will be supplied.
+     * This method will return immediately. The returned [Deferred] will eventually be populated with
+     * the server's response. If the server supports the labeled-responses capability, a label will
+     * be added to the outgoing message to identify the correct response; otherwise the [matcher]
+     * will be invoked on all incoming events to select the appropriate response.
+     *
+     * If the response times out, `null` will be supplied instead of an event.
      *
      * @param command The command to be sent.
      * @param arguments The arguments to the command.
+     * @param matcher The matcher to use to find a matching event.
      * @return A deferred [IrcEvent]? that contains the server's response to the command.
      */
-    fun sendAsync(command: String, vararg arguments: String) = sendAsync(emptyMap(),  command, *arguments)
+    fun sendAsync(command: String, arguments: Array<String>, matcher: (IrcEvent) -> Boolean) = sendAsync(tagMap(), command, arguments, matcher)
 
     /**
      * Sends the given command to the IRC server, and waits for a response back.
@@ -159,16 +164,20 @@ internal interface ExperimentalIrcClient : IrcClient {
      * This should only be needed to send raw/custom commands; standard messages can be sent using the
      * extension methods in [com.dmdirc.ktirc.messages] such as TODO: sendJoinAsync.
      *
-     * This method will return immediately. If the server supports the labeled-responses capability,
-     * the returned [Deferred] will be eventually populated with the response from the server. If
-     * the server does not support the capability, or the response times out, `null` will be supplied.
+     * This method will return immediately. The returned [Deferred] will eventually be populated with
+     * the server's response. If the server supports the labeled-responses capability, a label will
+     * be added to the outgoing message to identify the correct response; otherwise the [matcher]
+     * will be invoked on all incoming events to select the appropriate response.
+     *
+     * If the response times out, `null` will be supplied instead of an event.
      *
      * @param tags The IRCv3 tags to prefix the message with, if any.
      * @param command The command to be sent.
      * @param arguments The arguments to the command.
+     * @param matcher The matcher to use to find a matching event.
      * @return A deferred [IrcEvent]? that contains the server's response to the command.
      */
-    fun sendAsync(tags: Map<MessageTag, String>, command: String, vararg arguments: String): Deferred<IrcEvent?>
+    fun sendAsync(tags: Map<MessageTag, String>, command: String, arguments: Array<String>, matcher: (IrcEvent) -> Boolean): Deferred<IrcEvent?>
 
 }
 

@@ -73,20 +73,9 @@ class ServerState internal constructor(
     internal val batches = mutableMapOf<String, Batch>()
 
     /**
-     * Counter for ensuring sent labels are unique.
+     * Asynchronous command state.
      */
-    internal val labelCounter = AtomicLong(0)
-
-    /**
-     * Whether or not the server supports labeled responses.
-     */
-    internal val supportsLabeledResponses: Boolean
-        get() = Capability.LabeledResponse in capabilities.enabledCapabilities
-
-    /**
-     * Channels waiting for a label to be received.
-     */
-    internal val labelChannels = mutableMapOf<String, SendChannel<IrcEvent>>()
+    internal val asyncResponseState = AsyncResponseState(capabilities)
 
     /**
      * Determines if the given mode is one applied to a user of a channel, such as 'o' for operator.
@@ -118,8 +107,33 @@ class ServerState internal constructor(
         capabilities.reset()
         sasl.reset()
         batches.clear()
+        asyncResponseState.reset()
+    }
+
+}
+
+internal class AsyncResponseState(private val capabilities : CapabilitiesState) {
+
+
+    /**
+     * Counter for ensuring sent labels are unique.
+     */
+    internal val labelCounter = AtomicLong(0)
+
+    /**
+     * Whether or not the server supports labeled responses.
+     */
+    internal val supportsLabeledResponses: Boolean
+        get() = Capability.LabeledResponse in capabilities.enabledCapabilities
+
+    /**
+     * Channels waiting for a response to be received.
+     */
+    internal val pendingResponses = mutableMapOf<String, Pair<SendChannel<IrcEvent>, (IrcEvent) -> Boolean>>()
+
+    internal fun reset() {
         labelCounter.set(0)
-        labelChannels.clear()
+        pendingResponses.clear()
     }
 
 }

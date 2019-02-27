@@ -18,11 +18,11 @@ internal class LabelsTest {
 
     @Test
     fun `increments the label id when generating labels`() {
-        assertEquals(0L, fakeServerState.labelCounter.get())
+        assertEquals(0L, fakeServerState.asyncResponseState.labelCounter.get())
         defaultGenerateLabel(ircClient)
-        assertEquals(1L, fakeServerState.labelCounter.get())
+        assertEquals(1L, fakeServerState.asyncResponseState.labelCounter.get())
         defaultGenerateLabel(ircClient)
-        assertEquals(2L, fakeServerState.labelCounter.get())
+        assertEquals(2L, fakeServerState.asyncResponseState.labelCounter.get())
     }
 
     @Test
@@ -36,7 +36,7 @@ internal class LabelsTest {
     fun `generates unique labels at different times with the same counter value`() {
         currentTimeProvider = { TestConstants.time }
         val label1 = defaultGenerateLabel(ircClient)
-        fakeServerState.labelCounter.set(0L)
+        fakeServerState.asyncResponseState.labelCounter.set(0L)
         currentTimeProvider = { TestConstants.otherTime }
         val label2 = defaultGenerateLabel(ircClient)
         assertNotEquals(label1, label2)
