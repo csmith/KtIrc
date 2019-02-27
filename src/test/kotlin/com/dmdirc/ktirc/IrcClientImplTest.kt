@@ -289,7 +289,7 @@ internal class IrcClientImplTest {
     }
 
     @Test
-    fun `sends text to socket without label if cap is missing`() = runBlocking {
+    fun `asynchronously sends text to socket without label if cap is missing`() = runBlocking {
         val client = IrcClientImpl(normalConfig)
         client.socketFactory = mockSocketFactory
         client.connect()
@@ -300,7 +300,7 @@ internal class IrcClientImplTest {
     }
 
     @Test
-    fun `sends text to socket with added tags and label`() = runBlocking {
+    fun `asynchronously sends text to socket with added tags and label`() = runBlocking {
         generateLabel = { "abc123" }
         val client = IrcClientImpl(normalConfig)
         client.socketFactory = mockSocketFactory
@@ -313,7 +313,7 @@ internal class IrcClientImplTest {
     }
 
     @Test
-    fun `sends tagged text to socket with label`() = runBlocking {
+    fun `asynchronously sends tagged text to socket with label`() = runBlocking {
         generateLabel = { "abc123" }
         val client = IrcClientImpl(normalConfig)
         client.socketFactory = mockSocketFactory
