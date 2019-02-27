@@ -103,7 +103,8 @@ sealed class Capability(vararg val names:  String) {
 
 internal val capabilities: Map<String, Capability> by lazy {
     Capability::class.nestedClasses
-            .map { it.objectInstance as Capability }
+            .map { it.objectInstance }
+            .filterIsInstance(Capability::class.java)
             .flatMap { it.names.map { name -> name to it }  }
             .toMap()
 }

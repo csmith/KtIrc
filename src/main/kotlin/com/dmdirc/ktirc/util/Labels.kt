@@ -9,8 +9,8 @@ internal var generateLabel = { ircClient: IrcClient ->
     val counter = ircClient.serverState.labelCounter.incrementAndGet()
     ByteArray(6) {
         when {
-            it < 3 -> ((time shr it) and 0xff).toByte()
-            else -> ((counter shr (it - 3)) and 0xff).toByte()
+            it < 3 -> (time shr it and 0xff).toByte()
+            else -> (counter shr (it - 3) and 0xff).toByte()
         }
     }.toBase64()
 }

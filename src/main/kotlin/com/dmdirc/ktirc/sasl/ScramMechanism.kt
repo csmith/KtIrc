@@ -127,7 +127,7 @@ internal class ScramMechanism(private val algorithm: String, override val priori
     private fun pbkdf2(keyMaterial: ByteArray, initialSalt: ByteArray, iterations: Int): ByteArray {
         var salt = initialSalt + 0x00 + 0x00 + 0x00 + 0x01
         var result: ByteArray? = null
-        for (i in 1..iterations) {
+        repeat(iterations) {
             salt = hmac(keyMaterial, salt)
             result = result?.xor(salt) ?: salt
         }
@@ -136,8 +136,9 @@ internal class ScramMechanism(private val algorithm: String, override val priori
 
     private val IrcClient.scramState: ScramState
         get() = with(serverState.sasl) {
-            mechanismState = mechanismState as? ScramState ?: com.dmdirc.ktirc.sasl.ScramState()
-            mechanismState as ScramState
+            (mechanismState as? ScramState ?: com.dmdirc.ktirc.sasl.ScramState()).apply {
+                mechanismState = this
+            }
         }
 
     private fun ByteArray.xor(other: ByteArray): ByteArray = zip(other) { a, b -> a.xor(b) }.toByteArray()

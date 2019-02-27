@@ -5,7 +5,7 @@ import com.dmdirc.ktirc.events.IrcEvent
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 
-class LabelledResponseHandler : EventHandler {
+internal class LabelledResponseHandler : EventHandler {
 
     override fun processEvent(client: IrcClient, event: IrcEvent) {
         event.metadata.label?.let {

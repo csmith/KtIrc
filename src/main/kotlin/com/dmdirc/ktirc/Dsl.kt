@@ -193,6 +193,9 @@ class SaslConfig {
     /** The username to provide when authenticating using SASL. */
     var password: String = ""
 
+    /**
+     * Replaces all enabled SASL mechanisms with the given ones.
+     */
     @IrcClientDsl
     fun mechanisms(vararg methods: String) {
         with(this.mechanisms) {

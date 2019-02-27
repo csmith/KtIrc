@@ -96,11 +96,9 @@ internal class CapabilitiesHandler : EventHandler {
             return
         }
 
-        client.serverState.sasl.currentMechanism?.let {
-            it.handleAuthenticationEvent(client, client.getStoredSaslBuffer(argument)?.fromBase64())
-        } ?: run {
-            client.sendAuthenticationMessage("*")
-        }
+        client.serverState.sasl.currentMechanism
+                ?.handleAuthenticationEvent(client, client.getStoredSaslBuffer(argument)?.fromBase64())
+                ?: run { client.sendAuthenticationMessage("*") }
     }
 
     private fun handleSaslFinished(client: IrcClient) = with(client) {
