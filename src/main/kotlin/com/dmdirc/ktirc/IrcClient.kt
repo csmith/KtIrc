@@ -142,7 +142,7 @@ internal interface ExperimentalIrcClient : IrcClient {
      * Sends the given command to the IRC server, and waits for a response back.
      *
      * This should only be needed to send raw/custom commands; standard messages can be sent using the
-     * extension methods in [com.dmdirc.ktirc.messages] such as TODO: sendJoinAsync.
+     * extension methods in [com.dmdirc.ktirc.messages] such as [com.dmdirc.ktirc.messages.sendPartAsync].
      *
      * This method will return immediately. The returned [Deferred] will eventually be populated with
      * the server's response. If the server supports the labeled-responses capability, a label will
@@ -162,7 +162,7 @@ internal interface ExperimentalIrcClient : IrcClient {
      * Sends the given command to the IRC server, and waits for a response back.
      *
      * This should only be needed to send raw/custom commands; standard messages can be sent using the
-     * extension methods in [com.dmdirc.ktirc.messages] such as TODO: sendJoinAsync.
+     * extension methods in [com.dmdirc.ktirc.messages] such as [com.dmdirc.ktirc.messages.sendPartAsync].
      *
      * This method will return immediately. The returned [Deferred] will eventually be populated with
      * the server's response. If the server supports the labeled-responses capability, a label will
