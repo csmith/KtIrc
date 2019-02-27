@@ -1,3 +1,5 @@
+import org.jetbrains.dokka.gradle.DokkaTask
+import org.jetbrains.dokka.gradle.LinkMapping
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 version = "0.10.3"
@@ -102,6 +104,16 @@ tasks {
         testLogging {
             events("passed", "skipped", "failed")
         }
+    }
+
+    withType<DokkaTask> {
+        moduleName = "ktirc"
+        includes = listOf("src/docs/manual.md")
+        linkMappings = arrayListOf(LinkMapping().apply {
+            dir = "src/main/kotlin"
+            url = "https://github.com/csmith/ktirc/blob/master/src/main/kotlin"
+            suffix = "#L"
+        })
     }
 }
 
