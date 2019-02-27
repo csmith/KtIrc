@@ -9,18 +9,27 @@ import java.time.LocalDateTime
 /**
  * Metadata associated with an event.
  *
- * @param time The best-guess time at which the event occurred.
- * @param batchId The ID of the batch this event is part of, if any.
- * @param messageId The unique ID of this message, if any.
- * @param label The label of the command that this event was sent in response to, if any.
+ * @property time The best-guess time at which the event occurred.
+ * @property batchId The ID of the batch this event is part of, if any.
+ * @property messageId The unique ID of this message, if any.
+ * @property label The label of the command that this event was sent in response to, if any.
  */
-data class EventMetadata(
+data class EventMetadata internal constructor(
         val time: LocalDateTime,
         val batchId: String? = null,
         val messageId: String? = null,
         val label: String? = null)
 
-/** Base class for all events. */
+/**
+ * Base class for all events raised by KtIrc.
+ *
+ * An event occurs in response to some action by the IRC server. Most events correspond to a single
+ * line received from the server (such as [NoticeReceived]), but some happen when a combination
+ * of lines lead to a certain state (e.g. [ServerReady]), and the [BatchReceived] event in particular
+ * can contain *many* lines received from the server.
+ *
+ * @property metadata Meta-data about the received event
+ */
 sealed class IrcEvent(val metadata: EventMetadata) {
 
     /** The time at which the event occurred. */
@@ -33,6 +42,8 @@ sealed class IrcEvent(val metadata: EventMetadata) {
 
 /**
  * Base class for events that are targeted to a channel or user.
+ *
+ * @param target The target of the event - either a channel name, or nick name
  */
 sealed class TargetedEvent(metadata: EventMetadata, val target: String) : IrcEvent(metadata) {
 
@@ -48,10 +59,8 @@ sealed class TargetedEvent(metadata: EventMetadata, val target: String) : IrcEve
  * Interface implemented by events that come from a particular user.
  */
 interface SourcedEvent {
-
     /** The user that caused the event. */
     val user: User
-
 }
 
 /** Raised when a connection to the server is being established. */
@@ -66,7 +75,12 @@ class ServerDisconnected(metadata: EventMetadata) : IrcEvent(metadata)
 /** Raised when an error occurred trying to connect. */
 class ServerConnectionError(metadata: EventMetadata, val error: ConnectionError, val details: String?) : IrcEvent(metadata)
 
-/** Raised when the server is ready for use. */
+/**
+ * Raised when the server is ready for use.
+ *
+ * At this point, you should be able to freely send messages to the IRC server and can start joining channels etc, and
+ * the server state will contain relevant information about the server, its features, etc.
+ */
 class ServerReady(metadata: EventMetadata) : IrcEvent(metadata)
 
 /** Raised when the server initially welcomes us to the IRC network. */
@@ -108,7 +122,7 @@ class ChannelTopicMetadataDiscovered(metadata: EventMetadata, channel: String, v
 /**
  * Raised when a channel's topic is changed.
  *
- * If the topic has been unset (cleared), [topic] will be `null`
+ * @property topic The new topic of the channel, or `null` if the topic has been unset (cleared)
  */
 class ChannelTopicChanged(metadata: EventMetadata, override val user: User, channel: String, val topic: String?) : TargetedEvent(metadata, channel), SourcedEvent
 

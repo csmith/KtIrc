@@ -32,6 +32,13 @@ interface IrcClient {
      */
     val behaviour: ClientBehaviour
 
+    /**
+     * The current case-mapping of the server, defining how uppercase and lowercase nicks/channels/etc are mapped
+     * to one another.
+     *
+     * This may change over the lifetime of an [IrcClient]. It should not be stored, and should be checked each
+     * time it is needed.
+     */
     val caseMapping: CaseMapping
         get() = serverState.features[ServerFeature.ServerCaseMapping] ?: CaseMapping.Rfc
 
