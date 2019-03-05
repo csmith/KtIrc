@@ -1,0 +1,500 @@
+= KtIrc {version}
+Chris Smith
+:version: 0.10.3
+:toc: left
+:toc-position: left
+:toclevels: 5
+
+== About KtIrc
+
+KtIrc is a Kotlin JVM library for connecting to and interacting with IRC servers.
+It is still in an early stage of development. Its main features:
+
+.Built for Kotlin
+KtIrc is written in and designed for use in Kotlin; it uses extension methods,
+DSLs, sealed classes, and so on, to make it much easier to use than an
+equivalent Java library.
+
+.Coroutine-powered
+KtIrc uses co-routines for all of its input/output which lets it deal with
+IRC messages in the background while your app does other things, without
+the overhead of creating a new thread per IRC client.
+
+.Modern IRC standards
+KtIrc supports many IRCv3 features such as SASL authentication, message IDs,
+server timestamps, replies, reactions, account tags, and more. These features
+(where server support is available) make it easier to develop bots and
+clients, and enhance IRC with new user-facing functionality.
+
+== Getting started
+
+=== Installing
+
+All you need to do to start using KtIrc is add a single dependency.
+KtIrc is published to JCenter, making it quick and easy to pull in
+to almost any project. The examples below show how to add the JCenter
+repository and then the KtIrc dependency; you may already be using
+JCenter for other dependencies -- in that case just skip the
+repository configuration!
+
+[TIP]
+====
+KtIrc adheres to semantic versioning: you can expect to upgrade between
+minor versions without problems (e.g. from `0.1.2` to `0.13.7`); major
+version changes may include breaking changes such as the removal of
+deprecated methods. You should check the changelog before updating to
+a new major version.
+====
+
+.Gradle (using Kotlin DSL)
+[source,kotlin,subs="attributes"]
+----
+repositories {
+    jcenter()
+}
+
+dependencies {
+    implementation("com.dmdirc:ktirc:{version}")
+}
+----
+
+.Gradle (using Groovy DSL)
+[source,groovy,subs="attributes"]
+----
+buildscript {
+    repositories {
+        jcenter()
+    }
+}
+
+implementation 'com.dmdirc:ktirc:{version}'
+----
+
+.Maven
+[source,xml,subs="attributes"]
+----
+&lt;repositories&gt;
+    &lt;repository&gt;
+      &lt;id&gt;jcenter&lt;/id&gt;
+      &lt;url&gt;https://jcenter.bintray.com&lt;/url&gt;
+    &lt;/repository&gt;
+&lt;/repositories&gt;
+
+&lt;dependencies&gt;
+    &lt;dependency&gt;
+        &lt;groupId&gt;com.dmdirc&lt;/groupId&gt;
+        &lt;artifactId&gt;ktirc&lt;/artifactId&gt;
+        &lt;version&gt;{version}&lt;/version&gt;
+    &lt;/dependency&gt;
+&lt;/dependencies&gt;
+----
+
+=== Creating your first client
+
+KtIrc provides a DSL ("domain specific language") for configuring a
+client that allows you to set the connection details, the user's
+details, and configure the behaviour of KtIrc itself. The DSL is
+accessed through the `IrcClient` function. For full details of all
+supported options, see the <<IrcClient DSL>> reference.
+
+A basic client will look like this:
+
+[source,kotlin]
+----
+val client = IrcClient {
+    server {
+        host = "my.server.com"
+    } 
+    profile {
+        nickname = "nick"
+        username = "username"
+        realName = "Hi there"
+    }
+}
+----
+
+=== Connecting and handling events
+
+Getting KtIrc to start connecting is as simple as calling the `connect()`
+method, but before that we probably want to add an event listener to deal
+with incoming messages:
+
+[source,kotlin]
+----
+client.onEvent { event -> <1>
+    when (event) { <2>
+        is ServerReady ->
+            client.sendJoin("#ktirc") <3>
+        is ServerDisconnected ->
+            client.connect()
+        is MessageReceived ->
+            if (event.message == "!test") <4>
+                client.reply(event, "Test successful!") <5>
+    }
+}
+
+client.connect() <6>
+----
+<1> An event listener is registered using the `onEvent` method. It receives
+    a single IrcEvent.
+<2> A Kotlin `when` statement provides a convenient way to switch on the
+    type of event received.
+<3> Most common IRC commands have `send` methods defined to quickly and
+    safely send the message with the right formatting.
+<4> Kotlin smart-casts the event, so you can access the properties specific
+    to the matched event class, such as `message`.
+<5> The IrcClient class provides useful methods to react and respond to
+    events.
+<6> The connect() method starts connecting and returns immediately. You'll
+    receive events updating you on the progress.
+
+In this example, we're waiting for three events: `ServerReady`, which occurs
+after we have connected and the server has sent us all of the pre-amble
+such as its configuration and capabilities; `ServerDisconnected` which
+is raised whenever KtIrc gets disconnected from (or fails to connect to) the
+IRC server; and `MessageReceived` which occurs, unsuprisingly, whenever a
+message is received. KtIrc has many events: for more information, see the
+<<Events>> reference.
+
+[CAUTION]
+====
+With this code, KtIrc will immediately try to reconnect as soon as it is
+disconnected. If the server closes the connection early (due to, for
+example, a bad password or the user being banned) this will result in a
+huge number of connection attempts in a short time. In real code you should
+always delay reconnections -- preferably with a backoff -- to avoid
+excessive connection attempts.
+====
+
+You can see that KtIrc provides a number of useful methods for sending
+requests to the server, and reacting and responding to events. IRC
+commands that KtIrc supports can be invoked using the `send*` methods,
+which are documented in the <<Messages>> reference. Other useful methods
+such as `reply` can be found in the <<Utility methods>> reference.
+
+== Reference
+
+=== IrcClient DSL
+
+The DSL for creating a new `IrcClient` allows you to set a number of
+options relating to how KtIrc connects, what user details it provides,
+and how it behaves. The full range of options available in the DSL is
+shown below:
+
+[source,kotlin]
+----
+server {
+    host = "irc.example.com"
+    port = 6667
+    useTls = true
+    password = "H4ckTh3Pl4n3t"
+}
+
+profile {
+    nickname = "MyBot"
+    username = "bot"
+    realName = "Botomatic v1.2"
+}
+
+behaviour {
+    requestModesOnJoin = true
+    alwaysEchoMessages = true
+}
+
+sasl {
+    mechanisms += "PLAIN"
+    username = "botaccount"
+    password = "s3cur3"
+}
+----
+
+==== Server settings
+
+The server block allows you to specify the details of the IRC server you
+wish to connect to:
+
+ * `host` - the hostname or IP address of the server *(required)*
+ * `port` - the port to connect on _(default: 6667)_
+ * `useTls` - whether to use a secure connection or not _(default: false)_
+ * `password` - the password to provide to the server _(default: null)_
+
+An alternative more compact syntax is available for configuring server details:
+
+[source,kotlin]
+----
+server("irc.example.com", 6667, true, "H4ckTh3Pl4n3t")
+----
+
+You can, if you wish, combine the two or use named parameters:
+
+[source,kotlin]
+----
+server(useTls = true, port = 6697) {
+    host = "irc.example.com"
+    password = "H4ckTh3Pl4n3t"
+}
+----
+
+==== User profile
+
+The user profile controls how KtIrc will present itself to the IRC server, and
+how other users on that server will see the KtIrc user:
+
+ * `nickname` - the initial nickname you wish to use *(required)*
+ * `username` - the "username" to provide to the server _(default: KtIrc)_
+ * `realName` - the "real name" that will be seen by other clients
+   _(default: KtIrc User)_
+
+[TIP]
+====
+The "username" is sometimes called the "ident" or "gecos". Some IRC servers
+will check for an ident reply from your host and use that in place of the
+username provided if it gets a response. The username (or ident reply)
+becomes part of your client's hostmask, and is visible to other users. It
+is unrelated to nickserv or other account usernames.
+====
+
+As with the <<Server settings>> you can use a more compact syntax:
+
+[source,kotlin]
+----
+profile("nickname", "username", "real name")
+----
+
+==== Behaviour
+
+The behaviour block allows you to tweak how KtIrc itself operates. These
+options allow you perform common operations automatically, or enjoy more
+advanced IRC features even if the server doesn't support them:
+
+ * `requestModesOnJoin` - if enabled, automatically requests channel modes
+   when the client joins a new channel _(default: false)_
+ * `alwaysEchoMessages` - if enabled, every message you send will result
+   in a `MessageReceived` event being returned. Servers that support the
+   IRCv3 `echo-message` capability will do this automatically; enabling the
+   behaviour will make all servers act the same way _(default: false)_
+
+The behaviour block is optional in its entirety.
+
+==== SASL configuration
+
+SASL ("Simple Authentication and Security Layer") is a standard mechanism
+for securely authenticating to a service that has recently been adopted
+for use in IRC. SASL supports a number of 'mechanisms' that describe how
+the data will be exchanged between the client and server. KtIrc supports
+the following mechanisms:
+
+ * `EXTERNAL` - the server uses some external means to authenticate the
+   client, instead of a username and password. On most servers this
+   means checking the client certificate against one registered with
+   the user's account. _(disabled by default)_
+ * `PLAIN` - the client sends the username and password in plain text
+   during the connection phase. This offers slightly more security
+   than calling `nickserv identify` (for example) after connecting.
+ * `SCRAM-SHA-1` - this mechanism involves a "salted challenge" being
+   completed which results in both the server and the client proving that
+   they know the user's password, but without it every being transmitted.
+   This is based on the `SHA-1` algorithm which has known issues, but is
+   more than sufficient when used in this manner.
+ * `SCRAM-SHA-256` - the same as `SCRAM-SHA-1` but using the `SHA-256`
+   algorithm instead, which is more modern and secure.
+
+To use `PLAIN`, `SCRAM-SHA-1` or `SCRAM-SHA-256`, you must supply a username
+and password in the configuration:
+
+[source,kotlin]
+----
+sasl {
+    username = "botaccount"
+    password = "s3cur3"
+}
+----
+
+KtIrc enables `SCRAM-SHA-256`, `SCRAM-SHA-1` and `PLAIN` by default, and will
+use them in that order of preference if the server supports more than one.
+You can modify the `mechanisms` parameter if you wish to disable one:
+
+
+[source,kotlin]
+----
+sasl {
+    mechanisms -= "PLAIN"
+    username = "botaccount"
+    password = "s3cur3"
+}
+----
+
+You can also clear all the default mechanisms and provide your own list:
+
+[source,kotlin]
+----
+sasl {
+    mechanisms("SCRAM-SHA-256", "PLAIN")
+    username = "botaccount"
+    password = "s3cur3"
+}
+----
+
+
+If you wish to enable the `EXTERNAL` mechanism, you do not need to provide
+a username or password:
+
+[source,kotlin]
+----
+sasl {
+    mechanisms("EXTERNAL")
+}
+----
+
+Alternatively, if you wish to enable `EXTERNAL` but fall back to other
+mechanisms if it doesn't work:
+
+[source,kotlin]
+----
+sasl {
+    mechanisms += "EXTERNAL"
+    username = "botaccount"
+    password = "s3cur3"
+}
+----
+
+The SASL block is optional in its entirety.
+
+=== State
+
+KtIrc attempts to track all reasonable state of the IRC network. This includes
+details about the server, channels the client is joined to, and users that are
+also in those channels. The state is exposed in a several fields accessible
+from the `IrcClient`:
+
+==== ServerState
+
+The server state provides information about the server, and our connection to
+it.
+
+[IMPORTANT]
+====
+The server state will be updated frequently while KtIrc is connecting to a
+server. The values within it should not be relied upon until a `ServerReady`
+event is received, as they may be incomplete or estimates before then.
+====
+
+.serverState.status (ServerStatus)
+Provides an enum containing the current server state. One of:
+
+* `Disconnected` - the server is not connected
+* `Connecting` - we are attempting to establish a connection
+* `Negotiating` - we are logging in, negotiating capabilities, etc
+* `Ready` - we are connected and commands may be sent
+
+.serverState.localNickname (String)
+The current nickname we are using on the IRC server. While connecting this
+will default to the nickname from the <<User profile>>, but it may be updated
+if e.g. the nick is in use or not allowed.
+
+.serverState.serverName (String)
+The name the server uses for itself. While connecting this defaults to the
+hostname given in the <<Server settings>>, but it will be updated to the
+value provided by the server. For example, you may connect to
+`irc.example.com` and during the negotiation phase KtIrc will see that it
+is actually talking to `server3.uk.irc.example.com` and update the
+serverName to reflect that.
+
+[TIP]
+====
+For a user-friendly identifier most servers provide a `NETWORK` token in
+the ISUPPORT reply, which is available via the <<Features>> property.
+====
+
+.serverState.channelModePrefix (ModePrefixMapping)
+Provides a mapping from channel user modes (such as "o" for op, "v" for
+voice) to the prefixes used before nicknames (such as "@" and "+").
+
+To map prefixes to modes, you can use the `getMode()` or `getModes()`
+functions:
+
+[source,kotlin]
+----
+'o' == getMode('@')
+"ov" == getModes("@+")
+----
+
+.serverState.channelTypes (String)
+Contains the types of channels that are allowed by the server, such as
+`\#&amp;` for normal channels ("#") and local channels ("&").
+
+===== Capabilities
+
+The IRCv3 specifications introduce the concept of 'capability negotiation'.
+This allows the client and server to negotiate and enable new capabilities
+that are mutually supported.
+
+The capabilities state contains the following properties:
+
+.serverState.capabilities.negotiationState (CapabilitiesNegotiationState)
+The current state of negotiating with the server. One of:
+
+* `AWAITING_LIST` - we have requested a list of capabitilies and are awaiting
+  a reply
+* `AWAITING_ACK` - we have sent the capabilities we want to enable, and are
+  waitin for the server to acknowledge them
+* `AUTHENTICATING` - we are attempting to authenticate with SASL
+* `FINISHED` - we have completed negotiation
+
+Where a server does not support IRCv3 capability negotiation, the state will
+remain at `AWAITING_LIST`.
+
+.serverState.capabilities.advertisedCapabilities (Map<String, String>)
+Contains a map of capability names to values that the server offered. This
+should only be required for advance use cases, such as looking up the 
+languages offered by a server when providing the user with a choice of
+translations.
+
+.serverState.capabilities.enabledCapabilities (Map<Capability, String>)
+Contains a map of capabilities that KtIrc has successfully negotiated with
+the server.
+
+====== Supported capabilities
+
+* `sasl` - used to perform SASL authentication during connection
+* `message-tags` - allows arbitrary tags on messages
+* `server-time` - the server adds a timestamp tag to each incoming message
+* `account-tag` - the server adds an account tag to incoming user messages
+* `userhost-in-names` - the NAMES reply includes users hosts not just nicknames
+* `multi-prefix` - all modes are included in nick prefixes (e.g. `@+nick`)
+* `extended-join` - more information is sent when a user joins a channel
+* `batch` - allows multi-line responses to be batched together
+* `echo-message` - echos the client's own messages back to it
+* `draft/labeled-responses` - responses are labeled so the client knows which
+  incoming message corresponds to which command it sent
+* `account-notify` - the server sends a message when a user's account changes
+* `away-notify` - the server sends a message when a user's away state changes
+* `chghost` - the server sends a message when a user's host changes
+
+===== Features
+
+TODO
+
+==== UserState
+
+TODO
+
+==== ChannelState
+
+TODO
+
+=== Events
+
+TODO
+
+=== Messages
+
+TODO
+
+=== Utility methods
+
+TODO
+
+=== IRCv3 support
+
+TODO
