@@ -1,6 +1,6 @@
 = KtIrc {version}
 Chris Smith
-:version: 0.10.3
+:version: 0.11.0
 :toc: left
 :toc-position: left
 :toclevels: 5
