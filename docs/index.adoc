@@ -528,12 +528,21 @@ operator to check if the user is in a channel:
 
 [source,kotlin]
 ----
-ircClient.userState["acidBurn"]?.let { knownUser ->
+ircClient.userState["acidBurn"]?.let { knownUser -> <1>
     val accountName = knownUser.account
-    val inChannel = "#channel" in knownUser
-    val allChannels = knownUser.channels
+    val inChannel = "#channel" in knownUser <2>
+    val allChannels = knownUser.channels <3>
 }
 ----
+<1> If the user isn't known, the call to `get` (using the `[]` operator)
+    returns null, so we use a `let` statement to deal only with the case
+    that the user is found.
+<2> Check if the user is present on the common channel `#channel`. If
+    the KtIrc client is not joined to that channel, it will always return
+    false. You can also use the `contains("#channel")` method instead of
+    the `in` operator.
+<3> Returns all common channels we share with the user; will never
+    include channels that the KtIrc client is not joined to.
 
 ==== ChannelState
 
@@ -578,7 +587,302 @@ ircClient.channelState["#ktirc"]?.users?.forEach { user ->
 
 === Events
 
+Incoming lines from the IRC server are covered by KtIrc to subclasses of
+`IrcEvent`. These, along with other more advance events, are then published
+to users of the client using the `onEvent` method in `IrcClient`.
+
+All events extend `IrcEvent`, which offers a single `metadata` property.
+This contains details related to the event:
+
+* `time` - the time at which the message occurred (if the server supports
+  the `server-time` capability), or the time at which we received it.
+  Always present.
+* `batchId` - an opaque string identifier for the batch the message is
+  part of (if the server supports the `batch` capability). Null for
+  messages not in a batch.
+* `messageId` - a unique, opaque string identifier for the message if
+  the server supports the `msgid` tag. Null otherwise.
+* `label` - a unique, opaque string identifier that ties a message to
+  a labelled command that was sent by KtIrc, if the server supports
+  the `labelled-replies` capability. Null otherwise.
+
+Several specialised versions of `IrcEvent` are used which allow for easier
+processing:
+
+.TargetedEvent
+
+A `TargetedEvent` is one that is targeted at either a user or a channel.
+`TargetedEvent` exposes a string `target` property that identifies the
+target of the message. This allows you to direct messages to the right
+handler or UI component more easily:
+
+[source,kotlin]
+----
+ircClient.onEvent { event ->
+    when (event) {
+        is TargetedEvent -> dispatchEvent(event.target, event)
+    }
+}
+----
+
+.SourcedEvent
+
+A large number of events come from a remote IRC user, and it can be
+useful to handle these in the same way. KtIrc offers a `SourcedEvent`
+interface for all events that originate from a user, and it exposes
+a single `user` property:
+
+[source,kotlin]
+----
+ircClient.onEvent { event ->
+    when (event) {
+        is SourcedEvent -> notifyAboutUserActivity(event.user)
+    }
+}
+----
+
+.ChannelMembershipAdjustment
+
+A number of events describe how the membership of a channel changes --
+namely, joins, parts, quits, kicks, names replies, and nick changes.
+All of these events implement the `ChannelMembershipAdjustment` interface
+which reduces the amount of logic you need to do if you wish to maintain
+a membership list (for example in a UI). The interface exposes three
+properties:
+
+* `addedUser` - a single nickname to be added _(String)_
+* `removedUser` - a single nickname to be removed _(String)_
+* `replacedUsers` - a list of nicknames to replace any existing ones with
+  _(Array<String>)_
+
+All the properties are nullable, and most events will only populate
+one of the three.
+
+==== Server events
+
+===== ServerConnecting
+* Type: IrcEvent
+* Properties: _(none)_
+
+This event is raised by KtIrc as soon as it starts attempting to connect to
+a server. It will be followed by either a <<ServerConnected>> or a
+<<ServerConnectionError>> event at some point.
+
+===== ServerConnected
+* Type: IrcEvent
+* Properties: _(none)_
+
+This event is raised by KtIrc when it has connected to the server, and is
+starting the process of registering, negotiating capabilities, etc.
+The server will *not* yet be ready for use - a <<ServerReady>> event will
+follow once all of the initial setup has completed.
+
+===== ServerConnectionError
+* Type: IrcEvent
+* Properties:
+** `error`: `ConnectionError` - the type of error that occurred
+** `details`: `String?` - information about the error, if available
+
+This event is raised by KtIrc when a problem occurred while connecting
+to the server. The `ConnectionError` enum will provide the cause of
+the error, if known:
+
+* `UnresolvableAddress` - the hostname provided could not be resolved
+  to an IP address
+* `ConnectionRefused` - the server did not answer a connection request
+  on the given port
+* `BadTlsCertificate` - there was an issue with the TLS certificate the
+  server presented (e.g. it was out of date, for the wrong domain, etc)
+* `Unknown` - the exact cause of the error isn't known
+
+This event will be followed by a <<ServerDisconnected>> event.
+
+===== ServerWelcome
+* Type: IrcEvent
+* Properties:
+** `server`: `String` - the name the server supplied for itself
+** `localNick`: `String` - the nickname the server says we are using
+
+This event is raised in response to the server sending a 001 WELCOME
+message. It contains the name that the server supplied for itself
+(for example, KtIrc may connect to a round-robin address like
+`irc.example.com` and the server it actually connects to then
+identifies itself as `node3.uk.irc.example.com`), and the nickname
+that the server says we are using.
+
+===== ServerFeaturesUpdated
+* Type: IrcEvent
+* Properties:
+** `serverFeatures`: `ServerFeatureMap` - the features supplied by the server
+
+Corresponds to the server sending a single 005 ISUPPORT line. Multiple
+events of this type may be raised in quick succession when features are
+split over multiple lines.
+
+In general, you should wait for a <<ServerReady>> event and then query the
+<<Features>> instead of relying on this event.
+
+===== ServerReady
+* Type: IrcEvent
+* Properties: _(none)_
+
+This event is raised by KtIrc when it has connected to a server,
+registered with the IRC network, and received all of the server's
+initial data describing its configurations and its features.
+
+At this point it is safe to start issuing commands, checking
+state, joining channels, etc.
+
+===== PingReceived
+* Type: IrcEvent
+* Properties:
+** `nonce`: `ByteArray` - the unique data that must be included in the reply
+
+Raised when the IRC server sends a PING message to the client. KtIrc will
+automatically reply with an appropriate PONG.
+
+===== ServerCapabilitiesReceived
+
 TODO
+
+===== ServerCapabilitiesAcknowledged
+
+TODO
+
+===== ServerCapabilitiesFinished
+
+TODO
+
+===== MotdLineReceived
+
+TODO
+
+===== MotdFinished
+
+TODO
+
+==== Channel events
+
+===== ChannelJoined
+
+TODO
+
+===== ChannelJoinFailed
+
+TODO
+
+===== ChannelParted
+
+TODO
+
+===== ChannelUserKicked
+
+TODO
+
+===== ChannelQuit
+
+TODO
+
+===== ChannelNickChanged
+
+TODO
+
+===== ChannelNamesReceived
+
+TODO
+
+===== ChannelNamesFinished
+
+TODO
+
+===== ChannelTopicDiscovered
+
+TODO
+
+===== ChannelTopicMetadataDiscovered
+
+TODO
+
+===== ChannelTopicChanged
+
+TODO
+
+
+==== Channel/User events
+
+TODO
+
+===== MessageReceived
+
+TODO
+
+===== NoticeReceived
+
+TODO
+
+===== ActionReceived
+
+TODO
+
+===== CtcpReceived
+
+TODO
+
+===== CtcpReplyReceived
+
+TODO
+
+===== UserQuit
+
+TODO
+
+===== UserNickChanged
+
+TODO
+
+===== UserHostChanged
+
+TODO
+
+===== UserAccountChanged
+
+TODO
+
+===== ModeChanged
+
+TODO
+
+
+==== Other events
+
+===== AuthenticationMessage
+
+TODO
+
+===== SaslFinished
+
+TODO
+
+===== SaslMechanismNotAvailableError
+
+TODO
+
+===== BatchStarted
+
+TODO
+
+===== BatchFinished
+
+TODO
+
+===== BatchReceived
+
+TODO
+
+===== NicknameChangeFailed
+
+TODO
+
 
 === Messages
 
