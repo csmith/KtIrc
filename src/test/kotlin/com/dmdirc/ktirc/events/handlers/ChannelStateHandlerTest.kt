@@ -102,6 +102,19 @@ internal class ChannelStateHandlerTest {
     }
 
     @Test
+    fun `updates replacedUsers property of names finished event`() {
+        val channel = ChannelState("#thegibson") { CaseMapping.Rfc }
+        fakeChannelState += channel
+
+        val event = ChannelNamesFinished(EventMetadata(TestConstants.time), "#thegibson")
+        handler.processEvent(ircClient, ChannelNamesReceived(EventMetadata(TestConstants.time), "#thegibson", listOf("zeroCool")))
+        handler.processEvent(ircClient, event)
+
+        assertEquals(1, event.replacedUsers?.size)
+        assertEquals("zeroCool", event.replacedUsers?.get(0))
+    }
+
+    @Test
     fun `adds users with mode prefixes`() {
         val channel = ChannelState("#thegibson") { CaseMapping.Rfc }
         fakeChannelState += channel

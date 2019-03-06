@@ -77,6 +77,7 @@ internal class ChannelStateHandler : EventHandler {
         client.channelState[event.target]?.let {
             it.receivingUserList = false
             log.finest { "Finished receiving names in ${event.target}. Users: ${it.users.toList()}" }
+            event.replacedUsers = it.users.map(ChannelUser::nickname).toTypedArray()
             if (client.behaviour.requestModesOnJoin && !it.modesDiscovered) {
                 client.sendModeRequest(it.name)
             }

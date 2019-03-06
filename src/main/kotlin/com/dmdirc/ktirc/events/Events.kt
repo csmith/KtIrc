@@ -56,6 +56,18 @@ sealed class TargetedEvent(metadata: EventMetadata, val target: String) : IrcEve
 }
 
 /**
+ * Interface implemented by events that describe a change to a channel's membership.
+ */
+interface ChannelMembershipAdjustment {
+    /** The nickname of a user that has joined the channel. */
+    val addedUser: String?
+    /** The nickname of a user who has left the channel. */
+    val removedUser: String?
+    /** The nicknames of all users in the channel, to replace any existing values. */
+    val replacedUsers: Array<String>?
+}
+
+/**
  * Interface implemented by events that come from a particular user.
  */
 interface SourcedEvent {
@@ -93,7 +105,12 @@ class ServerFeaturesUpdated(metadata: EventMetadata, val serverFeatures: ServerF
 class PingReceived(metadata: EventMetadata, val nonce: ByteArray) : IrcEvent(metadata)
 
 /** Raised when a user joins a channel. */
-class ChannelJoined(metadata: EventMetadata, override val user: User, channel: String) : TargetedEvent(metadata, channel), SourcedEvent
+class ChannelJoined(metadata: EventMetadata, override val user: User, channel: String)
+    : TargetedEvent(metadata, channel), SourcedEvent, ChannelMembershipAdjustment {
+    override val addedUser = user.nickname
+    override val removedUser: String? = null
+    override val replacedUsers: Array<String>? = null
+}
 
 /** Raised when an attempt to join a channel fails. */
 class ChannelJoinFailed(metadata: EventMetadata, channel: String, val reason: JoinError) : TargetedEvent(metadata, channel) {
@@ -129,22 +146,47 @@ class ChannelJoinFailed(metadata: EventMetadata, channel: String, val reason: Jo
 }
 
 /** Raised when a user leaves a channel. */
-class ChannelParted(metadata: EventMetadata, override val user: User, channel: String, val reason: String = "") : TargetedEvent(metadata, channel), SourcedEvent
+class ChannelParted(metadata: EventMetadata, override val user: User, channel: String, val reason: String = "")
+    : TargetedEvent(metadata, channel), SourcedEvent, ChannelMembershipAdjustment {
+    override val addedUser: String? = null
+    override val removedUser = user.nickname
+    override val replacedUsers: Array<String>? = null
+}
 
 /** Raised when a [victim] is kicked from a channel. */
-class ChannelUserKicked(metadata: EventMetadata, override val user: User, channel: String, val victim: String, val reason: String = "") : TargetedEvent(metadata, channel), SourcedEvent
+class ChannelUserKicked(metadata: EventMetadata, override val user: User, channel: String, val victim: String, val reason: String = "")
+    : TargetedEvent(metadata, channel), SourcedEvent, ChannelMembershipAdjustment {
+    override val addedUser: String? = null
+    override val removedUser = victim
+    override val replacedUsers: Array<String>? = null
+}
 
 /** Raised when a user quits, and is in a channel. */
-class ChannelQuit(metadata: EventMetadata, override val user: User, channel: String, val reason: String = "") : TargetedEvent(metadata, channel), SourcedEvent
+class ChannelQuit(metadata: EventMetadata, override val user: User, channel: String, val reason: String = "")
+    : TargetedEvent(metadata, channel), SourcedEvent, ChannelMembershipAdjustment {
+    override val addedUser: String? = null
+    override val removedUser = user.nickname
+    override val replacedUsers: Array<String>? = null
+}
 
 /** Raised when a user changes nickname, and is in a channel. */
-class ChannelNickChanged(metadata: EventMetadata, override val user: User, channel: String, val newNick: String) : TargetedEvent(metadata, channel), SourcedEvent
+class ChannelNickChanged(metadata: EventMetadata, override val user: User, channel: String, val newNick: String)
+    : TargetedEvent(metadata, channel), SourcedEvent, ChannelMembershipAdjustment {
+    override val addedUser = newNick
+    override val removedUser = user.nickname
+    override val replacedUsers: Array<String>? = null
+}
 
 /** Raised when a batch of the channel's member list has been received. More batches may follow. */
 class ChannelNamesReceived(metadata: EventMetadata, channel: String, val names: List<String>) : TargetedEvent(metadata, channel)
 
 /** Raised when the entirety of the channel's member list has been received. */
-class ChannelNamesFinished(metadata: EventMetadata, channel: String) : TargetedEvent(metadata, channel)
+class ChannelNamesFinished(metadata: EventMetadata, channel: String) : TargetedEvent(metadata, channel), ChannelMembershipAdjustment {
+    override val addedUser: String? = null
+    override val removedUser: String? = null
+    override var replacedUsers: Array<String>? = null
+        internal set
+}
 
 /** Raised when a channel topic is discovered (not changed). Usually followed by [ChannelTopicMetadataDiscovered] if the [topic] is non-null. */
 class ChannelTopicDiscovered(metadata: EventMetadata, channel: String, val topic: String?) : TargetedEvent(metadata, channel)
@@ -257,7 +299,7 @@ class BatchReceived(metadata: EventMetadata, val type: String, val params: Array
  *
  * If this happens before {ServerReady], the nickname must be changed for registration to continue.
  */
-class NicknameChangeFailed(metadata: EventMetadata, val cause: NicknameChangeError): IrcEvent(metadata) {
+class NicknameChangeFailed(metadata: EventMetadata, val cause: NicknameChangeError) : IrcEvent(metadata) {
     /** Reasons a nick change may fail. */
     enum class NicknameChangeError {
         /** The nickname is not allowed by the server. */
