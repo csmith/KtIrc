@@ -172,9 +172,7 @@ commands that KtIrc supports can be invoked using the `send*` methods,
 which are documented in the <<Messages>> reference. Other useful methods
 such as `reply` can be found in the <<Utility methods>> reference.
 
-== Reference
-
-=== IrcClient DSL
+== IrcClient DSL
 
 The DSL for creating a new `IrcClient` allows you to set a number of
 options relating to how KtIrc connects, what user details it provides,
@@ -208,7 +206,7 @@ sasl {
 }
 ----
 
-==== Server settings
+=== Server settings
 
 The server block allows you to specify the details of the IRC server you
 wish to connect to:
@@ -235,7 +233,7 @@ server(useTls = true, port = 6697) {
 }
 ----
 
-==== User profile
+=== User profile
 
 The user profile controls how KtIrc will present itself to the IRC server, and
 how other users on that server will see the KtIrc user:
@@ -261,7 +259,7 @@ As with the <<Server settings>> you can use a more compact syntax:
 profile("nickname", "username", "real name")
 ----
 
-==== Behaviour
+=== Behaviour
 
 The behaviour block allows you to tweak how KtIrc itself operates. These
 options allow you perform common operations automatically, or enjoy more
@@ -276,7 +274,7 @@ advanced IRC features even if the server doesn't support them:
 
 The behaviour block is optional in its entirety.
 
-==== SASL configuration
+=== SASL configuration
 
 SASL ("Simple Authentication and Security Layer") is a standard mechanism
 for securely authenticating to a service that has recently been adopted
@@ -360,14 +358,14 @@ sasl {
 
 The SASL block is optional in its entirety.
 
-=== State
+== State
 
 KtIrc attempts to track all reasonable state of the IRC network. This includes
 details about the server, channels the client is joined to, and users that are
 also in those channels. The state is exposed in a several fields accessible
 from the `IrcClient`:
 
-==== ServerState
+=== ServerState
 
 The server state provides information about the server, and our connection to
 it.
@@ -423,7 +421,7 @@ getModes("@+") == "ov"
 Contains the types of channels that are allowed by the server, such as
 `\#&amp;` for normal channels ("#") and local channels ("&").
 
-===== Capabilities
+==== Capabilities
 
 The IRCv3 specifications introduce the concept of 'capability negotiation'.
 This allows the client and server to negotiate and enable new capabilities
@@ -454,7 +452,7 @@ translations.
 Contains a map of capabilities that KtIrc has successfully negotiated with
 the server.
 
-====== Supported capabilities
+===== Supported capabilities
 
 * `sasl` - used to perform SASL authentication during connection
 * `message-tags` - allows arbitrary tags on messages
@@ -471,7 +469,7 @@ the server.
 * `away-notify` - the server sends a message when a user's away state changes
 * `chghost` - the server sends a message when a user's host changes
 
-===== Features
+==== Features
 
 Features are KtIrc's way of exposing the information the server declares in
 its ISUPPORT messages. These describe how the server is configured, and what
@@ -503,7 +501,7 @@ the value of the feature will be `null` (such as for those identified as
 `Int?` or `String?` types).
 ====
 
-==== UserState
+=== UserState
 
 The client's UserState object tracks the details of all users in common
 channels. It can be used to find the most up-to-date and comprehensive
@@ -544,7 +542,7 @@ ircClient.userState["acidBurn"]?.let { knownUser -> <1>
 <3> Returns all common channels we share with the user; will never
     include channels that the KtIrc client is not joined to.
 
-==== ChannelState
+=== ChannelState
 
 The ChannelState keeps track of the state for all channels that the client
 is joined to. It is indexed by channel name:
@@ -570,7 +568,7 @@ Each channel's state contains the following properties:
 * `modes` - A map of the current channel modes and their values. Only
   complete if `modesDiscovered` is true.
 
-===== Channel users
+==== Channel users
 
 Channel users are accessed using the `users` property, which provides an
 iterable map of nickname to `ChannelUser`. Each `ChannelUser` contains
@@ -585,7 +583,7 @@ ircClient.channelState["#ktirc"]?.users?.forEach { user ->
 }
 ----
 
-=== Events
+== Events
 
 Incoming lines from the IRC server are covered by KtIrc to subclasses of
 `IrcEvent`. These, along with other more advance events, are then published
@@ -658,9 +656,9 @@ properties:
 All the properties are nullable, and most events will only populate
 one of the three.
 
-==== Server events
+=== Server events
 
-===== ServerConnecting
+==== ServerConnecting
 * Type: IrcEvent
 * Properties: _(none)_
 
@@ -668,7 +666,7 @@ This event is raised by KtIrc as soon as it starts attempting to connect to
 a server. It will be followed by either a <<ServerConnected>> or a
 <<ServerConnectionError>> event at some point.
 
-===== ServerConnected
+==== ServerConnected
 * Type: IrcEvent
 * Properties: _(none)_
 
@@ -677,7 +675,7 @@ starting the process of registering, negotiating capabilities, etc.
 The server will *not* yet be ready for use - a <<ServerReady>> event will
 follow once all of the initial setup has completed.
 
-===== ServerConnectionError
+==== ServerConnectionError
 * Type: IrcEvent
 * Properties:
 ** `error`: `ConnectionError` - the type of error that occurred
@@ -697,7 +695,7 @@ the error, if known:
 
 This event will be followed by a <<ServerDisconnected>> event.
 
-===== ServerWelcome
+==== ServerWelcome
 * Type: IrcEvent
 * Properties:
 ** `server`: `String` - the name the server supplied for itself
@@ -710,7 +708,7 @@ message. It contains the name that the server supplied for itself
 identifies itself as `node3.uk.irc.example.com`), and the nickname
 that the server says we are using.
 
-===== ServerFeaturesUpdated
+==== ServerFeaturesUpdated
 * Type: IrcEvent
 * Properties:
 ** `serverFeatures`: `ServerFeatureMap` - the features supplied by the server
@@ -722,7 +720,7 @@ split over multiple lines.
 In general, you should wait for a <<ServerReady>> event and then query the
 <<Features>> instead of relying on this event.
 
-===== ServerReady
+==== ServerReady
 * Type: IrcEvent
 * Properties: _(none)_
 
@@ -733,7 +731,7 @@ initial data describing its configurations and its features.
 At this point it is safe to start issuing commands, checking
 state, joining channels, etc.
 
-===== PingReceived
+==== PingReceived
 * Type: IrcEvent
 * Properties:
 ** `nonce`: `ByteArray` - the unique data that must be included in the reply
@@ -741,157 +739,156 @@ state, joining channels, etc.
 Raised when the IRC server sends a PING message to the client. KtIrc will
 automatically reply with an appropriate PONG.
 
-===== ServerCapabilitiesReceived
+==== ServerCapabilitiesReceived
 
 TODO
 
-===== ServerCapabilitiesAcknowledged
+==== ServerCapabilitiesAcknowledged
 
 TODO
 
-===== ServerCapabilitiesFinished
+==== ServerCapabilitiesFinished
 
 TODO
 
-===== MotdLineReceived
+==== MotdLineReceived
 
 TODO
 
-===== MotdFinished
+==== MotdFinished
 
 TODO
 
-==== Channel events
+=== Channel events
 
-===== ChannelJoined
-
-TODO
-
-===== ChannelJoinFailed
+==== ChannelJoined
 
 TODO
 
-===== ChannelParted
+==== ChannelJoinFailed
 
 TODO
 
-===== ChannelUserKicked
+==== ChannelParted
 
 TODO
 
-===== ChannelQuit
+==== ChannelUserKicked
 
 TODO
 
-===== ChannelNickChanged
+==== ChannelQuit
 
 TODO
 
-===== ChannelNamesReceived
+==== ChannelNickChanged
 
 TODO
 
-===== ChannelNamesFinished
+==== ChannelNamesReceived
 
 TODO
 
-===== ChannelTopicDiscovered
+==== ChannelNamesFinished
 
 TODO
 
-===== ChannelTopicMetadataDiscovered
+==== ChannelTopicDiscovered
 
 TODO
 
-===== ChannelTopicChanged
+==== ChannelTopicMetadataDiscovered
 
 TODO
 
-
-==== Channel/User events
-
-TODO
-
-===== MessageReceived
-
-TODO
-
-===== NoticeReceived
-
-TODO
-
-===== ActionReceived
-
-TODO
-
-===== CtcpReceived
-
-TODO
-
-===== CtcpReplyReceived
-
-TODO
-
-===== UserQuit
-
-TODO
-
-===== UserNickChanged
-
-TODO
-
-===== UserHostChanged
-
-TODO
-
-===== UserAccountChanged
-
-TODO
-
-===== ModeChanged
+==== ChannelTopicChanged
 
 TODO
 
 
-==== Other events
-
-===== AuthenticationMessage
+=== Channel/User events
 
 TODO
 
-===== SaslFinished
+==== MessageReceived
 
 TODO
 
-===== SaslMechanismNotAvailableError
+==== NoticeReceived
 
 TODO
 
-===== BatchStarted
+==== ActionReceived
 
 TODO
 
-===== BatchFinished
+==== CtcpReceived
 
 TODO
 
-===== BatchReceived
+==== CtcpReplyReceived
 
 TODO
 
-===== NicknameChangeFailed
+==== UserQuit
+
+TODO
+
+==== UserNickChanged
+
+TODO
+
+==== UserHostChanged
+
+TODO
+
+==== UserAccountChanged
+
+TODO
+
+==== ModeChanged
 
 TODO
 
 
-=== Messages
+=== Other events
+
+==== AuthenticationMessage
 
 TODO
 
-=== Utility methods
+==== SaslFinished
 
 TODO
 
-=== IRCv3 support
+==== SaslMechanismNotAvailableError
+
+TODO
+
+==== BatchStarted
+
+TODO
+
+==== BatchFinished
+
+TODO
+
+==== BatchReceived
+
+TODO
+
+==== NicknameChangeFailed
+
+TODO
+
+== Messages
+
+TODO
+
+== Utility methods
+
+TODO
+
+== IRCv3 support
 
 TODO
