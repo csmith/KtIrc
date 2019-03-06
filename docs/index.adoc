@@ -415,8 +415,8 @@ functions:
 
 [source,kotlin]
 ----
-'o' == getMode('@')
-"ov" == getModes("@+")
+getMode('@') == 'o'
+getModes("@+") == "ov"
 ----
 
 .serverState.channelTypes (String)
@@ -473,15 +473,108 @@ the server.
 
 ===== Features
 
-TODO
+Features are KtIrc's way of exposing the information the server declares in
+its ISUPPORT messages. These describe how the server is configured, and what
+limits are placed on clients. You access features using the `features` map
+in the server state:
+
+[source,kotlin]
+----
+ircClient.serverState.features[ServerFeature.Network]
+----
+
+The following features are available:
+
+* `Network` - the name of the network the server belongs to __(String?)__
+* `ServerCaseMapping` - the current case mapping of the server __(CaseMapping!)__
+* `Modeprefixes` - the user mode prefix mapping (e.g. ov to @+) __(ModePrefixMapping!)__
+* `MaximumChannels` - the maximum number of channels a user can join __(Int?)__
+* `ChannelModes` - the modes supported in channels __(Array<String>?)__
+* `ChannelTypes` - the types of channel supported (e.g. "#&") __(String!)__
+* `MaximumChannelNameLength` - how long channel names may be __(Int!)__
+* `WhoxSupport` - whether the server supports extended whos ("WHOX") __(Boolean!)__
+
+[NOTE]
+====
+If the server does not define a feature, KtIrc will either fall back to a
+default value based on the IRC RFCs or common practice (for those features
+identified with a non-null type such as `Int!` or `String!`); otherwise
+the value of the feature will be `null` (such as for those identified as
+`Int?` or `String?` types).
+====
 
 ==== UserState
 
-TODO
+The client's UserState object tracks the details of all users in common
+channels. It can be used to find the most up-to-date and comprehensive
+information for those users, as well as the set of channels that we share
+with them.
+
+The UserState is accessed via the `userState` property of IrcClient and
+acts as a map, accessible using either a nickname or a `User` object:
+
+[source,kotlin]
+----
+ircClient.userState["acidBurn"]
+
+val user: User = myIrcEvent.user
+ircClient.userState[user]
+----
+
+The UserState returns a `KnownUser` object which exposes a `details`
+property containing the user details, and a `channels` property
+containing the common channel names. You can also use the `in`
+operator to check if the user is in a channel:
+
+[source,kotlin]
+----
+ircClient.userState["acidBurn"]?.let { knownUser ->
+    val accountName = knownUser.account
+    val inChannel = "#channel" in knownUser
+    val allChannels = knownUser.channels
+}
+----
 
 ==== ChannelState
 
-TODO
+The ChannelState keeps track of the state for all channels that the client
+is joined to. It is indexed by channel name:
+
+[source,kotlin]
+----
+ircClient.channelState["#ktirc"]
+----
+
+Each channel's state contains the following properties:
+
+* `receivingUserList` - boolean value indicating whether we are in the process
+  of receiving the list of users for the channel. If we are, the `users`
+  property will be incomplete.
+* `modesDiscovered` - boolean value indicating whether we have received the
+  full set of modes set on the channel. The `requestModesOnJoin` <<Behaviour>>
+  allows you to make KtIrc request these automatically.
+* `topic` - a ChannelTopic object representing the current channel topic.
+  If no topic is set, then a ChannelTopic with `null` properties will be
+  provided.
+* `users` - a map of all known users in the channel, see <<Channel users>>
+  for more information
+* `modes` - A map of the current channel modes and their values. Only
+  complete if `modesDiscovered` is true.
+
+===== Channel users
+
+Channel users are accessed using the `users` property, which provides an
+iterable map of nickname to `ChannelUser`. Each `ChannelUser` contains
+the nickname and current modes for that user. To get further details about
+a user, such as their hostmask or real name, you should query the <<UserState>>
+with the given nickname.
+
+[source,kotlin]
+----
+ircClient.channelState["#ktirc"]?.users?.forEach { user ->
+    println("${user.nickname} has modes ${user.modes}")
+}
+----
 
 === Events
 
