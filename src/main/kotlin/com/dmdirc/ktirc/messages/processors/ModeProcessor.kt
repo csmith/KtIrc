@@ -4,6 +4,7 @@ import com.dmdirc.ktirc.events.ModeChanged
 import com.dmdirc.ktirc.messages.RPL_CHANNELMODEIS
 import com.dmdirc.ktirc.messages.RPL_UMODEIS
 import com.dmdirc.ktirc.model.IrcMessage
+import com.dmdirc.ktirc.model.User
 import com.dmdirc.ktirc.util.logger
 
 internal class ModeProcessor : MessageProcessor {
@@ -23,6 +24,7 @@ internal class ModeProcessor : MessageProcessor {
 
         return listOf(ModeChanged(
                 message.metadata,
+                user = message.sourceUser ?: User("*"),
                 target = String(message.params[paramOffset]),
                 modes = String(message.params[paramOffset + 1]),
                 arguments = message.params.takeLast(message.params.size - paramOffset - 2).map { String(it) }.toTypedArray(),

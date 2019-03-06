@@ -274,7 +274,8 @@ class MotdFinished(metadata: EventMetadata, val missing: Boolean = false) : IrcE
  * and the given modes are thus exhaustive. Otherwise, the modes are a sequence of changes to apply to the existing
  * state.
  */
-class ModeChanged(metadata: EventMetadata, target: String, val modes: String, val arguments: Array<String>, val discovered: Boolean = false) : TargetedEvent(metadata, target)
+class ModeChanged(metadata: EventMetadata, override val user: User, target: String, val modes: String, val arguments: Array<String>, val discovered: Boolean = false)
+    : TargetedEvent(metadata, target), SourcedEvent
 
 /** Raised when an AUTHENTICATION message is received. [argument] is `null` if the server sent an empty reply ("+") */
 class AuthenticationMessage(metadata: EventMetadata, val argument: String?) : IrcEvent(metadata)

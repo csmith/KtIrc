@@ -290,7 +290,7 @@ internal class ChannelStateHandlerTest {
         fakeChannelState += channel
         fakeServerState.features[ServerFeature.ChannelModes] = arrayOf("ab", "cd", "ef", "gh")
 
-        handler.processEvent(ircClient, ModeChanged(EventMetadata(TestConstants.time), "#thegibson", "+", emptyArray(), true))
+        handler.processEvent(ircClient, ModeChanged(EventMetadata(TestConstants.time), User("acidBurn"), "#thegibson", "+", emptyArray(), true))
 
         assertTrue(channel.modesDiscovered)
     }
@@ -301,7 +301,7 @@ internal class ChannelStateHandlerTest {
         fakeChannelState += channel
         fakeServerState.features[ServerFeature.ChannelModes] = arrayOf("ab", "cd", "ef", "gh")
 
-        handler.processEvent(ircClient, ModeChanged(EventMetadata(TestConstants.time), "#thegibson", "+ceg", arrayOf("CCC", "EEE"), true))
+        handler.processEvent(ircClient, ModeChanged(EventMetadata(TestConstants.time), User("acidBurn"), "#thegibson", "+ceg", arrayOf("CCC", "EEE"), true))
 
         assertEquals("CCC", channel.modes['c'])
         assertEquals("EEE", channel.modes['e'])
@@ -317,7 +317,7 @@ internal class ChannelStateHandlerTest {
         fakeChannelState += channel
         fakeServerState.features[ServerFeature.ChannelModes] = arrayOf("ab", "cd", "ef", "gh")
 
-        handler.processEvent(ircClient, ModeChanged(EventMetadata(TestConstants.time), "#thegibson", "-c+d-eh+fg", arrayOf("CCC", "DDD", "FFF"), true))
+        handler.processEvent(ircClient, ModeChanged(EventMetadata(TestConstants.time), User("acidBurn"), "#thegibson", "-c+d-eh+fg", arrayOf("CCC", "DDD", "FFF"), true))
 
         assertNull(channel.modes['c'])
         assertEquals("DDD", channel.modes['d'])
@@ -334,7 +334,7 @@ internal class ChannelStateHandlerTest {
             fakeChannelState += this
         }
 
-        handler.processEvent(ircClient, ModeChanged(EventMetadata(TestConstants.time), "#thegibson", "+o", arrayOf("zeroCool")))
+        handler.processEvent(ircClient, ModeChanged(EventMetadata(TestConstants.time), User("acidBurn"), "#thegibson", "+o", arrayOf("zeroCool")))
 
         assertEquals("o", fakeChannelState["#thegibson"]?.users?.get("zeroCool")?.modes)
     }
@@ -346,7 +346,7 @@ internal class ChannelStateHandlerTest {
             fakeChannelState += this
         }
 
-        handler.processEvent(ircClient, ModeChanged(EventMetadata(TestConstants.time), "#thegibson", "+v", arrayOf("zeroCool")))
+        handler.processEvent(ircClient, ModeChanged(EventMetadata(TestConstants.time), User("acidBurn"), "#thegibson", "+v", arrayOf("zeroCool")))
 
         assertEquals("ov", fakeChannelState["#thegibson"]?.users?.get("zeroCool")?.modes)
     }
@@ -358,7 +358,7 @@ internal class ChannelStateHandlerTest {
             fakeChannelState += this
         }
 
-        handler.processEvent(ircClient, ModeChanged(EventMetadata(TestConstants.time), "#thegibson", "+o", arrayOf("zeroCool")))
+        handler.processEvent(ircClient, ModeChanged(EventMetadata(TestConstants.time), User("acidBurn"), "#thegibson", "+o", arrayOf("zeroCool")))
 
         assertEquals("ov", fakeChannelState["#thegibson"]?.users?.get("zeroCool")?.modes)
     }
@@ -370,7 +370,7 @@ internal class ChannelStateHandlerTest {
             fakeChannelState += this
         }
 
-        handler.processEvent(ircClient, ModeChanged(EventMetadata(TestConstants.time), "#thegibson", "+vo", arrayOf("zeroCool", "zeroCool")))
+        handler.processEvent(ircClient, ModeChanged(EventMetadata(TestConstants.time), User("acidBurn"), "#thegibson", "+vo", arrayOf("zeroCool", "zeroCool")))
 
         assertEquals("ov", fakeChannelState["#thegibson"]?.users?.get("zeroCool")?.modes)
     }
@@ -382,7 +382,7 @@ internal class ChannelStateHandlerTest {
             fakeChannelState += this
         }
 
-        handler.processEvent(ircClient, ModeChanged(EventMetadata(TestConstants.time), "#thegibson", "-vo", arrayOf("zeroCool", "zeroCool")))
+        handler.processEvent(ircClient, ModeChanged(EventMetadata(TestConstants.time), User("acidBurn"), "#thegibson", "-vo", arrayOf("zeroCool", "zeroCool")))
 
         assertEquals("", fakeChannelState["#thegibson"]?.users?.get("zeroCool")?.modes)
     }
@@ -395,7 +395,7 @@ internal class ChannelStateHandlerTest {
         }
         fakeServerState.features[ServerFeature.ChannelModes] = arrayOf("ab", "cd", "ef", "gh")
 
-        handler.processEvent(ircClient, ModeChanged(EventMetadata(TestConstants.time), "#thegibson", "oa-v+b", arrayOf("zeroCool", "aaa", "zeroCool", "bbb")))
+        handler.processEvent(ircClient, ModeChanged(EventMetadata(TestConstants.time), User("acidBurn"), "#thegibson", "oa-v+b", arrayOf("zeroCool", "aaa", "zeroCool", "bbb")))
 
         assertEquals("o", fakeChannelState["#thegibson"]?.users?.get("zeroCool")?.modes)
         assertEquals("aaa", fakeChannelState["#thegibson"]?.modes?.get('a'))

@@ -2,6 +2,7 @@ package com.dmdirc.ktirc.messages.processors
 
 import com.dmdirc.ktirc.TestConstants
 import com.dmdirc.ktirc.model.IrcMessage
+import com.dmdirc.ktirc.model.User
 import com.dmdirc.ktirc.params
 import com.dmdirc.ktirc.util.currentTimeProvider
 import org.junit.jupiter.api.Assertions.*
@@ -22,6 +23,7 @@ internal class ModeProcessorTest {
         assertEquals(1, events.size)
 
         assertEquals(TestConstants.time, events[0].metadata.time)
+        assertEquals(User("acidburn", "libby", "root.localhost"), events[0].user)
         assertEquals("acidBurn", events[0].target)
         assertEquals("+hax", events[0].modes)
         assertEquals(0, events[0].arguments.size)
@@ -35,6 +37,7 @@ internal class ModeProcessorTest {
         assertEquals(1, events.size)
 
         assertEquals(TestConstants.time, events[0].metadata.time)
+        assertEquals(User("acidburn", "libby", "root.localhost"), events[0].user)
         assertEquals("acidBurn", events[0].target)
         assertEquals("+hax", events[0].modes)
         assertEquals(2, events[0].arguments.size)
@@ -50,6 +53,7 @@ internal class ModeProcessorTest {
         assertEquals(1, events.size)
 
         assertEquals(TestConstants.time, events[0].metadata.time)
+        assertEquals(User("acidburn", "libby", "root.localhost"), events[0].user)
         assertEquals("acidBurn", events[0].target)
         assertEquals("+hax", events[0].modes)
         assertEquals(0, events[0].arguments.size)
@@ -63,6 +67,7 @@ internal class ModeProcessorTest {
         assertEquals(1, events.size)
 
         assertEquals(TestConstants.time, events[0].metadata.time)
+        assertEquals(User("acidburn", "libby", "root.localhost"), events[0].user)
         assertEquals("acidBurn", events[0].target)
         assertEquals("+hax", events[0].modes)
         assertEquals(2, events[0].arguments.size)
@@ -78,6 +83,21 @@ internal class ModeProcessorTest {
         assertEquals(1, events.size)
 
         assertEquals(TestConstants.time, events[0].metadata.time)
+        assertEquals(User("acidburn", "libby", "root.localhost"), events[0].user)
+        assertEquals("#thegibson", events[0].target)
+        assertEquals("+hax", events[0].modes)
+        assertEquals(0, events[0].arguments.size)
+        assertTrue(events[0].discovered)
+    }
+
+    @Test
+    fun `raises event for channel mode discovery with no params and no prefix`() {
+        val events = ModeProcessor().process(
+                IrcMessage(emptyMap(), null, "324", params("acidBurn", "#thegibson", "+hax")))
+        assertEquals(1, events.size)
+
+        assertEquals(TestConstants.time, events[0].metadata.time)
+        assertEquals(User("*"), events[0].user)
         assertEquals("#thegibson", events[0].target)
         assertEquals("+hax", events[0].modes)
         assertEquals(0, events[0].arguments.size)
@@ -91,6 +111,7 @@ internal class ModeProcessorTest {
         assertEquals(1, events.size)
 
         assertEquals(TestConstants.time, events[0].metadata.time)
+        assertEquals(User("acidburn", "libby", "root.localhost"), events[0].user)
         assertEquals("#thegibson", events[0].target)
         assertEquals("+hax", events[0].modes)
         assertEquals(2, events[0].arguments.size)
@@ -106,6 +127,7 @@ internal class ModeProcessorTest {
         assertEquals(1, events.size)
 
         assertEquals(TestConstants.time, events[0].metadata.time)
+        assertEquals(User("acidburn", "libby", "root.localhost"), events[0].user)
         assertEquals("#thegibson", events[0].target)
         assertEquals("+hax", events[0].modes)
         assertEquals(0, events[0].arguments.size)
@@ -119,6 +141,7 @@ internal class ModeProcessorTest {
         assertEquals(1, events.size)
 
         assertEquals(TestConstants.time, events[0].metadata.time)
+        assertEquals(User("acidburn", "libby", "root.localhost"), events[0].user)
         assertEquals("#thegibson", events[0].target)
         assertEquals("+hax", events[0].modes)
         assertEquals(2, events[0].arguments.size)

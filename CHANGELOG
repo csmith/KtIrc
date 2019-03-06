@@ -4,6 +4,7 @@ vNEXT (in development)
  * Added ChannelJoinFailed event
  * Added ChannelMembershipAdjustment interface for events that concern
    users joining/leaving channels
+ * Added missing user parameter to ModeChangedEvent
 
 v0.10.3
 
