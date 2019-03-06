@@ -1,6 +1,7 @@
 vNEXT (in development)
 
  * Added SourcedEvent interface for events that have a user source attached
+ * Added ChannelJoinFailed event
 
 v0.10.3
 

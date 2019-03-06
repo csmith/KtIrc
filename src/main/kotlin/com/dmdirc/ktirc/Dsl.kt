@@ -27,7 +27,7 @@ internal data class IrcClientConfig(
  *
  * profile {
  *     nickname = "MyBot"           // Required
- *     username = "bot
+ *     username = "bot"
  *     realName = "Botomatic v1.2"
  * }
  *

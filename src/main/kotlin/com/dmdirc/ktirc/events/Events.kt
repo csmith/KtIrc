@@ -95,6 +95,39 @@ class PingReceived(metadata: EventMetadata, val nonce: ByteArray) : IrcEvent(met
 /** Raised when a user joins a channel. */
 class ChannelJoined(metadata: EventMetadata, override val user: User, channel: String) : TargetedEvent(metadata, channel), SourcedEvent
 
+/** Raised when an attempt to join a channel fails. */
+class ChannelJoinFailed(metadata: EventMetadata, channel: String, val reason: JoinError) : TargetedEvent(metadata, channel) {
+    /** Reasons a join may fail. */
+    enum class JoinError {
+        /** We are already in the maximum number of channels allowed by the server. */
+        TooManyChannels,
+        /** The channel is no-hiding (+H), but we have invisible join/parts enabled. */
+        NoHiding,
+        /** The channel is keyed (+k) and a valid key was not provided. */
+        NeedKey,
+        /** The channel is invite only (+i) and no invite was received. */
+        NeedInvite,
+        /** The channel is limited to registered users only, and we are not registered. */
+        NeedRegisteredNick,
+        /** The channel is secure-only, and we're not using TLS. */
+        NeedTls,
+        /** The channel is limited to server admins and we are not one. */
+        NeedAdmin,
+        /** The channel is limited to ircops and we are not one. */
+        NeedOper,
+        /** We are banned from the channel. */
+        Banned,
+        /** The channel is limited (+l) and currently full. */
+        ChannelFull,
+        /** The channel name is disallowed by the server. */
+        BadChannelName,
+        /** We're trying to joiin too many channels and have been throttled. */
+        Throttled,
+        /** We don't know why. */
+        Unknown
+    }
+}
+
 /** Raised when a user leaves a channel. */
 class ChannelParted(metadata: EventMetadata, override val user: User, channel: String, val reason: String = "") : TargetedEvent(metadata, channel), SourcedEvent
 
