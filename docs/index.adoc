@@ -731,13 +731,18 @@ initial data describing its configurations and its features.
 At this point it is safe to start issuing commands, checking
 state, joining channels, etc.
 
-==== PingReceived
+==== ServerDisconnected
 * Type: IrcEvent
-* Properties:
-** `nonce`: `ByteArray` - the unique data that must be included in the reply
+* Properties: _(none)_
 
-Raised when the IRC server sends a PING message to the client. KtIrc will
-automatically reply with an appropriate PONG.
+Raised in all cases where KtIrc has attempted to connect to an IRC server and
+has now been disconnected. KtIrc will not automatically attempt to reconnect;
+the `connect()` method should be called again after an appropriate delay.
+
+NOTE: All of KtIrc's internal state, such as details about users and
+channels, will be reset when disconnected from the server. State should not
+be queried until a new <<ServerReady>> event has been received, at which
+point it will have been recreated.
 
 ==== ServerCapabilitiesReceived
 
@@ -852,6 +857,14 @@ TODO
 
 
 === Other events
+
+==== PingReceived
+* Type: IrcEvent
+* Properties:
+** `nonce`: `ByteArray` - the unique data that must be included in the reply
+
+Raised when the IRC server sends a PING message to the client. KtIrc will
+automatically reply with an appropriate PONG.
 
 ==== AuthenticationMessage
 
