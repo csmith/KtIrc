@@ -1066,7 +1066,7 @@ TODO
 
 The following table shows KtIrc's IRCv3 support as of this release:
 
-[cols=3,options="header"]
+[cols=3,options="header,autowidth"]
 |===
 | Feature
 | Status
