@@ -708,18 +708,6 @@ message. It contains the name that the server supplied for itself
 identifies itself as `node3.uk.irc.example.com`), and the nickname
 that the server says we are using.
 
-==== ServerFeaturesUpdated
-* Type: IrcEvent
-* Properties:
-** `serverFeatures`: `ServerFeatureMap` - the features supplied by the server
-
-Corresponds to the server sending a single 005 ISUPPORT line. Multiple
-events of this type may be raised in quick succession when features are
-split over multiple lines.
-
-In general, you should wait for a <<ServerReady>> event and then query the
-<<Features>> instead of relying on this event.
-
 ==== ServerReady
 * Type: IrcEvent
 * Properties: _(none)_
@@ -744,55 +732,160 @@ channels, will be reset when disconnected from the server. State should not
 be queried until a new <<ServerReady>> event has been received, at which
 point it will have been recreated.
 
-==== ServerCapabilitiesReceived
-
-TODO
-
-==== ServerCapabilitiesAcknowledged
-
-TODO
-
-==== ServerCapabilitiesFinished
-
-TODO
-
 ==== MotdLineReceived
+* Type: IrcEvent
+* Properties:
+** `line`: `String` - the line of the message of the day that was received
+** `first`: `Boolean` - true if the line is the first one received
 
-TODO
+The MotdLineReceived event is raised whenever the server sends a single
+line of its Message of the Day. The `first` parameter is set on the
+first line of the MOTD so that special formatting or UI handling can
+be applied. When the MOTD is finished, a <<MotdFinished>> event is raised.
 
 ==== MotdFinished
+* Type: IrcEvent
+* Properties:
+** `missing`: `Boolean` - indicates the MOTD was missing
 
-TODO
+This event occurs in two circumstances: when the server has sent a
+series of <<MotdLineReceived>> events and has reached the end of the
+Message of the Day; or when the server has no MOTD to send and
+informs the client that the MOTD is missing.
 
 === Channel events
 
-==== ChannelJoined
+NOTE: Many events such as <<MessageReceived>> apply to both channels and
+users. These are documented in the <<Channel/User events>> category.
 
-TODO
+==== ChannelJoined
+* Type: IrcEvent, TargetedEvent, SourcedEvent, ChannelMembershipAdjustment
+* Properties:
+** `user`: `User` - the user that joined the channel
+** `target`: `String` - the channel that was joined
+
+Raised whenever a user joins a channel, including the KtIrc client. You
+can determine whether the join applies to another user or the local client
+using the <<isLocalClient>> utility method.
+
+When the local client joins a new channel, this event will typically be
+followed by one or more <<ChannelNamesReceived>> events, then
+<<ChannelNamesFinished>>, <<ChannelTopicDiscovered>> and if the
+`requestModesOnJoin` <<Behaviour>> is enabled a <<ModeChanged>> event.
 
 ==== ChannelJoinFailed
+* Type: IrcEvent, TargetedEvent
+* Properties:
+** `target`: `String` - the channel that we tried to join
+** `reason`: `JoinError` - the error that prevented us from joining
 
-TODO
+The ChannelJoinFailed event is raised when we attempt to join a channel
+but the server doesn't allow us to do so. The reason parameter enumerates
+the possible problems:
+
+* `TooManyChannels` - we are already in the maximum number of channels allowed
+  by the server.
+* `NoHiding` - the channel is no-hiding (+H), but we have invisible join/parts
+  enabled.
+* `NeedKey` - the channel is keyed (+k) and a valid key was not provided
+* `NeedInvite` - the channel is invite only (+i) and no invite was received.
+* `NeedRegisteredNick` - the channel is limited to registered users only, and we
+  are not registered.
+* `NeedTls` - the channel is secure-only, and we're not using TLS.
+* `NeedAdmin` - the channel is limited to server admins and we are not one.
+* `NeedOper` - the channel is limited to ircops and we are not one.
+* `Banned` - we are banned from the channel.
+* `ChannelFull` - the channel is limited (+l) and currently full.
+* `BadChannelName` - the channel name is disallowed by the server.
+* `Throttled` - we're trying to joiin too many channels and have been throttled.
+* `Unknown` - we don't know why.
+
+[WARNING]
+====
+ChannelJoinFailed events are generated on a _best-effort_ basis by KtIrc. Error
+handling on IRC is very poorly standardised, and varies wildly between server
+implementations. For example, trying to join a secure-only channel on an
+ircd-seven server will send a NOTICE to the user instead of an error response,
+so no `ChannelJoinFailed` event will be raised.
+
+When tracking whether a join suceeded or failed you should combine monitoring
+for the response with a reasonable timeout, and assume failure if the timeout
+lapses without a <<ChannelJoined>> or <<ChannelJoinFailed>> event occurring.
+====
 
 ==== ChannelParted
+* Type: IrcEvent, TargetedEvent, SourcedEvent, ChannelMembershipAdjustment
+* Properties:
+** `user`: `User` - the user that parted the channel
+** `target`: `String` - the channel that was parted
+** `reason`: `String` - the user-supplied reason for parting
 
-TODO
+Raised when any user parts a channel that we are on. Users can supply a reason
+when parting a channel; if they have done so the `reason` property will be
+non-empty.
 
 ==== ChannelUserKicked
+* Type: IrcEvent, TargetedEvent, SourcedEvent, ChannelMembershipAdjustment
+* Properties:
+** `user`: `User` - the user that performed the kick
+** `victim`: `String` - the nickname of the user that was kicked
+** `target`: `String` - the channel that the victim was kicked from
+** `reason`: `String` - the user-supplied reason for kicking
 
-TODO
+This event occurs when a user is kicked (forcibly removed) from a channel.
+
+NOTE: The `user` is the one performing the kick, and will remain in the
+channel. The `victim` is the one being forcibly ejected.
 
 ==== ChannelQuit
+* Type: IrcEvent, TargetedEvent, SourcedEvent, ChannelMembershipAdjustment
+* Properties:
+** `user`: `User` - the user that quit
+** `target`: `String` - the channel that the user was in
+** `reason`: `String` - the user-supplied reason for quitting
 
-TODO
+After a <<UserQuit>> event, KtIrc will "fan out" the event to all of the
+channels that we share with the user and raise a `ChannelQuit` event for
+each channel. This is designed to make implementing certain features easier;
+if you fully handle a UserQuit event there is no need to also handle the
+ChannelQuit events, and vice-versa.
+
+Users and servers can supply a reason when a user quits; if supplied then
+the `reason` parameter will be non-empty.
 
 ==== ChannelNickChanged
+* Type: IrcEvent, TargetedEvent, SourcedEvent, ChannelMembershipAdjustment
+* Properties:
+** `user`: `User` - the user who has changed their nickname
+** `target`: `String` - the channel that the user is in
+** `newNick`: `String` - the user's new nickname
 
-TODO
+After a <<UserNickChanged>> event, KtIrc will "fan out" the event to
+all of the channels that we share with the user and raise a `ChannelNickChanged`
+event for each channel. This is designed to make implementing certain features
+easier; if you fully handle a UserNickChanged event there is no need to also
+handle the ChannelNickChanged events, and vice-versa.
+
+TIP: The user property will contain the user's old details, but you will
+not be able to access additional information from the <<UserState>> using
+these details as KtIrc will have internally renamed the user to use the
+new nickname.
 
 ==== ChannelNamesReceived
+* Type: IrcEvent, TargetedEvent
+* Properties:
+** `target`: `String` - the channel that the user is in
+** `names`: `List<String>` - the partial list of names that are in the channel
 
-TODO
+When we join a channel (or manually request it) the IRC server sends the
+list of channel members in a sequence of NAMES messages. KtIrc raises a
+`ChannelNamesReceived` event for each of these messages.
+
+WARNING: The given names may not be a complete list of  members of the channel,
+as more names could follow. The format of the names varies between IRC servers
+and depending on the IRCv3 <<Capabilities>> that KtIrc negotiated. Most
+implementations should simply wait for <<ChannelNamesFinished>> and then request
+the complete list of names from KtIrc's <<ChannelState>>.
 
 ==== ChannelNamesFinished
 
@@ -866,6 +959,30 @@ TODO
 Raised when the IRC server sends a PING message to the client. KtIrc will
 automatically reply with an appropriate PONG.
 
+==== ServerFeaturesUpdated
+* Type: IrcEvent
+* Properties:
+** `serverFeatures`: `ServerFeatureMap` - the features supplied by the server
+
+Corresponds to the server sending a single 005 ISUPPORT line. Multiple
+events of this type may be raised in quick succession when features are
+split over multiple lines.
+
+In general, you should wait for a <<ServerReady>> event and then query the
+<<Features>> instead of relying on this event.
+
+==== ServerCapabilitiesReceived
+
+TODO
+
+==== ServerCapabilitiesAcknowledged
+
+TODO
+
+==== ServerCapabilitiesFinished
+
+TODO
+
 ==== AuthenticationMessage
 
 TODO
@@ -899,6 +1016,10 @@ TODO
 TODO
 
 == Utility methods
+
+TODO
+
+=== isLocalClient
 
 TODO
 
