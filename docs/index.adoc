@@ -585,7 +585,7 @@ ircClient.channelState["#ktirc"]?.users?.forEach { user ->
 
 == Events
 
-Incoming lines from the IRC server are covered by KtIrc to subclasses of
+Incoming lines from the IRC server are converted by KtIrc to subclasses of
 `IrcEvent`. These, along with other more advance events, are then published
 to users of the client using the `onEvent` method in `IrcClient`.
 
@@ -888,21 +888,52 @@ implementations should simply wait for <<ChannelNamesFinished>> and then request
 the complete list of names from KtIrc's <<ChannelState>>.
 
 ==== ChannelNamesFinished
+* Type: IrcEvent, TargetedEvent, ChannelMembershipAdjustment
+* Properties:
+** `target`: `String` - the channel whose names response has finished
 
-TODO
+Raised when the IRC server has finished receiving all of the names of users
+that are currently in a channel. At this point you can query the channel's
+<<ChannelState>> to get a detailed list of members.
 
 ==== ChannelTopicDiscovered
+* Type: IrcEvent, TargetedEvent
+* Properties:
+** `target`: `String` - the channel whose topic was discovered
+** `topic`: `String?` - the topic in the channel, if any
 
-TODO
+`ChannelTopicDiscovered` occurs when we join a channel (or manually request
+that the server repeats the current topic) and contains the current channel
+topic. If there is no topic set, the `topic` parameter will be `null`.
+
+Metadata about the topic, such as who set it and when, is contained in the
+<<ChannelTopicMetadataDiscovered>> event which should follow this one, if
+the topic was set.
 
 ==== ChannelTopicMetadataDiscovered
+* Type: IrcEvent, TargetedEvent
+* Properties:
+** `target`: `String` - the channel whose topic metadata was discovered
+** `user`: `User` - the user who set the topic
+** `setTime`: `LocalDateTime` - the time at which the topic was set
 
-TODO
+Provides meta-data relating to a topic that was previously set on the
+channel.
+
+NOTE: The given user may not exist on the network any more, or may have
+changed details since the topic was set. You should not expect to be able
+to look up the user's details in the <<UserState>>, or interact with them
+directly on IRC.
 
 ==== ChannelTopicChanged
+* Type: IrcEvent, TargetedEvent, SourcedEvent
+* Properties:
+** `user`: `User` - the user who has changed the topic
+** `target`: `String` - the channel that the topic was changed in
+** `topic`: `String?` - the channel's new topic
 
-TODO
-
+Raised when a user changes the topic of a channel we are joined to. If
+the topic was cleared/removed, the `topic` parameter will be `null`.
 
 === Channel/User events
 
@@ -1023,6 +1054,156 @@ TODO
 
 TODO
 
-== IRCv3 support
+=== react
 
 TODO
+
+=== reply
+
+TODO
+
+== IRCv3 support
+
+The following table shows KtIrc's IRCv3 support as of this release:
+
+[cols=3,options="header"]
+|===
+| Feature
+| Status
+| Notes
+
+3+h| Capability negotiation
+
+| https://ircv3.net/specs/core/capability-negotiation.html[CAP]
+| Supported
+| See <<Supported capabilities>> for the caps KtIrc will negotiate
+
+| https://ircv3.net/specs/core/capability-negotiation.html#cap-ls-version[CAP 302]
+| Supported
+| See <<Supported capabilities>> for the caps KtIrc will negotiate
+
+| https://ircv3.net/specs/core/capability-negotiation.html#cap-notify[cap-notify]
+2+| Not yet supported
+
+3+h| Published specifications
+
+| https://ircv3.net/specs/extensions/account-notify-3.1.html[account-notify] v3.1
+| Supported
+| See <<UserAccountChanged>>
+
+| https://ircv3.net/specs/extensions/account-tag-3.2.html[account-tag] v3.2
+| Supported
+| Accounts are automatically added to `User` properties in events
+
+| https://ircv3.net/specs/extensions/away-notify-3.1.html[away-notify] v3.1
+| Partial support
+| Negotiated but not yet exposed as an event
+
+| https://ircv3.net/specs/extensions/batch-3.2.html[batch] v3.2
+| Supported
+| See <<BatchReceived>>
+
+| https://ircv3.net/specs/extensions/chghost-3.2.html[chghost] v3.2
+| Supported
+| See <<UserHostChanged>>
+
+| https://ircv3.net/specs/extensions/echo-message-3.2.html[echo-message] v3.2
+| Supported
+| See also the `alwaysEchoMessages` <<Behaviour>>
+
+| https://ircv3.net/specs/extensions/extended-join-3.1.html[extended-join] v3.1
+| Supported
+| Additional details are automatically added to `User` properties in events
+
+| https://ircv3.net/specs/extensions/invite-notify-3.2.html[invite-notify] v3.2
+2+| Not yet supported
+
+| https://ircv3.net/specs/extensions/message-tags.html[message-tags]
+| Supported
+| Exposed in the metadata property of <<Events>>
+
+| https://ircv3.net/specs/core/monitor-3.2.html[monitor]
+2+| Not yet supported
+
+| https://ircv3.net/specs/extensions/multi-prefix-3.1.html[multi-prefix] v3.1
+| Supported
+| Automatically included in <<ChannelState>>
+
+| https://ircv3.net/specs/extensions/sasl-3.1.html[SASL] v3.1
+| Supported
+| See <<SASL configuration>>
+
+| https://ircv3.net/specs/extensions/sasl-3.2.html[SASL] v3.2
+| Partial support
+| Notifications via `cap-notify` not yet supported. See <<SASL configuration>>
+
+| https://ircv3.net/specs/extensions/server-time-3.2.html[server-time] v3.2
+| Supported
+| Exposed in the metadata property of <<Events>>
+
+| https://ircv3.net/specs/extensions/sts.html[sts]
+2+| Not yet supported
+
+| https://ircv3.net/specs/extensions/userhost-in-names-3.2.html[userhost-in-names] v3.2
+| Supported
+| Automatically included in <<UserState>>
+
+| https://ircv3.net/specs/extensions/webirc.html[webirc]
+2+| Not yet supported
+
+3+h| Draft specifications
+
+| https://github.com/ircv3/ircv3-specifications/pull/363[brb]
+2+| Not yet supported
+
+| https://github.com/ircv3/ircv3-specifications/pull/308[channel renaming]
+2+| Not yet supported
+
+| https://github.com/ircv3/ircv3-specifications/pull/349[chathistory]
+2+| Not yet supported
+
+| https://github.com/ircv3/ircv3-specifications/pull/346[delivered]
+2+| Not yet supported
+
+| https://github.com/ircv3/ircv3-specifications/pull/304[editmsg]
+2+| Not yet supported
+
+| https://ircv3.net/specs/extensions/labeled-response.html[labeled-response]
+| Supported
+| Exposed in the metadata property of <<Events>>
+
+| https://ircv3.net/specs/extensions/message-ids.html[message-ids]
+2+| Not yet supported
+
+| https://github.com/ircv3/ircv3-specifications/pull/330[migrate]
+2+| Not yet supported
+
+| https://ircv3.net/specs/client-tags/react.html[react]
+| Partial support
+| Sending via <<react>> method, no events generated
+
+| https://github.com/ircv3/ircv3-specifications/pull/347[read]
+2+| Not yet supported
+
+| https://github.com/ircv3/ircv3-specifications/pull/276[register]
+2+| Not yet supported
+
+| https://ircv3.net/specs/client-tags/reply.html[reply]
+| Partial support
+| Sending via <<reply>> method, not processed on incoming messages
+
+| https://github.com/ircv3/ircv3-specifications/pull/306[resume]
+2+| Not yet supported
+
+| https://github.com/ircv3/ircv3-specifications/pull/361[setname]
+2+| Not yet supported
+
+| https://github.com/ircv3/ircv3-specifications/pull/357[standard replies]
+2+| Not yet supported
+
+| https://github.com/ircv3/ircv3-specifications/pull/348[typing]
+2+| Not yet supported
+
+3+^h|Vendor specifications
+
+|===
