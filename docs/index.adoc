@@ -766,7 +766,7 @@ users. These are documented in the <<Channel/User events>> category.
 
 Raised whenever a user joins a channel, including the KtIrc client. You
 can determine whether the join applies to another user or the local client
-using the <<isLocalClient>> utility method.
+using the <<IsLocalClient>> utility method.
 
 When the local client joins a new channel, this event will typically be
 followed by one or more <<ChannelNamesReceived>> events, then
@@ -1050,15 +1050,15 @@ TODO
 
 TODO
 
-=== isLocalClient
+=== IsLocalClient
 
 TODO
 
-=== react
+=== React
 
 TODO
 
-=== reply
+=== Reply
 
 TODO
 
@@ -1075,134 +1075,170 @@ The following table shows KtIrc's IRCv3 support as of this release:
 3+h| Capability negotiation
 
 | https://ircv3.net/specs/core/capability-negotiation.html[CAP]
-| Supported
-| See <<Supported capabilities>> for the caps KtIrc will negotiate
+| {set:cellbgcolor:darkgreen} Supported
+| {set:cellbgcolor!}
+See <<Supported capabilities>> for the caps KtIrc will negotiate
 
 | https://ircv3.net/specs/core/capability-negotiation.html#cap-ls-version[CAP 302]
-| Supported
-| See <<Supported capabilities>> for the caps KtIrc will negotiate
+| {set:cellbgcolor:darkgreen} Supported
+| {set:cellbgcolor!}
+See <<Supported capabilities>> for the caps KtIrc will negotiate
 
 | https://ircv3.net/specs/core/capability-negotiation.html#cap-notify[cap-notify]
-2+| Not yet supported
+| {set:cellbgcolor:darkred} Not yet supported
+| {set:cellbgcolor!}
 
 3+h| Published specifications
 
 | https://ircv3.net/specs/extensions/account-notify-3.1.html[account-notify] v3.1
-| Supported
-| See <<UserAccountChanged>>
+| {set:cellbgcolor:darkgreen} Supported
+| {set:cellbgcolor!}
+See <<UserAccountChanged>>
 
 | https://ircv3.net/specs/extensions/account-tag-3.2.html[account-tag] v3.2
-| Supported
-| Accounts are automatically added to `User` properties in events
+| {set:cellbgcolor:darkgreen} Supported
+| {set:cellbgcolor!}
+Accounts are automatically added to `User` properties in events
 
 | https://ircv3.net/specs/extensions/away-notify-3.1.html[away-notify] v3.1
-| Partial support
-| Negotiated but not yet exposed as an event
+| {set:cellbgcolor:orange} Partial support
+| {set:cellbgcolor!}
+Negotiated but not yet exposed as an event
 
 | https://ircv3.net/specs/extensions/batch-3.2.html[batch] v3.2
-| Supported
-| See <<BatchReceived>>
+| {set:cellbgcolor:darkgreen} Supported
+| {set:cellbgcolor!}
+See <<BatchReceived>>
 
 | https://ircv3.net/specs/extensions/chghost-3.2.html[chghost] v3.2
-| Supported
-| See <<UserHostChanged>>
+| {set:cellbgcolor:darkgreen} Supported
+| {set:cellbgcolor!}
+See <<UserHostChanged>>
 
 | https://ircv3.net/specs/extensions/echo-message-3.2.html[echo-message] v3.2
-| Supported
-| See also the `alwaysEchoMessages` <<Behaviour>>
+| {set:cellbgcolor:darkgreen} Supported
+| {set:cellbgcolor!}
+See also the `alwaysEchoMessages` <<Behaviour>>
 
 | https://ircv3.net/specs/extensions/extended-join-3.1.html[extended-join] v3.1
-| Supported
-| Additional details are automatically added to `User` properties in events
+| {set:cellbgcolor:darkgreen} Supported
+| {set:cellbgcolor!}
+Additional details are automatically added to `User` properties in events
 
 | https://ircv3.net/specs/extensions/invite-notify-3.2.html[invite-notify] v3.2
-2+| Not yet supported
+| {set:cellbgcolor:darkred} Not yet supported
+| {set:cellbgcolor!}
 
 | https://ircv3.net/specs/extensions/message-tags.html[message-tags]
-| Supported
-| Exposed in the metadata property of <<Events>>
+| {set:cellbgcolor:darkgreen} Supported
+| {set:cellbgcolor!}
+Exposed in the metadata property of <<Events>>
 
 | https://ircv3.net/specs/core/monitor-3.2.html[monitor]
-2+| Not yet supported
+| {set:cellbgcolor:darkred} Not yet supported
+| {set:cellbgcolor!}
 
 | https://ircv3.net/specs/extensions/multi-prefix-3.1.html[multi-prefix] v3.1
-| Supported
-| Automatically included in <<ChannelState>>
+| {set:cellbgcolor:darkgreen} Supported
+| {set:cellbgcolor!}
+Automatically included in <<ChannelState>>
 
 | https://ircv3.net/specs/extensions/sasl-3.1.html[SASL] v3.1
-| Supported
-| See <<SASL configuration>>
+| {set:cellbgcolor:darkgreen} Supported
+| {set:cellbgcolor!}
+See <<SASL configuration>>
 
 | https://ircv3.net/specs/extensions/sasl-3.2.html[SASL] v3.2
-| Partial support
-| Notifications via `cap-notify` not yet supported. See <<SASL configuration>>
+| {set:cellbgcolor:orange} Partial support
+| {set:cellbgcolor!}
+Notifications via `cap-notify` not yet supported. See <<SASL configuration>>
 
 | https://ircv3.net/specs/extensions/server-time-3.2.html[server-time] v3.2
-| Supported
-| Exposed in the metadata property of <<Events>>
+| {set:cellbgcolor:darkgreen} Supported
+| {set:cellbgcolor!}
+Exposed in the metadata property of <<Events>>
 
 | https://ircv3.net/specs/extensions/sts.html[sts]
-2+| Not yet supported
+| {set:cellbgcolor:darkred} Not yet supported
+| {set:cellbgcolor!}
 
 | https://ircv3.net/specs/extensions/userhost-in-names-3.2.html[userhost-in-names] v3.2
-| Supported
-| Automatically included in <<UserState>>
+| {set:cellbgcolor:darkgreen} Supported
+| {set:cellbgcolor!}
+Automatically included in <<UserState>>
 
 | https://ircv3.net/specs/extensions/webirc.html[webirc]
-2+| Not yet supported
+| {set:cellbgcolor:darkred} Not yet supported
+| {set:cellbgcolor!}
 
 3+h| Draft specifications
 
 | https://github.com/ircv3/ircv3-specifications/pull/363[brb]
-2+| Not yet supported
+| {set:cellbgcolor:darkred} Not yet supported
+| {set:cellbgcolor!}
 
 | https://github.com/ircv3/ircv3-specifications/pull/308[channel renaming]
-2+| Not yet supported
+| {set:cellbgcolor:darkred} Not yet supported
+| {set:cellbgcolor!}
 
 | https://github.com/ircv3/ircv3-specifications/pull/349[chathistory]
-2+| Not yet supported
+| {set:cellbgcolor:darkred} Not yet supported
+| {set:cellbgcolor!}
 
 | https://github.com/ircv3/ircv3-specifications/pull/346[delivered]
-2+| Not yet supported
+| {set:cellbgcolor:darkred} Not yet supported
+| {set:cellbgcolor!}
 
 | https://github.com/ircv3/ircv3-specifications/pull/304[editmsg]
-2+| Not yet supported
+| {set:cellbgcolor:darkred} Not yet supported
+| {set:cellbgcolor!}
 
 | https://ircv3.net/specs/extensions/labeled-response.html[labeled-response]
-| Supported
-| Exposed in the metadata property of <<Events>>
+| {set:cellbgcolor:darkgreen} Supported
+| {set:cellbgcolor!}
+Exposed in the metadata property of <<Events>>
 
 | https://ircv3.net/specs/extensions/message-ids.html[message-ids]
-2+| Not yet supported
+| {set:cellbgcolor:darkred} Not yet supported
+| {set:cellbgcolor!}
 
 | https://github.com/ircv3/ircv3-specifications/pull/330[migrate]
-2+| Not yet supported
+| {set:cellbgcolor:darkred} Not yet supported
+| {set:cellbgcolor!}
 
 | https://ircv3.net/specs/client-tags/react.html[react]
-| Partial support
-| Sending via <<react>> method, no events generated
+| {set:cellbgcolor:orange} Partial support
+| {set:cellbgcolor!}
+Sending via <<React>> method, no events generated
 
 | https://github.com/ircv3/ircv3-specifications/pull/347[read]
-2+| Not yet supported
+| {set:cellbgcolor:darkred} Not yet supported
+| {set:cellbgcolor!}
 
 | https://github.com/ircv3/ircv3-specifications/pull/276[register]
-2+| Not yet supported
+| {set:cellbgcolor:darkred} Not yet supported
+| {set:cellbgcolor!}
 
 | https://ircv3.net/specs/client-tags/reply.html[reply]
-| Partial support
-| Sending via <<reply>> method, not processed on incoming messages
+| {set:cellbgcolor:orange} Partial support
+| {set:cellbgcolor!}
+Sending via <<Reply>> method, not processed on incoming messages
 
 | https://github.com/ircv3/ircv3-specifications/pull/306[resume]
-2+| Not yet supported
+| {set:cellbgcolor:darkred} Not yet supported
+| {set:cellbgcolor!}
 
 | https://github.com/ircv3/ircv3-specifications/pull/361[setname]
-2+| Not yet supported
+| {set:cellbgcolor:darkred} Not yet supported
+| {set:cellbgcolor!}
 
 | https://github.com/ircv3/ircv3-specifications/pull/357[standard replies]
-2+| Not yet supported
+| {set:cellbgcolor:darkred} Not yet supported
+| {set:cellbgcolor!}
 
 | https://github.com/ircv3/ircv3-specifications/pull/348[typing]
-2+| Not yet supported
+| {set:cellbgcolor:darkred} Not yet supported
+| {set:cellbgcolor!}
 
 3+^h|Vendor specifications
 
