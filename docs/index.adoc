@@ -172,6 +172,31 @@ commands that KtIrc supports can be invoked using the `send*` methods,
 which are documented in the <<Messages>> reference. Other useful methods
 such as `reply` can be found in the <<Utility methods>> reference.
 
+=== Mandatory event handling
+
+In order to properly connect to IRC, stay connected, and handle
+incoming messages properly, the following events MUST be handled:
+
+.<<NicknameChangeRequired>>
+The nickname change required event occurs when connecting to a server
+if our initial nickname is taken. A new nickname must be supplied
+to continue connecting.
+
+.<<ServerDisconnected>>
+When KtIrc becomes disconnected from a server, or fails a connection
+attempt, it will raise this event. If you wish to stay connected
+to IRC you must call the `connect()` method to start a reconnection
+attempt after an appropriate delay.
+
+.<<BatchReceived>>
+On servers that support the IRCv3 batch capability, some incoming
+messages may be sent inside a batch. These could include join or
+quit messages during a netsplit, or other important messages you
+may need to process. At minimum, when receiving a BatchReceived
+event you should apply your normal processing to all the events
+contained within.
+
+
 == IrcClient DSL
 
 The DSL for creating a new `IrcClient` allows you to set a number of
@@ -1039,10 +1064,42 @@ TODO
 TODO
 
 ==== NicknameChangeFailed
+* Type: IrcEvent
+* Properties:
+** `cause`: `NicknameChangeError` - the reason the nickname must be changed
+
+Raised when the server informs us that our desired nickname is not available
+for some reason. The `cause` parameter will contain a specific reason given
+by the server:
+
+* `ErroneousNickname` - the nickname is not allowed by the server (e.g. it used
+  restricted characters)
+* `AlreadyInUse` - the nickname is already in use
+* `Collision` - the nickname has collided with another somehow
+* `NoNicknameGiven` - no nickname was provided
+
+==== NicknameChangeRequired
+* Type: IrcEvent, NicknameChangeFailed
+* Properties:
+** `cause`: `NicknameChangeError` - the reason the nickname must be changed
+
+Raised during a connection attempt when there is a problem with the nickname
+that KtIrc was told to use. The exact problem will be detailed in the `cause`
+parameter, and has the same options as the <<NicknameChangeFailed>> event.
+
+Upon receiving this event, a new nickname MUST be chosen and sent to the
+server with the <<sendNickChange>> method. Failure to do so will result
+in the IRC server terminating the connection.
+
+WARNING: `NicknameChangeRequired` currently extends `NicknameChangeFailed`
+for backwards compatibility. This will be removed in KtIrc 2.0.0, and
+both events will need to be handled separately.
+
+== Messages
 
 TODO
 
-== Messages
+==== sendNickChange
 
 TODO
 

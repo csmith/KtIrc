@@ -1,5 +1,8 @@
 vNEXT (in development)
 
+ * Added NicknameChangeRequired event for the case when a nickname is
+   not allowed during connection and *MUST* be changed
+
 v0.11.0
 
  * Added SourcedEvent interface for events that have a user source attached

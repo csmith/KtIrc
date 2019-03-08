@@ -14,5 +14,6 @@ internal interface EventMutator {
 internal val eventMutators = listOf(
         ServerReadyMutator(),
         ChannelFanOutMutator(),
+        NickChangeRequiredMutator(),
         BatchMutator()
 )

@@ -1,5 +1,6 @@
 package com.dmdirc.ktirc.messages.processors
 
+import com.dmdirc.ktirc.events.NicknameChangeError
 import com.dmdirc.ktirc.events.NicknameChangeFailed
 import com.dmdirc.ktirc.messages.ERR_ERRONEUSNICKNAME
 import com.dmdirc.ktirc.messages.ERR_NICKCOLLISION
@@ -13,11 +14,11 @@ internal class NickChangeErrorProcessor : MessageProcessor {
 
     override fun process(message: IrcMessage) = listOf(NicknameChangeFailed(message.metadata, message.command.toNicknameChangeError()))
 
-    private fun String.toNicknameChangeError(): NicknameChangeFailed.NicknameChangeError = when(this) {
-        ERR_ERRONEUSNICKNAME -> NicknameChangeFailed.NicknameChangeError.ErroneousNickname
-        ERR_NICKCOLLISION -> NicknameChangeFailed.NicknameChangeError.Collision
-        ERR_NICKNAMEINUSE -> NicknameChangeFailed.NicknameChangeError.AlreadyInUse
-        ERR_NONICKNAMEGIVEN -> NicknameChangeFailed.NicknameChangeError.NoNicknameGiven
+    private fun String.toNicknameChangeError(): NicknameChangeError = when(this) {
+        ERR_ERRONEUSNICKNAME -> NicknameChangeError.ErroneousNickname
+        ERR_NICKCOLLISION -> NicknameChangeError.Collision
+        ERR_NICKNAMEINUSE -> NicknameChangeError.AlreadyInUse
+        ERR_NONICKNAMEGIVEN -> NicknameChangeError.NoNicknameGiven
         else -> throw IllegalArgumentException("Unknown nick change error")
     }
 

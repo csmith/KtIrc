@@ -1,7 +1,7 @@
 package com.dmdirc.ktirc.messages.processors
 
 import com.dmdirc.ktirc.TestConstants
-import com.dmdirc.ktirc.events.NicknameChangeFailed
+import com.dmdirc.ktirc.events.NicknameChangeError
 import com.dmdirc.ktirc.messages.tagMap
 import com.dmdirc.ktirc.model.IrcMessage
 import com.dmdirc.ktirc.model.MessageTag
@@ -25,28 +25,28 @@ internal class NickChangeErrorProcessorTest {
     fun `raises error event when nick in use`() {
         val events = processor.process(IrcMessage(tagMap(), null, "433", params("Nickname already in use")))
         assertEquals(1, events.size)
-        assertEquals(NicknameChangeFailed.NicknameChangeError.AlreadyInUse, events[0].cause)
+        assertEquals(NicknameChangeError.AlreadyInUse, events[0].cause)
     }
 
     @Test
     fun `raises error event when nick is erroneous`() {
         val events = processor.process(IrcMessage(tagMap(), null, "432", params("Nickname not allowed")))
         assertEquals(1, events.size)
-        assertEquals(NicknameChangeFailed.NicknameChangeError.ErroneousNickname, events[0].cause)
+        assertEquals(NicknameChangeError.ErroneousNickname, events[0].cause)
     }
 
     @Test
     fun `raises error event when nick collides`() {
         val events = processor.process(IrcMessage(tagMap(), null, "436", params("Nick collision")))
         assertEquals(1, events.size)
-        assertEquals(NicknameChangeFailed.NicknameChangeError.Collision, events[0].cause)
+        assertEquals(NicknameChangeError.Collision, events[0].cause)
     }
 
     @Test
     fun `raises error event when nick not provided`() {
         val events = processor.process(IrcMessage(tagMap(), null, "431", params("No nickname given")))
         assertEquals(1, events.size)
-        assertEquals(NicknameChangeFailed.NicknameChangeError.NoNicknameGiven, events[0].cause)
+        assertEquals(NicknameChangeError.NoNicknameGiven, events[0].cause)
     }
 
     @Test

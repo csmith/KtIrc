@@ -297,20 +297,27 @@ class BatchReceived(metadata: EventMetadata, val type: String, val params: Array
 
 /**
  * Raised when attempting to set or change our nickname fails.
- *
- * If this happens before {ServerReady], the nickname must be changed for registration to continue.
  */
-class NicknameChangeFailed(metadata: EventMetadata, val cause: NicknameChangeError) : IrcEvent(metadata) {
-    /** Reasons a nick change may fail. */
-    enum class NicknameChangeError {
-        /** The nickname is not allowed by the server. */
-        ErroneousNickname,
-        /** The nickname is already in use. */
-        AlreadyInUse,
-        /** The nickname has collided with another somehow. */
-        Collision,
-        /** No nickname was provided. */
-        NoNicknameGiven
-    }
-}
+open class NicknameChangeFailed(metadata: EventMetadata, val cause: NicknameChangeError) : IrcEvent(metadata)
 
+/**
+ * Raised during a connection attempt if the nickname we wanted is not available.
+ *
+ * The nickname must be changed to continue connecting.
+ *
+ * In 2.0.0 this will no longer extend [NicknameChangeFailed] and will have to be handled separately.
+ */
+@RemoveIn("2.0.0")
+class NicknameChangeRequired(metadata: EventMetadata, cause: NicknameChangeError) : NicknameChangeFailed(metadata, cause)
+
+/** Reasons a nick change may fail. */
+enum class NicknameChangeError {
+    /** The nickname is not allowed by the server. */
+    ErroneousNickname,
+    /** The nickname is already in use. */
+    AlreadyInUse,
+    /** The nickname has collided with another somehow. */
+    Collision,
+    /** No nickname was provided. */
+    NoNicknameGiven
+}
