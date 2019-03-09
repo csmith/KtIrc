@@ -3,8 +3,8 @@ package com.dmdirc.ktirc
 import com.dmdirc.ktirc.events.*
 import com.dmdirc.ktirc.events.handlers.eventHandlers
 import com.dmdirc.ktirc.events.mutators.eventMutators
-import com.dmdirc.ktirc.io.KtorLineBufferedSocket
 import com.dmdirc.ktirc.io.LineBufferedSocket
+import com.dmdirc.ktirc.io.LineBufferedSocketImpl
 import com.dmdirc.ktirc.io.MessageHandler
 import com.dmdirc.ktirc.io.MessageParser
 import com.dmdirc.ktirc.messages.*
@@ -13,11 +13,9 @@ import com.dmdirc.ktirc.model.*
 import com.dmdirc.ktirc.util.currentTimeProvider
 import com.dmdirc.ktirc.util.generateLabel
 import com.dmdirc.ktirc.util.logger
-import io.ktor.util.KtorExperimentalAPI
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.map
-import kotlinx.coroutines.time.withTimeoutOrNull
 import java.time.Duration
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.logging.Level
@@ -35,8 +33,7 @@ internal class IrcClientImpl(private val config: IrcClientConfig) : Experimental
     override val coroutineContext = GlobalScope.newCoroutineContext(Dispatchers.IO)
 
     @ExperimentalCoroutinesApi
-    @KtorExperimentalAPI
-    internal var socketFactory: (CoroutineScope, String, Int, Boolean) -> LineBufferedSocket = ::KtorLineBufferedSocket
+    internal var socketFactory: (CoroutineScope, String, Int, Boolean) -> LineBufferedSocket = ::LineBufferedSocketImpl
 
     internal var asyncTimeout = Duration.ofSeconds(20)
 
@@ -76,7 +73,7 @@ internal class IrcClientImpl(private val config: IrcClientConfig) : Experimental
             send(tags, command, *arguments)
         }
 
-        withTimeoutOrNull(asyncTimeout) {
+        withTimeoutOrNull(asyncTimeout.toMillis()) {
             channel.receive()
         }.also { serverState.asyncResponseState.pendingResponses.remove(label) }
     }

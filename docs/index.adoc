@@ -1099,7 +1099,7 @@ both events will need to be handled separately.
 
 TODO
 
-==== sendNickChange
+=== sendNickChange
 
 TODO
 

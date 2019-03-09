@@ -1,5 +1,8 @@
 vNEXT (in development)
 
+ * Replaced Ktor dependency with custom socket handling, which fixes
+   fatal issue when connecting to servers over TLS that request a
+   client certificate.
  * Added NicknameChangeRequired event for the case when a nickname is
    not allowed during connection and *MUST* be changed
 

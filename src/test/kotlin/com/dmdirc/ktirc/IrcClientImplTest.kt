@@ -7,7 +7,6 @@ import com.dmdirc.ktirc.messages.tagMap
 import com.dmdirc.ktirc.model.*
 import com.dmdirc.ktirc.util.currentTimeProvider
 import com.dmdirc.ktirc.util.generateLabel
-import io.ktor.util.KtorExperimentalAPI
 import io.mockk.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
@@ -22,7 +21,6 @@ import java.nio.channels.UnresolvedAddressException
 import java.security.cert.CertificateException
 import java.util.concurrent.atomic.AtomicReference
 
-@KtorExperimentalAPI
 @ExperimentalCoroutinesApi
 internal class IrcClientImplTest {
 

@@ -1,23 +1,17 @@
 package com.dmdirc.ktirc.io
 
 import com.dmdirc.ktirc.util.logger
-import io.ktor.network.selector.ActorSelectorManager
-import io.ktor.network.sockets.Socket
-import io.ktor.network.sockets.aSocket
-import io.ktor.network.sockets.openReadChannel
-import io.ktor.network.sockets.openWriteChannel
-import io.ktor.network.tls.tls
-import io.ktor.util.KtorExperimentalAPI
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.ReceiveChannel
 import kotlinx.coroutines.channels.SendChannel
 import kotlinx.coroutines.channels.produce
-import kotlinx.coroutines.io.ByteReadChannel
 import kotlinx.coroutines.io.ByteWriteChannel
 import java.net.InetSocketAddress
+import java.nio.ByteBuffer
 import java.security.SecureRandom
 import java.security.cert.CertificateException
+import javax.net.ssl.SSLContext
 import javax.net.ssl.X509TrustManager
 
 internal interface LineBufferedSocket {
@@ -36,9 +30,8 @@ internal interface LineBufferedSocket {
  * Asynchronous socket that buffers incoming data and emits individual lines.
  */
 // TODO: Expose advanced TLS options
-@KtorExperimentalAPI
 @ExperimentalCoroutinesApi
-internal class KtorLineBufferedSocket(coroutineScope: CoroutineScope, private val host: String, private val port: Int, private val tls: Boolean = false) : CoroutineScope, LineBufferedSocket {
+internal class LineBufferedSocketImpl(coroutineScope: CoroutineScope, private val host: String, private val port: Int, private val tls: Boolean = false) : CoroutineScope, LineBufferedSocket {
 
     companion object {
         const val CARRIAGE_RETURN = '\r'.toByte()
@@ -53,21 +46,22 @@ internal class KtorLineBufferedSocket(coroutineScope: CoroutineScope, private va
     private val log by logger()
 
     private lateinit var socket: Socket
-    private lateinit var readChannel: ByteReadChannel
     private lateinit var writeChannel: ByteWriteChannel
 
     override fun connect() {
+        log.info { "Connecting..." }
+        socket = PlainTextSocket(this)
+
         runBlocking {
-            log.info { "Connecting..." }
-            socket = aSocket(ActorSelectorManager(Dispatchers.IO)).tcp().connect(InetSocketAddress(host, port))
             if (tls) {
-                socket = socket.tls(
-                        coroutineContext = this@KtorLineBufferedSocket.coroutineContext,
-                        randomAlgorithm = SecureRandom.getInstanceStrong().algorithm,
-                        trustManager = tlsTrustManager)
+                with (SSLContext.getInstance("TLSv1.2")) {
+                    init(null, tlsTrustManager?.let { arrayOf(it) }, SecureRandom.getInstanceStrong())
+                    socket = TlsSocket(this@LineBufferedSocketImpl, socket, this, host)
+                }
             }
-            readChannel = socket.openReadChannel()
-            writeChannel = socket.openWriteChannel()
+            socket.connect(InetSocketAddress(host, port))
+            println("connected!")
+            writeChannel = socket.write
         }
         launch { writeLines() }
     }
@@ -82,9 +76,9 @@ internal class KtorLineBufferedSocket(coroutineScope: CoroutineScope, private va
         get() = produce {
             val lineBuffer = ByteArray(16384)
             var nextByteOffset = 0
-            while (!readChannel.isClosedForRead) {
+            while (socket.isOpen) {
                 var lineStart = 0
-                val bytesRead = readChannel.readAvailable(lineBuffer, nextByteOffset, lineBuffer.size - nextByteOffset)
+                val bytesRead = socket.read(ByteBuffer.wrap(lineBuffer).apply { position(nextByteOffset) })
                 for (i in nextByteOffset until nextByteOffset + bytesRead) {
                     if (lineBuffer[i] == CARRIAGE_RETURN || lineBuffer[i] == LINE_FEED) {
                         if (lineStart < i) {
