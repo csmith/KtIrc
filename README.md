@@ -75,15 +75,6 @@ client.onEvent { event ->
 client.connect()
 ```
 
-## Known issues / FAQ
-
-### KtIrc connects over IPv4 even when host has IPv6
-
-This is an issue with the Java standard library. You can change its behaviour by
-defining the system property `java.net.preferIPv6Addresses` to `true`, e.g. by
-running Java with `-Djava.net.preferIPv6Addresses=true` or calling
-`System.setProperty("java.net.preferIPv6Addresses","true");` in code.
-
 ## Developing KtIrc
 
 ### Lifecycle of a message

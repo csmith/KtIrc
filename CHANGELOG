@@ -1,5 +1,7 @@
 vNEXT (in development)
 
+v1.0.0
+
  * Replaced Ktor dependency with custom socket handling, which fixes
    fatal issue when connecting to servers over TLS that request a
    client certificate.
