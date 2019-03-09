@@ -237,8 +237,8 @@ The server block allows you to specify the details of the IRC server you
 wish to connect to:
 
  * `host` - the hostname or IP address of the server *(required)*
- * `port` - the port to connect on _(default: 6667)_
- * `useTls` - whether to use a secure connection or not _(default: false)_
+ * `port` - the port to connect on _(default: 6697)_
+ * `useTls` - whether to use a secure connection or not _(default: true)_
  * `password` - the password to provide to the server _(default: null)_
 
 An alternative more compact syntax is available for configuring server details:
@@ -296,6 +296,10 @@ advanced IRC features even if the server doesn't support them:
    in a `MessageReceived` event being returned. Servers that support the
    IRCv3 `echo-message` capability will do this automatically; enabling the
    behaviour will make all servers act the same way _(default: false)_
+ * `preferIPv6` - if enabled, KtIrc will prefer to connect over IPv6 if the
+   server publishes AAAA DNS records. If disabled, KtIrc will prefer IPv4.
+   If the server is available exclusively on IPv4 or IPv6 then this option
+   has no effect. _(default: true)_
 
 The behaviour block is optional in its entirety.
 

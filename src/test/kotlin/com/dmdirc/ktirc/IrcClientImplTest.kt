@@ -17,6 +17,7 @@ import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
+import java.net.UnknownHostException
 import java.nio.channels.UnresolvedAddressException
 import java.security.cert.CertificateException
 import java.util.concurrent.atomic.AtomicReference
@@ -26,6 +27,8 @@ internal class IrcClientImplTest {
 
     companion object {
         private const val HOST = "thegibson.com"
+        private const val HOST2 = "irc.thegibson.com"
+        private const val IP = "127.0.13.37"
         private const val PORT = 12345
         private const val NICK = "AcidBurn"
         private const val REAL_NAME = "Kate Libby"
@@ -41,8 +44,13 @@ internal class IrcClientImplTest {
         every { sendChannel } returns sendLineChannel
     }
 
-    private val mockSocketFactory = mockk<(CoroutineScope, String, Int, Boolean) -> LineBufferedSocket> {
-        every { this@mockk.invoke(any(), eq(HOST), eq(PORT), any()) } returns mockSocket
+    private val mockSocketFactory = mockk<(CoroutineScope, String, String, Int, Boolean) -> LineBufferedSocket> {
+        every { this@mockk.invoke(any(), eq(HOST), eq(IP), eq(PORT), any()) } returns mockSocket
+        every { this@mockk.invoke(any(), eq(HOST2), any(), eq(PORT), any()) } returns mockSocket
+    }
+
+    private val mockResolver = mockk<(String) -> Collection<ResolveResult>> {
+        every { this@mockk.invoke(HOST) } returns listOf(ResolveResult(IP, false))
     }
 
     private val mockEventHandler = mockk<(IrcEvent) -> Unit> {
@@ -58,6 +66,7 @@ internal class IrcClientImplTest {
     private val serverConfig = ServerConfig().apply {
         host = HOST
         port = PORT
+        useTls = false
     }
 
     private val normalConfig = IrcClientConfig(serverConfig, profileConfig, BehaviourConfig(), null)
@@ -71,9 +80,10 @@ internal class IrcClientImplTest {
     fun `uses socket factory to create a new socket on connect`() {
         val client = IrcClientImpl(normalConfig)
         client.socketFactory = mockSocketFactory
+        client.resolver = mockResolver
         client.connect()
 
-        verify(timeout = 500) { mockSocketFactory(client, HOST, PORT, false) }
+        verify(timeout = 500) { mockSocketFactory(client, HOST, IP, PORT, false) }
     }
 
     @Test
@@ -84,15 +94,111 @@ internal class IrcClientImplTest {
             useTls = true
         }, profileConfig, BehaviourConfig(), null))
         client.socketFactory = mockSocketFactory
+        client.resolver = mockResolver
         client.connect()
 
-        verify(timeout = 500) { mockSocketFactory(client, HOST, PORT, true) }
+        verify(timeout = 500) { mockSocketFactory(client, HOST, IP, PORT, true) }
+    }
+
+    @Test
+    fun `prefers ipv6 addresses if behaviour is enabled`() {
+        val client = IrcClientImpl(IrcClientConfig(ServerConfig().apply {
+            host = HOST2
+            port = PORT
+        }, profileConfig, BehaviourConfig().apply { preferIPv6 = true }, null))
+
+        every { mockResolver(HOST2) } returns listOf(
+                ResolveResult(IP, false),
+                ResolveResult("::13:37", true),
+                ResolveResult("0.0.0.0", false)
+        )
+
+        client.socketFactory = mockSocketFactory
+        client.resolver = mockResolver
+        client.connect()
+
+        verify(timeout = 500) { mockSocketFactory(client, HOST2, "::13:37", PORT, true) }
+    }
+
+    @Test
+    fun `falls back to ipv4 if no ipv6 addresses are available`() {
+        val client = IrcClientImpl(IrcClientConfig(ServerConfig().apply {
+            host = HOST2
+            port = PORT
+        }, profileConfig, BehaviourConfig().apply { preferIPv6 = true }, null))
+
+        every { mockResolver(HOST2) } returns listOf(
+                ResolveResult("0.0.0.0", false)
+        )
+
+        client.socketFactory = mockSocketFactory
+        client.resolver = mockResolver
+        client.connect()
+
+        verify(timeout = 500) { mockSocketFactory(client, HOST2, "0.0.0.0", PORT, true) }
+    }
+
+    @Test
+    fun `prefers ipv4 addresses if ipv6 behaviour is disabled`() {
+        val client = IrcClientImpl(IrcClientConfig(ServerConfig().apply {
+            host = HOST2
+            port = PORT
+        }, profileConfig, BehaviourConfig().apply { preferIPv6 = false }, null))
+
+        every { mockResolver(HOST2) } returns listOf(
+                ResolveResult("::13:37", true),
+                ResolveResult("::313:37", true),
+                ResolveResult("0.0.0.0", false)
+        )
+
+        client.socketFactory = mockSocketFactory
+        client.resolver = mockResolver
+        client.connect()
+
+        verify(timeout = 500) { mockSocketFactory(client, HOST2, "0.0.0.0", PORT, true) }
+    }
+
+    @Test
+    fun `falls back to ipv6 if no ipv4 addresses available`() {
+        val client = IrcClientImpl(IrcClientConfig(ServerConfig().apply {
+            host = HOST2
+            port = PORT
+        }, profileConfig, BehaviourConfig().apply { preferIPv6 = false }, null))
+
+        every { mockResolver(HOST2) } returns listOf(
+                ResolveResult("::13:37", true)
+        )
+
+        client.socketFactory = mockSocketFactory
+        client.resolver = mockResolver
+        client.connect()
+
+        verify(timeout = 500) { mockSocketFactory(client, HOST2, "::13:37", PORT, true) }
+    }
+
+    @Test
+    fun `raises error if dns fails`() {
+        val client = IrcClientImpl(IrcClientConfig(ServerConfig().apply {
+            host = HOST2
+        }, profileConfig, BehaviourConfig().apply { preferIPv6 = true }, null))
+
+        every { mockResolver(HOST2) } throws UnknownHostException("oops")
+
+        client.socketFactory = mockSocketFactory
+        client.resolver = mockResolver
+        client.onEvent(mockEventHandler)
+        client.connect()
+
+        verify(timeout = 500) {
+            mockEventHandler(match { it is ServerConnectionError && it.error == ConnectionError.UnresolvableAddress })
+        }
     }
 
     @Test
     fun `throws if socket already exists`() {
         val client = IrcClientImpl(normalConfig)
         client.socketFactory = mockSocketFactory
+        client.resolver = mockResolver
         client.connect()
 
         assertThrows<IllegalStateException> {
@@ -112,6 +218,7 @@ internal class IrcClientImplTest {
 
         val client = IrcClientImpl(normalConfig)
         client.socketFactory = mockSocketFactory
+        client.resolver = mockResolver
         client.onEvent(mockEventHandler)
         client.connect()
 
@@ -128,6 +235,7 @@ internal class IrcClientImplTest {
     fun `sends basic connection strings`() = runBlocking {
         val client = IrcClientImpl(normalConfig)
         client.socketFactory = mockSocketFactory
+        client.resolver = mockResolver
         client.connect()
 
         assertEquals("CAP LS 302", String(sendLineChannel.receive()))
@@ -143,6 +251,7 @@ internal class IrcClientImplTest {
             password = PASSWORD
         }, profileConfig, BehaviourConfig(), null))
         client.socketFactory = mockSocketFactory
+        client.resolver = mockResolver
         client.connect()
 
         assertEquals("CAP LS 302", String(sendLineChannel.receive()))
@@ -153,6 +262,7 @@ internal class IrcClientImplTest {
     fun `sends events to provided event handler`() {
         val client = IrcClientImpl(normalConfig)
         client.socketFactory = mockSocketFactory
+        client.resolver = mockResolver
         client.onEvent(mockEventHandler)
 
         GlobalScope.launch {
@@ -204,6 +314,7 @@ internal class IrcClientImplTest {
     fun `sends text to socket`() = runBlocking {
         val client = IrcClientImpl(normalConfig)
         client.socketFactory = mockSocketFactory
+        client.resolver = mockResolver
         client.connect()
 
         client.send("testing 123")
@@ -215,6 +326,7 @@ internal class IrcClientImplTest {
     fun `sends structured text to socket`() = runBlocking {
         val client = IrcClientImpl(normalConfig)
         client.socketFactory = mockSocketFactory
+        client.resolver = mockResolver
         client.connect()
 
         client.send("testing", "123", "456")
@@ -227,6 +339,7 @@ internal class IrcClientImplTest {
         val config = IrcClientConfig(serverConfig, profileConfig, BehaviourConfig().apply { alwaysEchoMessages = true }, null)
         val client = IrcClientImpl(config)
         client.socketFactory = mockSocketFactory
+        client.resolver = mockResolver
 
         val slot = slot<MessageReceived>()
         val mockkEventHandler = mockk<(IrcEvent) -> Unit>(relaxed = true)
@@ -250,6 +363,7 @@ internal class IrcClientImplTest {
         val config = IrcClientConfig(serverConfig, profileConfig, BehaviourConfig().apply { alwaysEchoMessages = true }, null)
         val client = IrcClientImpl(config)
         client.socketFactory = mockSocketFactory
+        client.resolver = mockResolver
         client.serverState.capabilities.enabledCapabilities[Capability.EchoMessages] = ""
         client.connect()
 
@@ -266,6 +380,7 @@ internal class IrcClientImplTest {
         val config = IrcClientConfig(serverConfig, profileConfig, BehaviourConfig().apply { alwaysEchoMessages = false }, null)
         val client = IrcClientImpl(config)
         client.socketFactory = mockSocketFactory
+        client.resolver = mockResolver
         client.connect()
 
         client.onEvent(mockEventHandler)
@@ -273,12 +388,14 @@ internal class IrcClientImplTest {
 
         verify(inverse = true) {
             mockEventHandler(ofType<MessageReceived>())
-        }    }
+        }
+    }
 
     @Test
     fun `sends structured text to socket with tags`() = runBlocking {
         val client = IrcClientImpl(normalConfig)
         client.socketFactory = mockSocketFactory
+        client.resolver = mockResolver
         client.connect()
 
         client.send(tagMap(MessageTag.AccountName to "acidB"), "testing", "123", "456")
@@ -290,6 +407,8 @@ internal class IrcClientImplTest {
     fun `asynchronously sends text to socket without label if cap is missing`() = runBlocking {
         val client = IrcClientImpl(normalConfig)
         client.socketFactory = mockSocketFactory
+        client.resolver = mockResolver
+
         client.connect()
 
         client.sendAsync(tagMap(), "testing", arrayOf("123")) { false }
@@ -302,6 +421,8 @@ internal class IrcClientImplTest {
         generateLabel = { "abc123" }
         val client = IrcClientImpl(normalConfig)
         client.socketFactory = mockSocketFactory
+        client.resolver = mockResolver
+
         client.serverState.capabilities.enabledCapabilities[Capability.LabeledResponse] = ""
         client.connect()
 
@@ -315,6 +436,8 @@ internal class IrcClientImplTest {
         generateLabel = { "abc123" }
         val client = IrcClientImpl(normalConfig)
         client.socketFactory = mockSocketFactory
+        client.resolver = mockResolver
+
         client.serverState.capabilities.enabledCapabilities[Capability.LabeledResponse] = ""
         client.connect()
 
@@ -327,6 +450,7 @@ internal class IrcClientImplTest {
     fun `disconnects the socket`() = runBlocking {
         val client = IrcClientImpl(normalConfig)
         client.socketFactory = mockSocketFactory
+        client.resolver = mockResolver
         client.connect()
 
         client.disconnect()
@@ -341,6 +465,7 @@ internal class IrcClientImplTest {
     fun `sends messages in order`() = runBlocking {
         val client = IrcClientImpl(normalConfig)
         client.socketFactory = mockSocketFactory
+        client.resolver = mockResolver
         client.connect()
 
         (0..100).forEach { client.send("TEST", "$it") }
@@ -399,6 +524,7 @@ internal class IrcClientImplTest {
         every { mockSocket.connect() } throws UnresolvedAddressException()
         with(IrcClientImpl(normalConfig)) {
             socketFactory = mockSocketFactory
+            resolver = mockResolver
             withTimeout(500) {
                 launch {
                     delay(50)
@@ -415,6 +541,7 @@ internal class IrcClientImplTest {
         every { mockSocket.connect() } throws CertificateException("Boooo")
         with(IrcClientImpl(normalConfig)) {
             socketFactory = mockSocketFactory
+            resolver = mockResolver
             withTimeout(500) {
                 launch {
                     delay(50)

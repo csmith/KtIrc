@@ -20,7 +20,7 @@ internal class LineBufferedSocketImplTest {
     @Test
     fun `KtorLineBufferedSocket can connect to a server`() = runBlocking {
         ServerSocket(12321).use { serverSocket ->
-            val socket = LineBufferedSocketImpl(GlobalScope, "localhost", 12321)
+            val socket = LineBufferedSocketImpl(GlobalScope, "localhost", "localhost", 12321)
             val clientSocketAsync = GlobalScope.async { serverSocket.accept() }
 
             socket.connect()
@@ -32,7 +32,7 @@ internal class LineBufferedSocketImplTest {
     @Test
     fun `KtorLineBufferedSocket can send a byte array to a server`() = runBlocking {
         ServerSocket(12321).use { serverSocket ->
-            val socket = LineBufferedSocketImpl(GlobalScope, "localhost", 12321)
+            val socket = LineBufferedSocketImpl(GlobalScope, "localhost", "localhost", 12321)
             val clientBytesAsync = GlobalScope.async {
                 ByteArray(13).apply {
                     serverSocket.accept().getInputStream().read(this)
@@ -51,7 +51,7 @@ internal class LineBufferedSocketImplTest {
     @Test
     fun `KtorLineBufferedSocket can send a string to a server over TLS`() = runBlocking {
         tlsServerSocket(12321).use { serverSocket ->
-            val socket = LineBufferedSocketImpl(GlobalScope, "localhost", 12321, true)
+            val socket = LineBufferedSocketImpl(GlobalScope, "localhost", "localhost", 12321, true)
             socket.tlsTrustManager = getTrustingManager()
             val clientBytesAsync = GlobalScope.async {
                 ByteArray(13).apply {
@@ -71,7 +71,7 @@ internal class LineBufferedSocketImplTest {
     @Test
     fun `KtorLineBufferedSocket can receive a line of CRLF delimited text`() = runBlocking {
         ServerSocket(12321).use { serverSocket ->
-            val socket = LineBufferedSocketImpl(GlobalScope, "localhost", 12321)
+            val socket = LineBufferedSocketImpl(GlobalScope, "localhost", "localhost", 12321)
             GlobalScope.launch {
                 serverSocket.accept().getOutputStream().write("Hi there\r\n".toByteArray())
             }
@@ -84,7 +84,7 @@ internal class LineBufferedSocketImplTest {
     @Test
     fun `KtorLineBufferedSocket can receive a line of LF delimited text`() = runBlocking {
         ServerSocket(12321).use { serverSocket ->
-            val socket = LineBufferedSocketImpl(GlobalScope, "localhost", 12321)
+            val socket = LineBufferedSocketImpl(GlobalScope, "localhost", "localhost", 12321)
             GlobalScope.launch {
                 serverSocket.accept().getOutputStream().write("Hi there\n".toByteArray())
             }
@@ -97,7 +97,7 @@ internal class LineBufferedSocketImplTest {
     @Test
     fun `KtorLineBufferedSocket can receive multiple lines of text in one packet`() = runBlocking {
         ServerSocket(12321).use { serverSocket ->
-            val socket = LineBufferedSocketImpl(GlobalScope, "localhost", 12321)
+            val socket = LineBufferedSocketImpl(GlobalScope, "localhost", "localhost", 12321)
             GlobalScope.launch {
                 serverSocket.accept().getOutputStream().write("Hi there\nThis is a test\r".toByteArray())
             }
@@ -112,7 +112,7 @@ internal class LineBufferedSocketImplTest {
     @Test
     fun `KtorLineBufferedSocket can receive multiple long lines of text`() = runBlocking {
         ServerSocket(12321).use { serverSocket ->
-            val socket = LineBufferedSocketImpl(GlobalScope, "localhost", 12321)
+            val socket = LineBufferedSocketImpl(GlobalScope, "localhost", "localhost", 12321)
             val line1 = "abcdefghijklmnopqrstuvwxyz".repeat(500)
             val line2 = "1234567890987654321[];'#,.".repeat(500)
             val line3 = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".repeat(500)
@@ -131,7 +131,7 @@ internal class LineBufferedSocketImplTest {
     @Test
     fun `KtorLineBufferedSocket can receive one line of text over multiple packets`() = runBlocking {
         ServerSocket(12321).use { serverSocket ->
-            val socket = LineBufferedSocketImpl(GlobalScope, "localhost", 12321)
+            val socket = LineBufferedSocketImpl(GlobalScope, "localhost", "localhost", 12321)
             GlobalScope.launch {
                 with(serverSocket.accept().getOutputStream()) {
                     write("Hi".toByteArray())
@@ -152,7 +152,7 @@ internal class LineBufferedSocketImplTest {
     @Test
     fun `KtorLineBufferedSocket returns from readLines when socket is closed`() = runBlocking {
         ServerSocket(12321).use { serverSocket ->
-            val socket = LineBufferedSocketImpl(GlobalScope, "localhost", 12321)
+            val socket = LineBufferedSocketImpl(GlobalScope, "localhost", "localhost", 12321)
             GlobalScope.launch {
                 with(serverSocket.accept()) {
                     getOutputStream().write("Hi there\r\n".toByteArray())
@@ -169,7 +169,7 @@ internal class LineBufferedSocketImplTest {
     @Test
     fun `KtorLineBufferedSocket disconnects from server`() = runBlocking {
         ServerSocket(12321).use { serverSocket ->
-            val socket = LineBufferedSocketImpl(GlobalScope, "localhost", 12321)
+            val socket = LineBufferedSocketImpl(GlobalScope, "localhost", "localhost", 12321)
             val clientSocketAsync = GlobalScope.async { serverSocket.accept() }
 
             socket.connect()

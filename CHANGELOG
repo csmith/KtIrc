@@ -5,6 +5,10 @@ vNEXT (in development)
    client certificate.
  * Added NicknameChangeRequired event for the case when a nickname is
    not allowed during connection and *MUST* be changed
+ * BREAKING: Added 'PreferIPv6' behaviour config, defaulting to true.
+   With this configuration KtIrc will try to use IPv6 if the server
+   publishes AAAA records.
+ * BREAKING: Default port is now 6697, TLS is enabled by default
 
 v0.11.0
 
@@ -88,7 +92,7 @@ v0.8.0
 v0.7.0
 
  * Fixed experimental API warnings when using IrcClient
- * IrcClients are now constructed using a DSL
+ * BREAKING: IrcClients are now constructed using a DSL
    * Users of the library no longer need to care about the implementing class
    * Facilitates adding more options in the future without breaking existing implementations
  * SASL improvements
@@ -144,31 +148,31 @@ v0.4.0
 
 v0.3.1
 
-  * Added more documentation to public methods/classes
-  * Fixed exception when sending multiple lines at once (e.g. when connecting!)
+ * Added more documentation to public methods/classes
+ * Fixed exception when sending multiple lines at once (e.g. when connecting!)
 
 v0.3.0
 
-  * Simplified how messages are constructed.
-    Instead of: client.send(joinMessage("#channel"))
-    Now use: client.sendJoin("#channel")
-  * Added reply utility to easily send replies to message events
-  * Server state improvements:
-    * Added status field to ServerState
-    * ServerConnected event is emitted as soon as the socket is connected
-    * ServerReady event is emitted after logging in, negotiating, etc
-  * Added extra debugging to show what type of events are being dispatched
-  * Added ChannelQuit event, raised for each channel a user is in when they quit
-  * (Internal) Event handlers can now return more events to emit
+ * Simplified how messages are constructed.
+   Instead of: client.send(joinMessage("#channel"))
+   Now use: client.sendJoin("#channel")
+ * Added reply utility to easily send replies to message events
+ * Server state improvements:
+   * Added status field to ServerState
+   * ServerConnected event is emitted as soon as the socket is connected
+   * ServerReady event is emitted after logging in, negotiating, etc
+ * Added extra debugging to show what type of events are being dispatched
+ * Added ChannelQuit event, raised for each channel a user is in when they quit
+ * (Internal) Event handlers can now return more events to emit
 
 v0.2.1
 
-  * Added documentation and reduced visibility of some internal methods/classes
-  * (Internal) Enabled Travis, Codacy and Coveralls
+ * Added documentation and reduced visibility of some internal methods/classes
+ * (Internal) Enabled Travis, Codacy and Coveralls
 
 v0.2.0
 
-  * Added support for connecting over TLS
-  * Simplified how event handlers are registered
-  * Improved use of coroutines so users don't have to worry about them
-  * (Internal) Upgraded to Gradle 5.1.1
+ * Added support for connecting over TLS
+ * BREAKING: Simplified how event handlers are registered
+ * BREAKING: Improved use of coroutines so users don't have to worry about them
+ * (Internal) Upgraded to Gradle 5.1.1

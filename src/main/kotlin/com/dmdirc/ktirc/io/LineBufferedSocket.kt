@@ -31,7 +31,7 @@ internal interface LineBufferedSocket {
  */
 // TODO: Expose advanced TLS options
 @ExperimentalCoroutinesApi
-internal class LineBufferedSocketImpl(coroutineScope: CoroutineScope, private val host: String, private val port: Int, private val tls: Boolean = false) : CoroutineScope, LineBufferedSocket {
+internal class LineBufferedSocketImpl(coroutineScope: CoroutineScope, private val host: String, private val ip: String, private val port: Int, private val tls: Boolean = false) : CoroutineScope, LineBufferedSocket {
 
     companion object {
         const val CARRIAGE_RETURN = '\r'.toByte()
@@ -59,8 +59,7 @@ internal class LineBufferedSocketImpl(coroutineScope: CoroutineScope, private va
                     socket = TlsSocket(this@LineBufferedSocketImpl, socket, this, host)
                 }
             }
-            socket.connect(InetSocketAddress(host, port))
-            println("connected!")
+            socket.connect(InetSocketAddress(ip, port))
             writeChannel = socket.write
         }
         launch { writeLines() }

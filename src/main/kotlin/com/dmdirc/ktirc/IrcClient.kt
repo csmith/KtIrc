@@ -198,6 +198,13 @@ interface ClientBehaviour {
      */
     val alwaysEchoMessages: Boolean
 
+    /**
+     * If enabled, KtIRC will try to connect to IRC servers over IPv6 if they publish the appropriate DNS entries.
+     *
+     * Otherwise, KtIrc will prefer IPv4.
+     */
+    val preferIPv6: Boolean
+
 }
 
 /**

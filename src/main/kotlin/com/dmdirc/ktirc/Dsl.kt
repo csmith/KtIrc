@@ -34,6 +34,7 @@ internal data class IrcClientConfig(
  * behaviour {
  *     requestModesOnJoin = true
  *     alwaysEchoMessages = true
+ *     preferIPv6 = false
  * }
  *
  * sasl {
@@ -141,10 +142,10 @@ class IrcClientConfigBuilder {
 class ServerConfig {
     /** The hostname (or IP address) of the server to connect to. */
     var host: String = ""
-    /** The port to connect on. Defaults to 6667. */
-    var port: Int = 6667
+    /** The port to connect on. Defaults to 6697. */
+    var port: Int = 6697
     /** Whether or not to use TLS (an encrypted connection). */
-    var useTls: Boolean = false
+    var useTls: Boolean = true
     /** The password required to connect to the server, if any. */
     var password: String? = null
 }
@@ -212,4 +213,5 @@ class SaslConfig {
 class BehaviourConfig : ClientBehaviour {
     override var requestModesOnJoin = false
     override var alwaysEchoMessages = false
+    override var preferIPv6 = true
 }

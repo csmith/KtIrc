@@ -10,12 +10,15 @@ import com.dmdirc.ktirc.io.MessageParser
 import com.dmdirc.ktirc.messages.*
 import com.dmdirc.ktirc.messages.processors.messageProcessors
 import com.dmdirc.ktirc.model.*
+import com.dmdirc.ktirc.util.RemoveIn
 import com.dmdirc.ktirc.util.currentTimeProvider
 import com.dmdirc.ktirc.util.generateLabel
 import com.dmdirc.ktirc.util.logger
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.map
+import java.net.Inet6Address
+import java.net.InetAddress
 import java.time.Duration
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.logging.Level
@@ -23,8 +26,6 @@ import java.util.logging.Level
 /**
  * Concrete implementation of an [IrcClient].
  */
-// TODO: How should alternative nicknames work?
-// TODO: Should IRC Client take a pool of servers and rotate through, or make the caller do that?
 internal class IrcClientImpl(private val config: IrcClientConfig) : ExperimentalIrcClient, CoroutineScope {
 
     private val log by logger()
@@ -33,7 +34,10 @@ internal class IrcClientImpl(private val config: IrcClientConfig) : Experimental
     override val coroutineContext = GlobalScope.newCoroutineContext(Dispatchers.IO)
 
     @ExperimentalCoroutinesApi
-    internal var socketFactory: (CoroutineScope, String, Int, Boolean) -> LineBufferedSocket = ::LineBufferedSocketImpl
+    internal var socketFactory: (CoroutineScope, String, String, Int, Boolean) -> LineBufferedSocket = ::LineBufferedSocketImpl
+    internal var resolver: (String) -> Collection<ResolveResult> = { host ->
+        InetAddress.getAllByName(host).map { ResolveResult(it.hostAddress, it is Inet6Address) }
+    }
 
     internal var asyncTimeout = Duration.ofSeconds(20)
 
@@ -51,6 +55,8 @@ internal class IrcClientImpl(private val config: IrcClientConfig) : Experimental
 
     private val connecting = AtomicBoolean(false)
 
+    @Deprecated("Use structured send instead", ReplaceWith("send(command, arguments)"))
+    @RemoveIn("2.0.0")
     override fun send(message: String) {
         socket?.sendChannel?.offer(message.toByteArray()) ?: log.warning { "No send channel for message: $message" }
     }
@@ -81,8 +87,18 @@ internal class IrcClientImpl(private val config: IrcClientConfig) : Experimental
     override fun connect() {
         check(!connecting.getAndSet(true))
 
+        val ip: String
+        try {
+            ip = resolve(config.server.host)
+        } catch (ex: Exception) {
+            log.log(Level.SEVERE, ex) { "Error resolving ${config.server.host}" }
+            emitEvent(ServerConnectionError(EventMetadata(currentTimeProvider()), ConnectionError.UnresolvableAddress, ex.localizedMessage))
+            reset()
+            return
+        }
+
         @Suppress("EXPERIMENTAL_API_USAGE")
-        with(socketFactory(this, config.server.host, config.server.port, config.server.useTls)) {
+        with(socketFactory(this, config.server.host, ip, config.server.port, config.server.useTls)) {
             socket = this
 
             emitEvent(ServerConnecting(EventMetadata(currentTimeProvider())))
@@ -129,6 +145,16 @@ internal class IrcClientImpl(private val config: IrcClientConfig) : Experimental
         }
     }
 
+    private fun resolve(host: String): String {
+        val hosts = resolver(host)
+        val preferredHosts = hosts.filter { it.isV6 == behaviour.preferIPv6 }
+        return if (preferredHosts.isNotEmpty()) {
+            preferredHosts.random().ip
+        } else {
+            hosts.random().ip
+        }
+    }
+
     internal fun reset() {
         serverState.reset()
         channelState.clear()
@@ -138,3 +164,5 @@ internal class IrcClientImpl(private val config: IrcClientConfig) : Experimental
     }
 
 }
+
+internal data class ResolveResult(val ip: String, val isV6: Boolean)
