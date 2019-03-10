@@ -453,6 +453,12 @@ internal class IrcClientImplTest {
         client.resolver = mockResolver
         client.connect()
 
+        launch {
+            delay(50)
+            readLineChannel.close()
+            sendLineChannel.close()
+        }
+
         client.disconnect()
 
         verify(timeout = 500) {

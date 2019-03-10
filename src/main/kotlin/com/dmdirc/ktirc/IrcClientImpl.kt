@@ -164,6 +164,7 @@ internal class IrcClientImpl(private val config: IrcClientConfig) : Experimental
         channelState.clear()
         userState.reset()
         socket = null
+        connecting.tryLock()
         connecting.unlock()
     }
 
