@@ -239,4 +239,34 @@ internal class UserStateHandlerTest {
         assertEquals("root.gibson", fakeUserState["acidBurn"]?.details?.hostname)
     }
 
+    @Test
+    fun `updates details for user back events`() {
+        val user = User("acidBurn", "libby", "root.localhost")
+        fakeUserState += User("AcidBurn", awayMessage = "Hacking the planet")
+
+        handler.processEvent(ircClient, UserAway(EventMetadata(TestConstants.time), user, null))
+
+        assertNull(fakeUserState["acidBurn"]?.details?.awayMessage)
+    }
+
+    @Test
+    fun `does not update away details for less detailed events`() {
+        val user = User("acidBurn", "libby", "root.localhost")
+        fakeUserState += User("AcidBurn", awayMessage = "Hacking the planet")
+
+        handler.processEvent(ircClient, UserAway(EventMetadata(TestConstants.time), user, ""))
+
+        assertEquals("Hacking the planet", fakeUserState["acidBurn"]?.details?.awayMessage)
+    }
+
+    @Test
+    fun `updates away details for away message`() {
+        val user = User("acidBurn", "libby", "root.localhost")
+        fakeUserState += User("AcidBurn")
+
+        handler.processEvent(ircClient, UserAway(EventMetadata(TestConstants.time), user, "Hacking the planet"))
+
+        assertEquals("Hacking the planet", fakeUserState["acidBurn"]?.details?.awayMessage)
+    }
+
 }

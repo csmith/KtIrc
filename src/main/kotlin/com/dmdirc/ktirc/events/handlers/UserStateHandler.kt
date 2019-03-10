@@ -16,6 +16,7 @@ internal class UserStateHandler : EventHandler {
             is UserNickChanged -> handleNickChanged(client, event)
             is UserHostChanged -> handleHostChanged(client, event)
             is UserQuit -> handleQuit(client.userState, event)
+            is UserAway -> handleAway(client.userState, event)
         }
     }
 
@@ -81,6 +82,16 @@ internal class UserStateHandler : EventHandler {
 
     private fun handleQuit(state: UserState, event: UserQuit) {
         state -= event.user
+    }
+
+    private fun handleAway(state: UserState, event: UserAway) {
+        state[event.user]?.details?.let {
+            when (event.message) {
+                null -> it.awayMessage = null
+                "" -> if (it.awayMessage == null) it.awayMessage = ""
+                else -> it.awayMessage = event.message
+            }
+        }
     }
 
 }

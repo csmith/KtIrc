@@ -94,7 +94,7 @@ sealed class Capability(vararg val names:  String) {
     object AccountChangeMessages : Capability("account-notify")
 
     /** Receive a notification when a user's away state changes. */
-    object AwayStateMessages : Capability("away-notify") // TODO: Add processor
+    object AwayStateMessages : Capability("away-notify")
 
     /** Receive a notification when a user's host changes, instead of a quit/join. */
     object HostChangeMessages : Capability("chghost")
