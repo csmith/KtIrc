@@ -2,7 +2,7 @@ import org.jetbrains.dokka.gradle.DokkaTask
 import org.jetbrains.dokka.gradle.LinkMapping
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
-version = "1.0.0"
+version = "1.0.1"
 group = "com.dmdirc.ktirc"
 
 plugins {

@@ -3,6 +3,7 @@ package com.dmdirc.ktirc.io
 import com.dmdirc.ktirc.util.logger
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.channels.ClosedReceiveChannelException
 import kotlinx.coroutines.io.ByteChannel
 import kotlinx.coroutines.io.ByteWriteChannel
 import kotlinx.coroutines.launch
@@ -96,12 +97,14 @@ internal class TlsSocket(
         }
     }
 
-    override suspend fun read(buffer: ByteBuffer): Int {
+    override suspend fun read(buffer: ByteBuffer) = try {
         val nextBuffer = outgoingAppBuffers.receive()
         val bytes = nextBuffer.limit()
         buffer.put(nextBuffer)
         defaultPool.recycle(nextBuffer)
-        return bytes
+        bytes
+    } catch (_: ClosedReceiveChannelException) {
+        -1
     }
 
     private suspend fun wrap(): SSLEngineResult? {
@@ -153,6 +156,14 @@ internal class TlsSocket(
 
     override fun close() {
         socket.close()
+
+        // Release any buffers we've got queued up
+        while(true) {
+            outgoingAppBuffers.poll()?.let {
+                defaultPool.recycle(it)
+            } ?: break
+        }
+
         outgoingAppBuffers.close()
     }
 

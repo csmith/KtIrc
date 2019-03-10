@@ -17,10 +17,10 @@ import com.dmdirc.ktirc.util.logger
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.map
+import kotlinx.coroutines.sync.Mutex
 import java.net.Inet6Address
 import java.net.InetAddress
 import java.time.Duration
-import java.util.concurrent.atomic.AtomicBoolean
 import java.util.logging.Level
 
 /**
@@ -53,7 +53,7 @@ internal class IrcClientImpl(private val config: IrcClientConfig) : Experimental
     private val parser = MessageParser()
     private var socket: LineBufferedSocket? = null
 
-    private val connecting = AtomicBoolean(false)
+    private val connecting = Mutex(false)
 
     @Deprecated("Use structured send instead", ReplaceWith("send(command, arguments)"))
     @RemoveIn("2.0.0")
@@ -85,7 +85,7 @@ internal class IrcClientImpl(private val config: IrcClientConfig) : Experimental
     }
 
     override fun connect() {
-        check(!connecting.getAndSet(true))
+        check(connecting.tryLock()) { "IrcClient is already connected to a server" }
 
         val ip: String
         try {
@@ -124,7 +124,11 @@ internal class IrcClientImpl(private val config: IrcClientConfig) : Experimental
     }
 
     override fun disconnect() {
-        socket?.disconnect()
+        runBlocking {
+            socket?.disconnect()
+            connecting.lock()
+            connecting.unlock()
+        }
     }
 
     override fun onEvent(handler: (IrcEvent) -> Unit) = messageHandler.addEmitter(handler)
@@ -160,7 +164,7 @@ internal class IrcClientImpl(private val config: IrcClientConfig) : Experimental
         channelState.clear()
         userState.reset()
         socket = null
-        connecting.set(false)
+        connecting.unlock()
     }
 
 }

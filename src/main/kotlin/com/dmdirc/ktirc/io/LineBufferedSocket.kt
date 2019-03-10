@@ -67,8 +67,8 @@ internal class LineBufferedSocketImpl(coroutineScope: CoroutineScope, private va
     }
 
     override fun disconnect() {
-        log.info { "Disconnecting..." }
         socket.close()
+        sendChannel.close()
         coroutineContext.cancel()
     }
 
@@ -78,6 +78,9 @@ internal class LineBufferedSocketImpl(coroutineScope: CoroutineScope, private va
                 while (socket.isOpen) {
                     defaultPool.borrow { buffer ->
                         val bytesRead = socket.read(buffer)
+                        if (bytesRead == -1) {
+                            return@produce
+                        }
                         var lastLine = 0
                         for (i in 0 until bytesRead) {
                             if (buffer[i] == CARRIAGE_RETURN || buffer[i] == LINE_FEED) {

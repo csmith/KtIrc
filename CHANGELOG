@@ -1,7 +1,17 @@
 vNEXT (in development)
 
+v1.0.1
+
  * Fixed issue with very long packets not fitting in buffers
    after TLS decryption.
+ * Improved error message when IrcClient.connect() is called
+   while already connected
+ * Made IrcClient.disconnect() block until the disconnect has
+   been processed. This will be a very short period of time,
+   and allows callers to immediately call connect() again
+   afterwards if they wish
+ * Fixed various issues with disconnecting TLS connections
+   not behaving correctly
 
 v1.0.0
 
