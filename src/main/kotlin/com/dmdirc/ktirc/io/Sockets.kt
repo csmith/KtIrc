@@ -15,7 +15,7 @@ import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 
 internal const val BUFFER_SIZE = 32768
-internal const val POOL_SIZE = 16
+internal const val POOL_SIZE = 128
 
 internal val defaultPool = ByteBufferPool()
 

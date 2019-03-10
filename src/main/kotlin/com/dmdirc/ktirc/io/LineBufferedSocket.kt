@@ -7,6 +7,7 @@ import kotlinx.coroutines.channels.ReceiveChannel
 import kotlinx.coroutines.channels.SendChannel
 import kotlinx.coroutines.channels.produce
 import kotlinx.coroutines.io.ByteWriteChannel
+import kotlinx.io.core.String
 import java.net.InetSocketAddress
 import java.nio.ByteBuffer
 import java.security.SecureRandom
@@ -73,23 +74,33 @@ internal class LineBufferedSocketImpl(coroutineScope: CoroutineScope, private va
 
     override val receiveChannel
         get() = produce {
-            val lineBuffer = ByteArray(16384)
-            var nextByteOffset = 0
-            while (socket.isOpen) {
-                var lineStart = 0
-                val bytesRead = socket.read(ByteBuffer.wrap(lineBuffer).apply { position(nextByteOffset) })
-                for (i in nextByteOffset until nextByteOffset + bytesRead) {
-                    if (lineBuffer[i] == CARRIAGE_RETURN || lineBuffer[i] == LINE_FEED) {
-                        if (lineStart < i) {
-                            val line = lineBuffer.sliceArray(lineStart until i)
-                            log.fine { "<<< ${String(line)}" }
-                            send(line)
+            defaultPool.borrow { lineBuffer ->
+                while (socket.isOpen) {
+                    defaultPool.borrow { buffer ->
+                        val bytesRead = socket.read(buffer)
+                        var lastLine = 0
+                        for (i in 0 until bytesRead) {
+                            if (buffer[i] == CARRIAGE_RETURN || buffer[i] == LINE_FEED) {
+                                val length = i - lastLine + lineBuffer.position()
+
+                                if (length > 1) {
+                                    val output = ByteBuffer.allocate(length)
+
+                                    lineBuffer.flip()
+                                    output.put(lineBuffer)
+                                    lineBuffer.clear()
+
+                                    output.put(buffer.array(), lastLine, i - lastLine)
+                                    log.fine { "<<< ${String(output.array())}" }
+                                    send(output.array())
+                                }
+
+                                lastLine = i + 1
+                            }
                         }
-                        lineStart = i + 1
+                        lineBuffer.put(buffer.array(), lastLine, bytesRead - lastLine)
                     }
                 }
-                lineBuffer.copyInto(lineBuffer, 0, lineStart)
-                nextByteOffset += bytesRead - lineStart
             }
         }
 

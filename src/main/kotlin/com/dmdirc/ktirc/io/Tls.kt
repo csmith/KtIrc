@@ -1,11 +1,11 @@
 package com.dmdirc.ktirc.io
 
+import com.dmdirc.ktirc.util.logger
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.io.ByteChannel
 import kotlinx.coroutines.io.ByteWriteChannel
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
 import java.net.SocketAddress
 import java.nio.ByteBuffer
 import java.security.cert.CertificateException
@@ -25,12 +25,12 @@ internal class TlsSocket(
         private val hostname: String
 ) : Socket {
 
+    private val log by logger()
     private var engine: SSLEngine = sslContext.createSSLEngine()
 
     private var incomingNetBuffer = ByteBuffer.allocate(0)
-    private var outgoingAppBuffer = ByteBuffer.allocate(0)
     private var incomingAppBuffer = ByteBuffer.allocate(0)
-    private val outgoingAppBufferMutex = Mutex(false)
+    private var outgoingAppBuffers = Channel<ByteBuffer>(capacity = Channel.UNLIMITED)
 
     private var writeChannel = ByteChannel(autoFlush = true)
 
@@ -52,7 +52,7 @@ internal class TlsSocket(
         }
 
         incomingNetBuffer = ByteBuffer.allocate(engine.session.packetBufferSize)
-        outgoingAppBuffer = ByteBuffer.allocate(engine.session.applicationBufferSize)
+        outgoingAppBuffers = Channel(capacity = Channel.UNLIMITED)
         incomingAppBuffer = ByteBuffer.allocate(engine.session.applicationBufferSize)
 
         socket.connect(socketAddress)
@@ -96,11 +96,11 @@ internal class TlsSocket(
         }
     }
 
-    override suspend fun read(buffer: ByteBuffer) = outgoingAppBufferMutex.withLock<Int> {
-        outgoingAppBuffer.flip()
-        val bytes = outgoingAppBuffer.limit()
-        buffer.put(outgoingAppBuffer)
-        outgoingAppBuffer.clear()
+    override suspend fun read(buffer: ByteBuffer): Int {
+        val nextBuffer = outgoingAppBuffers.receive()
+        val bytes = nextBuffer.limit()
+        buffer.put(nextBuffer)
+        defaultPool.recycle(nextBuffer)
         return bytes
     }
 
@@ -120,8 +120,8 @@ internal class TlsSocket(
         return result
     }
 
-    private suspend fun unwrap(): SSLEngineResult? {
-        if (incomingNetBuffer.position() == 0) {
+    private suspend fun unwrap(networkRead: Boolean = incomingNetBuffer.position() == 0): SSLEngineResult? {
+        if (networkRead) {
             val bytes = socket.read(incomingNetBuffer.slice())
             if (bytes == -1) {
                 close()
@@ -131,15 +131,29 @@ internal class TlsSocket(
         }
 
         incomingNetBuffer.flip()
-        outgoingAppBufferMutex.withLock {
-            val result = engine.unwrap(incomingNetBuffer, outgoingAppBuffer)
-            incomingNetBuffer.compact()
-            return result
+
+        val buffer = defaultPool.borrow()
+        val result = engine.unwrap(incomingNetBuffer, buffer)
+        incomingNetBuffer.compact()
+        if (buffer.position() > 0) {
+            buffer.flip()
+            outgoingAppBuffers.send(buffer)
+        } else {
+            defaultPool.recycle(buffer)
+        }
+
+        return if (result?.status == SSLEngineResult.Status.BUFFER_UNDERFLOW && !networkRead) {
+            // We didn't do a network read, but SSLEngine is unhappy; force a read.
+            log.finest { "Incoming net buffer underflowed, forcing re-read" }
+            unwrap(true)
+        } else {
+            result
         }
     }
 
     override fun close() {
         socket.close()
+        outgoingAppBuffers.close()
     }
 
     private suspend fun readLoop() {
