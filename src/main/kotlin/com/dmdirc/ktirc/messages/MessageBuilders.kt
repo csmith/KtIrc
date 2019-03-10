@@ -3,16 +3,6 @@ package com.dmdirc.ktirc.messages
 import com.dmdirc.ktirc.IrcClient
 import com.dmdirc.ktirc.model.MessageTag
 
-/** Sends a message to ask the server to list capabilities. */
-internal fun IrcClient.sendCapabilityList() = send("CAP", "LS", "302")
-
-/** Sends a message indicating the end of capability negotiation. */
-internal fun IrcClient.sendCapabilityEnd() = send("CAP", "END")
-
-/** Sends a message requesting the specified caps are enabled. */
-internal fun IrcClient.sendCapabilityRequest(capabilities: Collection<String>) =
-        send("CAP", "REQ", capabilities.joinToString(" "))
-
 /** Sends a request to join the given channel. */
 fun IrcClient.sendJoin(channel: String) = send("JOIN", channel)
 
@@ -26,11 +16,11 @@ fun IrcClient.sendModeRequest(target: String) = send("MODE", target)
 /** Sends a request to change to the given nickname. */
 fun IrcClient.sendNickChange(nick: String) = send("NICK", nick)
 
-/** Sends the connection password to the server. */
-internal fun IrcClient.sendPassword(password: String) = send("PASS", password)
-
-/** Sends a response to a PING event. */
-internal fun IrcClient.sendPong(nonce: ByteArray) = send("PONG", String(nonce))
+/** Sends a request to set or unset our away state. */
+fun IrcClient.sendAway(reason: String? = null) =
+        // We need to pass emptyMap() in the second case to avoid using the deprecated send(String) method
+        // Once that's removed, the redundant map can be taken out.
+        reason?.let { send("AWAY", reason) } ?: send(emptyMap(), "AWAY")
 
 /** Sends a CTCP message of the specified [type] and with optional [data] to [target] (a user or a channel). */
 fun IrcClient.sendCtcp(target: String, type: String, data: String? = null) =
@@ -55,12 +45,6 @@ fun IrcClient.sendMessage(target: String, message: String, inReplyTo: String? = 
 fun IrcClient.sendTagMessage(target: String, tags: Map<MessageTag, String>, inReplyTo: String? = null) {
     send(inReplyTo?.let { tags + (MessageTag.Reply to inReplyTo) } ?: tags, "TAGMSG", target)
 }
-
-/** Sends a message to register a user with the server. */
-internal fun IrcClient.sendUser(userName: String, realName: String) = send("USER", userName, "0", "*", realName)
-
-/** Starts an authentication request. */
-internal fun IrcClient.sendAuthenticationMessage(data: String = "+") = send("AUTHENTICATE", data)
 
 /**
  * Utility method for creating a map of tags to avoid type inference problems.

@@ -53,6 +53,18 @@ internal class MessageBuildersTest {
     }
 
     @Test
+    fun `sendAway sends blank AWAY message with no args`() {
+        mockClient.sendAway()
+        verify { mockClient.send(emptyMap(), "AWAY") }
+    }
+
+    @Test
+    fun `sendAway sends AWAY message with reason`() {
+        mockClient.sendAway("Hacking the planet")
+        verify { mockClient.send("AWAY", "Hacking the planet") }
+    }
+
+    @Test
     fun `sendPassword sends correct PASS message`() {
         mockClient.sendPassword("hacktheplanet")
         verify { mockClient.send("PASS", "hacktheplanet") }

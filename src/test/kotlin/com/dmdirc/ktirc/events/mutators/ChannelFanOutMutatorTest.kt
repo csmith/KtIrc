@@ -65,6 +65,42 @@ internal class ChannelFanOutMutatorTest {
     }
 
     @Test
+    fun `raises ChannelAway event for each channel a user shares when away`() {
+        with (ChannelState("#thegibson") { CaseMapping.Rfc }) {
+            users += ChannelUser("ZeroCool")
+            fakeChannelStateMap += this
+        }
+
+        with (ChannelState("#dumpsterdiving") { CaseMapping.Rfc }) {
+            users += ChannelUser("ZeroCool")
+            fakeChannelStateMap += this
+        }
+
+        with (ChannelState("#chat") { CaseMapping.Rfc }) {
+            users += ChannelUser("AcidBurn")
+            fakeChannelStateMap += this
+        }
+
+        val quitEvent = UserAway(EventMetadata(TestConstants.time), User("zerocool", "dade", "root.localhost"), "Hack the planet!")
+        val events = mutator.mutateEvent(ircClient, messageEmitter, quitEvent)
+
+        val names = mutableListOf<String>()
+        assertEquals(3, events.size)
+        assertSame(quitEvent, events[0])
+        events.subList(1, events.size).forEach { event ->
+            (event as ChannelAway).let {
+                assertEquals(TestConstants.time, it.metadata.time)
+                assertEquals("zerocool", it.user.nickname)
+                assertEquals("Hack the planet!", it.message)
+                names.add(it.target)
+            }
+        }
+
+        assertTrue("#thegibson" in names)
+        assertTrue("#dumpsterdiving" in names)
+    }
+
+    @Test
     fun `raises ChannelNickChanged event for each channel a user changes nicks in`() {
         with (ChannelState("#thegibson") { CaseMapping.Rfc }) {
             users += ChannelUser("ZeroCool")

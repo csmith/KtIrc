@@ -1,5 +1,8 @@
 vNEXT (in development)
 
+ * Away support:
+   * Added sendAway() method
+   * Added UserAway event and fanned-out ChannelAway
  * (Internal) improved the way byte buffers are used to
    reduce array copying and clean up code
 

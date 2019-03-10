@@ -12,15 +12,25 @@ internal class ChannelFanOutMutator : EventMutator {
     override fun mutateEvent(client: IrcClient, messageEmitter: MessageEmitter, event: IrcEvent) = sequence<IrcEvent> {
         yield(event)
         when (event) {
+            is UserAway -> handleAway(client, event)
             is UserQuit -> handleQuit(client, event)
             is UserNickChanged -> handleNickChanged(client, event)
         }
     }.toList()
 
+
     private suspend fun SequenceScope<IrcEvent>.handleQuit(client: IrcClient, event: UserQuit) {
         client.channelState.forEach {
             if (it.users.contains(event.user.nickname)) {
                 yield(ChannelQuit(event.metadata, event.user, it.name, event.reason))
+            }
+        }
+    }
+
+    private suspend fun SequenceScope<IrcEvent>.handleAway(client: IrcClient, event: UserAway) {
+        client.channelState.forEach {
+            if (it.users.contains(event.user.nickname)) {
+                yield(ChannelAway(event.metadata, event.user, it.name, event.message))
             }
         }
     }

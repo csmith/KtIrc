@@ -177,6 +177,15 @@ class ChannelNickChanged(metadata: EventMetadata, override val user: User, chann
     override val replacedUsers: Array<String>? = null
 }
 
+/**
+ * Raised when a user's away state changes, and they are in a common channel. If [message] is null then the user is
+ * now back.
+ *
+ * This event is only raised for other users if the server supports the 'away-notify' capability.
+ */
+class ChannelAway(metadata: EventMetadata, override val user: User, channel: String, val message: String?)
+    : TargetedEvent(metadata, channel), SourcedEvent
+
 /** Raised when a batch of the channel's member list has been received. More batches may follow. */
 class ChannelNamesReceived(metadata: EventMetadata, channel: String, val names: List<String>) : TargetedEvent(metadata, channel)
 
@@ -251,6 +260,13 @@ class UserHostChanged(metadata: EventMetadata, override val user: User, val newI
  * This event is only raised if the server supports the `account-notify` capability.
  */
 class UserAccountChanged(metadata: EventMetadata, override val user: User, val newAccount: String?) : IrcEvent(metadata), SourcedEvent
+
+/**
+ * Raised when a user's away state changes. If [message] is null then the user is now back.
+ *
+ * This event is only raised for other users if the server supports the 'away-notify' capability.
+ */
+class UserAway(metadata: EventMetadata, override val user: User, val message: String?) : IrcEvent(metadata), SourcedEvent
 
 /** Raised when available server capabilities are received. More batches may follow. */
 class ServerCapabilitiesReceived(metadata: EventMetadata, val capabilities: Map<String, String>) : IrcEvent(metadata)
