@@ -5,7 +5,9 @@ import io.mockk.mockk
 import kotlinx.coroutines.*
 import kotlinx.coroutines.io.writeFully
 import kotlinx.io.core.String
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.parallel.Execution
 import org.junit.jupiter.api.parallel.ExecutionMode
@@ -17,6 +19,7 @@ import java.security.cert.X509Certificate
 import javax.net.ssl.KeyManagerFactory
 import javax.net.ssl.SSLContext
 import javax.net.ssl.X509TrustManager
+import kotlin.coroutines.CoroutineContext
 
 internal class CertificateValidationTest {
 
@@ -163,15 +166,28 @@ internal class CertificateValidationTest {
 
 @Suppress("BlockingMethodInNonBlockingContext")
 @Execution(ExecutionMode.SAME_THREAD)
-internal class TlsSocketTest {
+internal class TlsSocketTest: CoroutineScope {
+
+    override var coroutineContext: CoroutineContext = GlobalScope.coroutineContext
+
+    @ObsoleteCoroutinesApi
+    @BeforeEach
+    fun setup() {
+        coroutineContext = newFixedThreadPoolContext(4, "tls-test")
+    }
+
+    @AfterEach
+    fun teardown() {
+        coroutineContext.cancel()
+    }
 
     @Test
-    fun `can send a string to a server over TLS`() = runBlocking {
+    fun `can send a string to a server over TLS`() = runBlocking(coroutineContext) {
         withTimeout(5000) {
             tlsServerSocket(12321).use { serverSocket ->
-                val plainSocket = PlainTextSocket(GlobalScope)
-                val tlsSocket = TlsSocket(GlobalScope, plainSocket, getTrustingContext(), "localhost")
-                val clientBytesAsync = GlobalScope.async {
+                val plainSocket = PlainTextSocket(this@TlsSocketTest)
+                val tlsSocket = TlsSocket(this@TlsSocketTest, plainSocket, getTrustingContext(), "localhost")
+                val clientBytesAsync = this@TlsSocketTest.async {
                     ByteArray(13).apply {
                         serverSocket.accept().getInputStream().read(this)
                     }
@@ -188,14 +204,14 @@ internal class TlsSocketTest {
     }
 
     @Test
-    fun `can read a string from a server over TLS`() = runBlocking<Unit> {
+    fun `can read a string from a server over TLS`() = runBlocking<Unit>(coroutineContext) {
         withTimeout(5000) {
             tlsServerSocket(12321).use { serverSocket ->
-                val plainSocket = PlainTextSocket(GlobalScope)
-                val tlsSocket = TlsSocket(GlobalScope, plainSocket, getTrustingContext(), "localhost")
-                val socket = GlobalScope.async {
+                val plainSocket = PlainTextSocket(this@TlsSocketTest)
+                val tlsSocket = TlsSocket(this@TlsSocketTest, plainSocket, getTrustingContext(), "localhost")
+                val socket = this@TlsSocketTest.async {
                     serverSocket.accept().apply {
-                        GlobalScope.launch {
+                        this@TlsSocketTest.launch {
                             getInputStream().read()
                         }
                     }
@@ -203,7 +219,7 @@ internal class TlsSocketTest {
 
                 tlsSocket.connect(InetSocketAddress("localhost", 12321))
 
-                GlobalScope.launch {
+                this@TlsSocketTest.launch {
                     with(socket.await().getOutputStream()) {
                         write("Hack the planet!".toByteArray())
                         flush()
@@ -221,12 +237,12 @@ internal class TlsSocketTest {
     }
 
     @Test
-    fun `read returns null after close`() = runBlocking {
+    fun `read returns null after close`() = runBlocking(coroutineContext) {
         withTimeout(5000) {
             tlsServerSocket(12321).use { serverSocket ->
-                val plainSocket = PlainTextSocket(GlobalScope)
-                val tlsSocket = TlsSocket(GlobalScope, plainSocket, getTrustingContext(), "localhost")
-                GlobalScope.launch {
+                val plainSocket = PlainTextSocket(this@TlsSocketTest)
+                val tlsSocket = TlsSocket(this@TlsSocketTest, plainSocket, getTrustingContext(), "localhost")
+                this@TlsSocketTest.launch {
                     serverSocket.accept().getInputStream().read()
                 }
 
@@ -244,13 +260,13 @@ internal class TlsSocketTest {
     @Test
     fun `throws if the hostname mismatches`() {
         tlsServerSocket(12321).use { serverSocket ->
-            val plainSocket = PlainTextSocket(GlobalScope)
-            val tlsSocket = TlsSocket(GlobalScope, plainSocket, getTrustingContext(), "127.0.0.1")
-            GlobalScope.launch {
+            val plainSocket = PlainTextSocket(this@TlsSocketTest)
+            val tlsSocket = TlsSocket(this@TlsSocketTest, plainSocket, getTrustingContext(), "127.0.0.1")
+            launch {
                 serverSocket.accept().getInputStream().read()
             }
 
-            runBlocking {
+            runBlocking(coroutineContext) {
                 withTimeout(5000) {
                     try {
                         tlsSocket.connect(InetSocketAddress("localhost", 12321))
@@ -262,8 +278,6 @@ internal class TlsSocketTest {
             }
         }
     }
-
-
 }
 
 internal fun tlsServerSocket(port: Int): ServerSocket {
