@@ -8,7 +8,6 @@ import kotlinx.coroutines.io.writeFully
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.io.core.String
-import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.parallel.Execution
@@ -184,8 +183,58 @@ internal class TlsSocketTest {
             tlsSocket.write.writeFully("Hello World\r\n".toByteArray())
 
             val bytes = clientBytesAsync.await()
-            Assertions.assertNotNull(bytes)
-            Assertions.assertEquals("Hello World\r\n", String(bytes))
+            assertNotNull(bytes)
+            assertEquals("Hello World\r\n", String(bytes))
+        }
+    }
+
+    @Test
+    fun `can read a string from a server over TLS`() = runBlocking<Unit> {
+        tlsServerSocket(12321).use { serverSocket ->
+            val plainSocket = PlainTextSocket(GlobalScope)
+            val tlsSocket = TlsSocket(GlobalScope, plainSocket, getTrustingContext(), "localhost")
+            val socket = GlobalScope.async {
+                serverSocket.accept().apply {
+                    GlobalScope.launch {
+                        getInputStream().read()
+                    }
+                }
+            }
+
+            tlsSocket.connect(InetSocketAddress("localhost", 12321))
+
+            GlobalScope.launch {
+                with (socket.await().getOutputStream()) {
+                    write("Hack the planet!".toByteArray())
+                    flush()
+                }
+            }
+
+            val buffer = tlsSocket.read()
+
+            assertNotNull(buffer)
+            buffer?.let {
+                assertEquals("Hack the planet!", String(it.array(), 0, it.limit()))
+            }
+        }
+    }
+
+    @Test
+    fun `read returns null after close`() = runBlocking {
+        tlsServerSocket(12321).use { serverSocket ->
+            val plainSocket = PlainTextSocket(GlobalScope)
+            val tlsSocket = TlsSocket(GlobalScope, plainSocket, getTrustingContext(), "localhost")
+            GlobalScope.launch {
+                serverSocket.accept().getInputStream().read()
+            }
+
+            tlsSocket.connect(InetSocketAddress("localhost", 12321))
+
+            tlsSocket.close()
+
+            val buffer = tlsSocket.read()
+
+            assertNull(buffer)
         }
     }
 
