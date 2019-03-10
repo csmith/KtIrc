@@ -2,11 +2,25 @@ package com.dmdirc.ktirc.io
 
 import io.mockk.every
 import io.mockk.mockk
-import org.junit.jupiter.api.Assertions.assertFalse
-import org.junit.jupiter.api.Assertions.assertTrue
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.async
+import kotlinx.coroutines.io.writeFully
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
+import kotlinx.io.core.String
+import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.parallel.Execution
+import org.junit.jupiter.api.parallel.ExecutionMode
+import java.net.InetSocketAddress
+import java.net.ServerSocket
+import java.security.KeyStore
 import java.security.cert.CertificateException
 import java.security.cert.X509Certificate
+import javax.net.ssl.KeyManagerFactory
+import javax.net.ssl.SSLContext
+import javax.net.ssl.X509TrustManager
 
 internal class CertificateValidationTest {
 
@@ -149,4 +163,74 @@ internal class CertificateValidationTest {
         assertFalse(cert.validFor("directory.test.ktirc"))
     }
 
+}
+
+@Suppress("BlockingMethodInNonBlockingContext")
+@Execution(ExecutionMode.SAME_THREAD)
+internal class TlsSocketTest {
+
+    @Test
+    fun `can send a string to a server over TLS`() = runBlocking {
+        tlsServerSocket(12321).use { serverSocket ->
+            val plainSocket = PlainTextSocket(GlobalScope)
+            val tlsSocket = TlsSocket(GlobalScope, plainSocket, getTrustingContext(), "localhost")
+            val clientBytesAsync = GlobalScope.async {
+                ByteArray(13).apply {
+                    serverSocket.accept().getInputStream().read(this)
+                }
+            }
+
+            tlsSocket.connect(InetSocketAddress("localhost", 12321))
+            tlsSocket.write.writeFully("Hello World\r\n".toByteArray())
+
+            val bytes = clientBytesAsync.await()
+            Assertions.assertNotNull(bytes)
+            Assertions.assertEquals("Hello World\r\n", String(bytes))
+        }
+    }
+
+    @Test
+    fun `throws if the hostname mismatches`() {
+        tlsServerSocket(12321).use { serverSocket ->
+            val plainSocket = PlainTextSocket(GlobalScope)
+            val tlsSocket = TlsSocket(GlobalScope, plainSocket, getTrustingContext(), "127.0.0.1")
+            GlobalScope.launch {
+                serverSocket.accept().getInputStream().read()
+            }
+
+            runBlocking {
+                try {
+                    tlsSocket.connect(InetSocketAddress("localhost", 12321))
+                    fail<Unit>("Expected an exception")
+                } catch (ex: Exception) {
+                    assertTrue(ex is CertificateException)
+                }
+            }
+        }
+    }
+
+
+}
+
+internal fun tlsServerSocket(port: Int): ServerSocket {
+    val keyStore = KeyStore.getInstance("PKCS12")
+    keyStore.load(CertificateValidationTest::class.java.getResourceAsStream("localhost.p12"), CharArray(0))
+
+    val keyManagerFactory = KeyManagerFactory.getInstance("PKIX")
+    keyManagerFactory.init(keyStore, CharArray(0))
+
+    val sslContext = SSLContext.getInstance("TLSv1.2")
+    sslContext.init(keyManagerFactory.keyManagers, null, null)
+    return sslContext.serverSocketFactory.createServerSocket(port)
+}
+
+internal fun getTrustingContext() =
+        SSLContext.getInstance("TLSv1.2").apply { init(null, arrayOf(getTrustingManager()), null) }
+
+internal fun getTrustingManager() = object : X509TrustManager {
+    override fun getAcceptedIssuers(): Array<X509Certificate> = emptyArray()
+
+    override fun checkClientTrusted(certs: Array<X509Certificate>, authType: String) {}
+
+    override fun checkServerTrusted(certs: Array<X509Certificate>, authType: String) {}
 }

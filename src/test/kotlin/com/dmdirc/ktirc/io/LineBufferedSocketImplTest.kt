@@ -7,18 +7,14 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.parallel.Execution
 import org.junit.jupiter.api.parallel.ExecutionMode
 import java.net.ServerSocket
-import java.security.KeyStore
-import java.security.cert.X509Certificate
-import javax.net.ssl.KeyManagerFactory
-import javax.net.ssl.SSLContext
-import javax.net.ssl.X509TrustManager
 
+@Suppress("BlockingMethodInNonBlockingContext")
 @ExperimentalCoroutinesApi
 @Execution(ExecutionMode.SAME_THREAD)
 internal class LineBufferedSocketImplTest {
 
     @Test
-    fun `KtorLineBufferedSocket can connect to a server`() = runBlocking {
+    fun `can connect to a server`() = runBlocking {
         ServerSocket(12321).use { serverSocket ->
             val socket = LineBufferedSocketImpl(GlobalScope, "localhost", "localhost", 12321)
             val clientSocketAsync = GlobalScope.async { serverSocket.accept() }
@@ -30,7 +26,7 @@ internal class LineBufferedSocketImplTest {
     }
 
     @Test
-    fun `KtorLineBufferedSocket can send a byte array to a server`() = runBlocking {
+    fun `can send a byte array to a server`() = runBlocking {
         ServerSocket(12321).use { serverSocket ->
             val socket = LineBufferedSocketImpl(GlobalScope, "localhost", "localhost", 12321)
             val clientBytesAsync = GlobalScope.async {
@@ -49,7 +45,7 @@ internal class LineBufferedSocketImplTest {
     }
 
     @Test
-    fun `KtorLineBufferedSocket can send a string to a server over TLS`() = runBlocking {
+    fun `can send a string to a server over TLS`() = runBlocking {
         tlsServerSocket(12321).use { serverSocket ->
             val socket = LineBufferedSocketImpl(GlobalScope, "localhost", "localhost", 12321, true)
             socket.tlsTrustManager = getTrustingManager()
@@ -69,7 +65,7 @@ internal class LineBufferedSocketImplTest {
     }
 
     @Test
-    fun `KtorLineBufferedSocket can receive a line of CRLF delimited text`() = runBlocking {
+    fun `can receive a line of CRLF delimited text`() = runBlocking {
         ServerSocket(12321).use { serverSocket ->
             val socket = LineBufferedSocketImpl(GlobalScope, "localhost", "localhost", 12321)
             GlobalScope.launch {
@@ -82,7 +78,7 @@ internal class LineBufferedSocketImplTest {
     }
 
     @Test
-    fun `KtorLineBufferedSocket can receive a line of LF delimited text`() = runBlocking {
+    fun `can receive a line of LF delimited text`() = runBlocking {
         ServerSocket(12321).use { serverSocket ->
             val socket = LineBufferedSocketImpl(GlobalScope, "localhost", "localhost", 12321)
             GlobalScope.launch {
@@ -95,7 +91,7 @@ internal class LineBufferedSocketImplTest {
     }
 
     @Test
-    fun `KtorLineBufferedSocket can receive multiple lines of text in one packet`() = runBlocking {
+    fun `can receive multiple lines of text in one packet`() = runBlocking {
         ServerSocket(12321).use { serverSocket ->
             val socket = LineBufferedSocketImpl(GlobalScope, "localhost", "localhost", 12321)
             GlobalScope.launch {
@@ -110,7 +106,7 @@ internal class LineBufferedSocketImplTest {
     }
 
     @Test
-    fun `KtorLineBufferedSocket can receive multiple long lines of text`() = runBlocking {
+    fun `can receive multiple long lines of text`() = runBlocking {
         ServerSocket(12321).use { serverSocket ->
             val socket = LineBufferedSocketImpl(GlobalScope, "localhost", "localhost", 12321)
             val line1 = "abcdefghijklmnopqrstuvwxyz".repeat(500)
@@ -129,7 +125,7 @@ internal class LineBufferedSocketImplTest {
     }
 
     @Test
-    fun `KtorLineBufferedSocket can receive one line of text over multiple packets`() = runBlocking {
+    fun `can receive one line of text over multiple packets`() = runBlocking {
         ServerSocket(12321).use { serverSocket ->
             val socket = LineBufferedSocketImpl(GlobalScope, "localhost", "localhost", 12321)
             GlobalScope.launch {
@@ -150,7 +146,7 @@ internal class LineBufferedSocketImplTest {
     }
 
     @Test
-    fun `KtorLineBufferedSocket returns from readLines when socket is closed`() = runBlocking {
+    fun `returns from readLines when socket is closed`() = runBlocking {
         ServerSocket(12321).use { serverSocket ->
             val socket = LineBufferedSocketImpl(GlobalScope, "localhost", "localhost", 12321)
             GlobalScope.launch {
@@ -167,7 +163,7 @@ internal class LineBufferedSocketImplTest {
     }
 
     @Test
-    fun `KtorLineBufferedSocket disconnects from server`() = runBlocking {
+    fun `disconnects from server`() = runBlocking {
         ServerSocket(12321).use { serverSocket ->
             val socket = LineBufferedSocketImpl(GlobalScope, "localhost", "localhost", 12321)
             val clientSocketAsync = GlobalScope.async { serverSocket.accept() }
@@ -178,26 +174,5 @@ internal class LineBufferedSocketImplTest {
             assertEquals(-1, clientSocketAsync.await().getInputStream().read()) { "Server socket should EOF after KtorLineBufferedSocket disconnects" }
         }
     }
-
-    private fun tlsServerSocket(port: Int): ServerSocket {
-        val keyStore = KeyStore.getInstance("PKCS12")
-        keyStore.load(LineBufferedSocketImplTest::class.java.getResourceAsStream("localhost.p12"), CharArray(0))
-
-        val keyManagerFactory = KeyManagerFactory.getInstance("PKIX")
-        keyManagerFactory.init(keyStore, CharArray(0))
-
-        val sslContext = SSLContext.getInstance("TLSv1.2")
-        sslContext.init(keyManagerFactory.keyManagers, null, null)
-        return sslContext.serverSocketFactory.createServerSocket(port)
-    }
-
-    private fun getTrustingManager() = object : X509TrustManager {
-        override fun getAcceptedIssuers(): Array<X509Certificate>  = emptyArray()
-
-        override fun checkClientTrusted(certs: Array<X509Certificate>, authType: String) {}
-
-        override fun checkServerTrusted(certs: Array<X509Certificate>, authType: String) {}
-    }
-
 
 }

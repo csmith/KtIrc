@@ -54,22 +54,25 @@ internal class PlainTextSocket(private val scope: CoroutineScope) : Socket {
         client.close()
     }
 
-    override suspend fun read() = try {
+    override suspend fun read(): ByteBuffer? {
         val buffer = byteBufferPool.borrow()
-        val bytes = suspendCancellableCoroutine<Int> { continuation ->
-            client.closeOnCancel(continuation)
-            client.read(buffer, continuation, asyncIOHandler())
-        }
+        try {
+            val bytes = suspendCancellableCoroutine<Int> { continuation ->
+                client.closeOnCancel(continuation)
+                client.read(buffer, continuation, asyncIOHandler())
+            }
 
-        if (bytes == -1) {
-            close()
-        }
+            if (bytes == -1) {
+                close()
+            }
 
-        buffer.flip()
-        buffer
-    } catch (_: ClosedChannelException) {
-        // Ignore
-        null
+            buffer.flip()
+            return buffer
+        } catch (_: ClosedChannelException) {
+            // Ignore
+            byteBufferPool.recycle(buffer)
+            return null
+        }
     }
 
     private suspend fun writeLoop() {
