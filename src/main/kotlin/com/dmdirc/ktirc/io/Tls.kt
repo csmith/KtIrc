@@ -7,6 +7,7 @@ import kotlinx.coroutines.channels.ClosedReceiveChannelException
 import kotlinx.coroutines.io.ByteChannel
 import kotlinx.coroutines.io.ByteWriteChannel
 import kotlinx.coroutines.launch
+import kotlinx.io.pool.useInstance
 import java.net.SocketAddress
 import java.nio.ByteBuffer
 import java.security.cert.CertificateException
@@ -97,19 +98,15 @@ internal class TlsSocket(
         }
     }
 
-    override suspend fun read(buffer: ByteBuffer) = try {
-        val nextBuffer = outgoingAppBuffers.receive()
-        val bytes = nextBuffer.limit()
-        buffer.put(nextBuffer)
-        defaultPool.recycle(nextBuffer)
-        bytes
+    override suspend fun read() = try {
+        outgoingAppBuffers.receive()
     } catch (_: ClosedReceiveChannelException) {
-        -1
+        null
     }
 
     private suspend fun wrap(): SSLEngineResult? {
         var result: SSLEngineResult? = null
-        defaultPool.borrow { netBuffer ->
+        byteBufferPool.useInstance { netBuffer ->
             if (engine.handshakeStatus <= SSLEngineResult.HandshakeStatus.FINISHED) {
                 writeChannel.readAvailable(incomingAppBuffer)
             }
@@ -125,24 +122,25 @@ internal class TlsSocket(
 
     private suspend fun unwrap(networkRead: Boolean = incomingNetBuffer.position() == 0): SSLEngineResult? {
         if (networkRead) {
-            val bytes = socket.read(incomingNetBuffer.slice())
-            if (bytes == -1) {
+            val buffer = socket.read()
+            if (buffer == null) {
                 close()
                 return null
             }
-            incomingNetBuffer.position(incomingNetBuffer.position() + bytes)
+            incomingNetBuffer.put(buffer)
+            byteBufferPool.recycle(buffer)
         }
 
         incomingNetBuffer.flip()
 
-        val buffer = defaultPool.borrow()
+        val buffer = byteBufferPool.borrow()
         val result = engine.unwrap(incomingNetBuffer, buffer)
         incomingNetBuffer.compact()
         if (buffer.position() > 0) {
             buffer.flip()
             outgoingAppBuffers.send(buffer)
         } else {
-            defaultPool.recycle(buffer)
+            byteBufferPool.recycle(buffer)
         }
 
         return if (result?.status == SSLEngineResult.Status.BUFFER_UNDERFLOW && !networkRead) {
@@ -158,9 +156,9 @@ internal class TlsSocket(
         socket.close()
 
         // Release any buffers we've got queued up
-        while(true) {
+        while (true) {
             outgoingAppBuffers.poll()?.let {
-                defaultPool.recycle(it)
+                byteBufferPool.recycle(it)
             } ?: break
         }
 

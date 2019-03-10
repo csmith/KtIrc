@@ -1,5 +1,8 @@
 vNEXT (in development)
 
+ * (Internal) improved the way byte buffers are used to
+   reduce array copying and clean up code
+
 v1.0.1
 
  * Fixed issue with very long packets not fitting in buffers

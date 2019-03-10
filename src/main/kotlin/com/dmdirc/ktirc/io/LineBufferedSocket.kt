@@ -8,6 +8,7 @@ import kotlinx.coroutines.channels.SendChannel
 import kotlinx.coroutines.channels.produce
 import kotlinx.coroutines.io.ByteWriteChannel
 import kotlinx.io.core.String
+import kotlinx.io.pool.useInstance
 import java.net.InetSocketAddress
 import java.nio.ByteBuffer
 import java.security.SecureRandom
@@ -55,7 +56,7 @@ internal class LineBufferedSocketImpl(coroutineScope: CoroutineScope, private va
 
         runBlocking {
             if (tls) {
-                with (SSLContext.getInstance("TLSv1.2")) {
+                with(SSLContext.getInstance("TLSv1.2")) {
                     init(null, tlsTrustManager?.let { arrayOf(it) }, SecureRandom.getInstanceStrong())
                     socket = TlsSocket(this@LineBufferedSocketImpl, socket, this, host)
                 }
@@ -74,35 +75,31 @@ internal class LineBufferedSocketImpl(coroutineScope: CoroutineScope, private va
 
     override val receiveChannel
         get() = produce {
-            defaultPool.borrow { lineBuffer ->
+            byteBufferPool.useInstance { lineBuffer ->
                 while (socket.isOpen) {
-                    defaultPool.borrow { buffer ->
-                        val bytesRead = socket.read(buffer)
-                        if (bytesRead == -1) {
-                            return@produce
-                        }
-                        var lastLine = 0
-                        for (i in 0 until bytesRead) {
-                            if (buffer[i] == CARRIAGE_RETURN || buffer[i] == LINE_FEED) {
-                                val length = i - lastLine + lineBuffer.position()
+                    val buffer = socket.read() ?: return@produce
+                    var lastLine = 0
+                    for (i in 0 until buffer.limit()) {
+                        if (buffer[i] == CARRIAGE_RETURN || buffer[i] == LINE_FEED) {
+                            val length = i - lastLine + lineBuffer.position()
 
-                                if (length > 1) {
-                                    val output = ByteBuffer.allocate(length)
+                            if (length > 1) {
+                                val output = ByteBuffer.allocate(length)
 
-                                    lineBuffer.flip()
-                                    output.put(lineBuffer)
-                                    lineBuffer.clear()
+                                lineBuffer.flip()
+                                output.put(lineBuffer)
+                                lineBuffer.clear()
 
-                                    output.put(buffer.array(), lastLine, i - lastLine)
-                                    log.fine { "<<< ${String(output.array())}" }
-                                    send(output.array())
-                                }
-
-                                lastLine = i + 1
+                                output.put(buffer.array(), lastLine, i - lastLine)
+                                log.fine { "<<< ${String(output.array())}" }
+                                send(output.array())
                             }
+
+                            lastLine = i + 1
                         }
-                        lineBuffer.put(buffer.array(), lastLine, bytesRead - lastLine)
                     }
+                    lineBuffer.put(buffer.array(), lastLine, buffer.limit() - lastLine)
+                    byteBufferPool.recycle(buffer)
                 }
             }
         }
