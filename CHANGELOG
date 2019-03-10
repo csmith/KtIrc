@@ -3,7 +3,7 @@ vNEXT (in development)
  * Away support:
    * Added sendAway() method
    * Added UserAway event and fanned-out ChannelAway
-   * away message is now updated in the UserState
+   * Away message is now updated in the UserState
  * (Internal) improved the way byte buffers are used to
    reduce array copying and clean up code
 

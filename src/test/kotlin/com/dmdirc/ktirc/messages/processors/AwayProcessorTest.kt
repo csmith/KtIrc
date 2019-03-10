@@ -43,6 +43,30 @@ internal class AwayProcessorTest {
     }
 
     @Test
+    fun `raises away changed event for local user on NOWAWAY`() {
+        val events = AwayProcessor().process(
+                IrcMessage(emptyMap(), ":the.server".toByteArray(), "306", params("acidBurn", "You have been marked as being away")))
+        assertEquals(1, events.size)
+
+        val event = events[0]
+        assertEquals(TestConstants.time, event.metadata.time)
+        assertEquals(User("acidBurn"), event.user)
+        assertEquals("", event.message)
+    }
+
+    @Test
+    fun `raises away changed event for local user on UNAWAY`() {
+        val events = AwayProcessor().process(
+                IrcMessage(emptyMap(), ":the.server".toByteArray(), "305", params("acidBurn", "You are no longer marked as being away")))
+        assertEquals(1, events.size)
+
+        val event = events[0]
+        assertEquals(TestConstants.time, event.metadata.time)
+        assertEquals(User("acidBurn"), event.user)
+        assertNull(event.message)
+    }
+
+    @Test
     fun `does nothing on away if prefix missing`() {
         val events = AwayProcessor().process(IrcMessage(emptyMap(), null, "AWAY", params("*")))
         Assertions.assertEquals(0, events.size)
