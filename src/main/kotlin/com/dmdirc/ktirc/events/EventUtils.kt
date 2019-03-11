@@ -46,4 +46,4 @@ fun IrcClient.react(message: MessageReceived, reaction: String) = sendTagMessage
  * Utility to determine whether the given message is to our local user or not.
  */
 internal fun IrcClient.isToMe(message: MessageReceived) =
-        caseMapping.areEquivalent(message.target, serverState.localNickname)
+        caseMapping.areEquivalent(message.target, localUser.nickname)

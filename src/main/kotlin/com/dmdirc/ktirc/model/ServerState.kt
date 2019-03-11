@@ -4,6 +4,7 @@ import com.dmdirc.ktirc.SaslConfig
 import com.dmdirc.ktirc.events.EventMetadata
 import com.dmdirc.ktirc.events.IrcEvent
 import com.dmdirc.ktirc.io.CaseMapping
+import com.dmdirc.ktirc.util.RemoveIn
 import com.dmdirc.ktirc.util.logger
 import kotlinx.coroutines.channels.SendChannel
 import java.util.concurrent.atomic.AtomicLong
@@ -33,6 +34,8 @@ class ServerState internal constructor(
      * in use when connecting. Once you have received a [com.dmdirc.ktirc.events.ServerWelcome] event you can
      * rely on this value being current.
      * */
+    @RemoveIn("3.0.0")
+    @Deprecated("use ircClient.localUser.nickname instead")
     var localNickname: String = initialNickname
         internal set
 

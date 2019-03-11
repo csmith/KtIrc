@@ -2,6 +2,7 @@ package com.dmdirc.ktirc.events.handlers
 
 import com.dmdirc.ktirc.IrcClient
 import com.dmdirc.ktirc.events.*
+import com.dmdirc.ktirc.model.User
 import com.dmdirc.ktirc.model.UserState
 
 internal class UserStateHandler : EventHandler {
@@ -17,6 +18,7 @@ internal class UserStateHandler : EventHandler {
             is UserHostChanged -> handleHostChanged(client, event)
             is UserQuit -> handleQuit(client.userState, event)
             is UserAway -> handleAway(client.userState, event)
+            is ServerWelcome -> handleServerWelcome(client.localUser, event)
         }
     }
 
@@ -92,6 +94,10 @@ internal class UserStateHandler : EventHandler {
                 else -> it.awayMessage = event.message
             }
         }
+    }
+
+    private fun handleServerWelcome(localUser: User, event: ServerWelcome) {
+        localUser.nickname = event.localNick
     }
 
 }

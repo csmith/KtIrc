@@ -414,10 +414,16 @@ Provides an enum containing the current server state. One of:
 * `Negotiating` - we are logging in, negotiating capabilities, etc
 * `Ready` - we are connected and commands may be sent
 
-.serverState.localNickname (String)
+.serverState.localNickname (String) [DEPRECATED]
 The current nickname we are using on the IRC server. While connecting this
 will default to the nickname from the <<User profile>>, but it may be updated
 if e.g. the nick is in use or not allowed.
+
+[WARNING]
+====
+This property is deprecated in favour of the <<LocalUser>> property of `IrcClient`.
+You should migrate to using `localUser.nickname` in place of `serverSate.localNickname`.
+====
 
 .serverState.serverName (String)
 The name the server uses for itself. While connecting this defaults to the
@@ -549,7 +555,7 @@ ircClient.userState[user]
 ----
 
 The UserState returns a `KnownUser` object which exposes a `details`
-property containing the user details, and a `channels` property
+property containing the <<User>> details, and a `channels` property
 containing the common channel names. You can also use the `in`
 operator to check if the user is in a channel:
 
@@ -570,6 +576,27 @@ ircClient.userState["acidBurn"]?.let { knownUser -> <1>
     the `in` operator.
 <3> Returns all common channels we share with the user; will never
     include channels that the KtIrc client is not joined to.
+
+==== User
+
+User objects have the following properties:
+
+* `nickname` - the current nickname of the user, always set
+* `ident` - the ident (username/"gecos") of the user, if known (null otherwise)
+* `hostname` - the hostname of the user, if known (null otherwise)
+* `account` - the account of the user, if known (null if account unknown, or user not registered)
+* `realName` - the real name of the user, if known (null otherwise)
+* `awayMessage` - the away message of the user, if known (null if away state unknown, or user not away)
+
+=== LocalUser
+
+Contains a <<User>> instance corresponding to our own details on the IRC
+network. This is the same instance that would be returned from
+`ircClient.userState[nickname]` for the current nickname.
+
+While connecting this will default to a User with only a nickname, which will
+be taken from the <<User profile>>. It will be updated as more information
+is received from the IRC server.
 
 === ChannelState
 

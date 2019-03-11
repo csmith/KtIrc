@@ -4,6 +4,8 @@ vNEXT (in development)
    * Added sendAway() method
    * Added UserAway event and fanned-out ChannelAway
    * Away message is now updated in the UserState
+ * Added IrcClient.localUser property, returning the local User
+ * Deprecated ServerState.localNickname in favour of localUser.
  * (Internal) improved the way byte buffers are used to
    reduce array copying and clean up code
 

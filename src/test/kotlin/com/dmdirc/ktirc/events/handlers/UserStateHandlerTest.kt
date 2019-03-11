@@ -15,12 +15,14 @@ internal class UserStateHandlerTest {
 
     private val fakeServerState = ServerState("", "")
     private val fakeUserState = UserState { CaseMapping.Rfc }
+    private val fakeLocalUser = User("?")
 
     private val ircClient = mockk<IrcClient> {
         every { serverState } returns fakeServerState
         every { userState } returns fakeUserState
         every { isLocalUser(any<User>()) } answers { arg<User>(0).nickname == "zeroCool" }
         every { isLocalUser(any<String>()) } answers { arg<String>(0) == "zeroCool" }
+        every { localUser } returns fakeLocalUser
     }
 
     private val handler = UserStateHandler()
@@ -267,6 +269,15 @@ internal class UserStateHandlerTest {
         handler.processEvent(ircClient, UserAway(EventMetadata(TestConstants.time), user, "Hacking the planet"))
 
         assertEquals("Hacking the planet", fakeUserState["acidBurn"]?.details?.awayMessage)
+    }
+
+    @Test
+    fun `updates local nickname on server welcome`() {
+        fakeUserState += User("AcidBurn")
+
+        handler.processEvent(ircClient, ServerWelcome(EventMetadata(TestConstants.time), "the.gibson", "acidBurn2"))
+
+        assertEquals("acidBurn2", fakeLocalUser.nickname)
     }
 
 }

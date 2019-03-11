@@ -15,9 +15,11 @@ import org.junit.jupiter.api.Test
 internal class EventUtilsTest {
 
     private val fakeServerState = ServerState("", "")
+    private val fakeLocalUser = User("")
     private val ircClient = mockk<IrcClient> {
         every { serverState } returns fakeServerState
         every { caseMapping } returns CaseMapping.Ascii
+        every { localUser } returns fakeLocalUser
     }
 
     @BeforeEach
@@ -66,7 +68,7 @@ internal class EventUtilsTest {
 
     @Test
     fun `reply sends response to user when message is private`() {
-        fakeServerState.localNickname = "zeroCool"
+        fakeLocalUser.nickname = "zeroCool"
         val message = MessageReceived(EventMetadata(TestConstants.time), User("acidBurn"), "Zerocool", "Hack the planet!")
 
         ircClient.reply(message, "OK")
@@ -97,7 +99,7 @@ internal class EventUtilsTest {
 
     @Test
     fun `reply sends response with message ID to user when message is private`() {
-        fakeServerState.localNickname = "zeroCool"
+        fakeLocalUser.nickname = "zeroCool"
         val message = MessageReceived(EventMetadata(TestConstants.time, messageId = "abc123"), User("acidBurn"), "Zerocool", "Hack the planet!")
 
         ircClient.reply(message, "OK")
@@ -129,7 +131,7 @@ internal class EventUtilsTest {
 
     @Test
     fun `react sends response to user when message is private`() {
-        fakeServerState.localNickname = "zeroCool"
+        fakeLocalUser.nickname = "zeroCool"
         val message = MessageReceived(EventMetadata(TestConstants.time, messageId = "msgId"), User("acidBurn"), "Zerocool", "Hack the planet!")
 
         ircClient.react(message, ":P")

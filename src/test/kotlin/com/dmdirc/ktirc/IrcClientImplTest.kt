@@ -5,6 +5,7 @@ import com.dmdirc.ktirc.io.CaseMapping
 import com.dmdirc.ktirc.io.LineBufferedSocket
 import com.dmdirc.ktirc.messages.tagMap
 import com.dmdirc.ktirc.model.*
+import com.dmdirc.ktirc.util.RemoveIn
 import com.dmdirc.ktirc.util.currentTimeProvider
 import com.dmdirc.ktirc.util.generateLabel
 import io.mockk.*
@@ -286,7 +287,7 @@ internal class IrcClientImplTest {
     @Test
     fun `indicates if user is local user or not`() {
         val client = IrcClientImpl(normalConfig)
-        client.serverState.localNickname = "[acidBurn]"
+        client.localUser.nickname = "[acidBurn]"
 
         assertTrue(client.isLocalUser(User("{acidBurn}", "libby", "root.localhost")))
         assertFalse(client.isLocalUser(User("acid-Burn", "libby", "root.localhost")))
@@ -295,7 +296,7 @@ internal class IrcClientImplTest {
     @Test
     fun `indicates if nickname is local user or not`() {
         val client = IrcClientImpl(normalConfig)
-        client.serverState.localNickname = "[acidBurn]"
+        client.localUser.nickname = "[acidBurn]"
 
         assertTrue(client.isLocalUser("{acidBurn}"))
         assertFalse(client.isLocalUser("acid-Burn"))
@@ -304,13 +305,14 @@ internal class IrcClientImplTest {
     @Test
     fun `uses current case mapping to check local user`() {
         val client = IrcClientImpl(normalConfig)
-        client.serverState.localNickname = "[acidBurn]"
+        client.localUser.nickname = "[acidBurn]"
         client.serverState.features[ServerFeature.ServerCaseMapping] = CaseMapping.Ascii
         assertFalse(client.isLocalUser(User("{acidBurn}", "libby", "root.localhost")))
     }
 
     @Test
-    @SuppressWarnings("deprecation")
+    @Deprecated("Tests deprecated method")
+    @RemoveIn("2.0.0")
     fun `sends text to socket`() = runBlocking {
         val client = IrcClientImpl(normalConfig)
         client.socketFactory = mockSocketFactory
@@ -489,9 +491,17 @@ internal class IrcClientImplTest {
     }
 
     @Test
+    @Deprecated("Tests deprecated method")
+    @RemoveIn("3.0.0")
     fun `defaults local nickname to profile`() {
         val client = IrcClientImpl(normalConfig)
         assertEquals(NICK, client.serverState.localNickname)
+    }
+
+    @Test
+    fun `defaults local user to nickname in profile`() {
+        val client = IrcClientImpl(normalConfig)
+        assertEquals(User(NICK), client.localUser)
     }
 
     @Test
@@ -514,14 +524,17 @@ internal class IrcClientImplTest {
     @Test
     fun `reset clears all state`() {
         with(IrcClientImpl(normalConfig)) {
-            userState += User("acidBurn")
+            userState += User("zeroCool")
             channelState += ChannelState("#thegibson") { CaseMapping.Rfc }
             serverState.serverName = "root.$HOST"
+            localUser.awayMessage = "Hacking the planet"
+
             reset()
 
-            assertEquals(0, userState.count())
+            assertEquals(1, userState.count())
             assertEquals(0, channelState.count())
             assertEquals(HOST, serverState.serverName)
+            assertEquals(User("AcidBurn"), localUser)
         }
     }
 

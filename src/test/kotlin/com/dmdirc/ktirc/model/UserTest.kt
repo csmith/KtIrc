@@ -53,4 +53,11 @@ internal class UserTest {
         assertEquals("Hacking the planet", user2.awayMessage)
     }
 
+    @Test
+    fun `resets all fields`() {
+        val user = User("acidBurn", "acidB", "root.localhost", "acidBurn", "Libby", "Hacking the planet!")
+        user.reset("burn")
+        assertEquals(User("burn"), user)
+    }
+
 }

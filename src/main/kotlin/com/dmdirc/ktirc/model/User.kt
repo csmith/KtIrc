@@ -19,6 +19,15 @@ data class User(
         other.realName?.let { realName = it }
         other.awayMessage?.let { awayMessage = it }
     }
+
+    internal fun reset(newNickname: String) {
+        nickname = newNickname
+        ident = null
+        hostname = null
+        account = null
+        realName = null
+        awayMessage = null
+    }
 }
 
 internal fun ByteArray.asUser() = String(this).asUser()

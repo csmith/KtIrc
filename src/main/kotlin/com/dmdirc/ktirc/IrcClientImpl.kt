@@ -45,7 +45,8 @@ internal class IrcClientImpl(private val config: IrcClientConfig) : Experimental
 
     override val serverState = ServerState(config.profile.nickname, config.server.host, config.sasl)
     override val channelState = ChannelStateMap { caseMapping }
-    override val userState = UserState { caseMapping }
+    override val localUser = User(config.profile.nickname)
+    override val userState = UserState { caseMapping }.apply { this += localUser }
 
     private val messageHandler = MessageHandler(messageProcessors, eventMutators, eventHandlers)
     private val messageBuilder = MessageBuilder()
@@ -142,7 +143,7 @@ internal class IrcClientImpl(private val config: IrcClientConfig) : Experimental
         if (command == "PRIVMSG" && behaviour.alwaysEchoMessages && !serverState.capabilities.enabledCapabilities.contains(Capability.EchoMessages)) {
             emitEvent(MessageReceived(
                     EventMetadata(currentTimeProvider()),
-                    userState[serverState.localNickname]?.details ?: User(serverState.localNickname),
+                    localUser,
                     arguments[0],
                     arguments[1]
             ))
@@ -163,6 +164,8 @@ internal class IrcClientImpl(private val config: IrcClientConfig) : Experimental
         serverState.reset()
         channelState.clear()
         userState.reset()
+        localUser.reset(config.profile.nickname)
+        userState += localUser
         socket = null
         connecting.tryLock()
         connecting.unlock()

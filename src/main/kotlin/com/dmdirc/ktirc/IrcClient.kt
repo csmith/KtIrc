@@ -29,6 +29,11 @@ interface IrcClient {
     val userState: UserState
 
     /**
+     * Details of our user on IRC.
+     */
+    val localUser: User
+
+    /**
      * The configured behaviour of the client.
      */
     val behaviour: ClientBehaviour
@@ -126,7 +131,7 @@ interface IrcClient {
      * Utility method to determine if the given user is the one we are connected to IRC as. Should only be used after a
      * [com.dmdirc.ktirc.events.ServerReady] event has been received.
      */
-    fun isLocalUser(nickname: String) = caseMapping.areEquivalent(nickname, serverState.localNickname)
+    fun isLocalUser(nickname: String) = caseMapping.areEquivalent(nickname, localUser.nickname)
 
     /**
      * Determines if the given [target] appears to be a channel or not. Should only be used after a
