@@ -1,6 +1,9 @@
 = Changelog
 
 == Next version (in development)
+* No changes yet
+
+== v1.1.0 (2019-03-13)
 
 * Away support:
 ** Added sendAway() method
@@ -12,7 +15,7 @@
   reduce array copying and clean up code
 * (Internal) Converted README, LICENCE and CHANGELOG to Asciidoc.
 
-== v1.0.1
+== v1.0.1 (2019-03-10)
 
 * Fixed issue with very long packets not fitting in buffers
   after TLS decryption.
@@ -25,7 +28,7 @@
 * Fixed various issues with disconnecting TLS connections
   not behaving correctly
 
-== v1.0.0
+== v1.0.0 (2019-03-09)
 
 * Replaced Ktor dependency with custom socket handling, which fixes
   fatal issue when connecting to servers over TLS that request a
@@ -37,7 +40,7 @@
   publishes AAAA records.
 * BREAKING: Default port is now 6697, TLS is enabled by default
 
-== v0.11.0
+== v0.11.0 (2019-03-06)
 
 * Added SourcedEvent interface for events that have a user source attached
 * Added ChannelJoinFailed event
@@ -45,7 +48,7 @@
   users joining/leaving channels
 * Added missing user parameter to ModeChangedEvent
 
-== v0.10.3
+== v0.10.3 (2019-02-26)
 
 * Fix issue parsing CTCPs when the content contained multi-byte chars
 * Fixed multiple issues when receiving malformed input from the server:
@@ -55,13 +58,13 @@
   * Better handling for duplicate JOIN messages
   * Ignored messages are now logged more consistently
 
-== v0.10.2
+== v0.10.2 (2019-02-25)
 
 * Fix handling of multiple long lines sometimes dropping part of the line
 * Support lines with 8191 bytes of tags, as allowed by the message-tags spec
 * Fix a few more instances of occasional ConcurrentModificationExceptions
 
-== v0.10.1
+== v0.10.1 (2019-02-24)
 
 * Added NickChangeFailed event for when nicknames are in use, banned, etc
 * Added sendPart method
@@ -69,7 +72,7 @@
 * (Internal) Moved message processors into their own package
 * (Internal) Added ExperimentalIrcClient interface for features not yet ready for release
 
-== v0.10.0
+== v0.10.0 (2019-02-21)
 
 * Batch start and end events are no longer included in BatchReceived events
 * Batches now expose complete metadata from their start event
@@ -87,7 +90,7 @@
 * (Internal) Added annotation to track removal of deprecated methods
 * (Internal) Migrate unit tests to use Mockk instead of Mockito
 
-== v0.9.0
+== v0.9.0 (2019-02-15)
 
 * Improve DSL for creating an IrcClient to allow parameters to be passed to server and profile
   e.g. IrcClient { server("irc.example.com", 6667) }
@@ -108,7 +111,7 @@
     e.g. ChannelFanOutMutator creates Channel* events for global quits/nick changes/etc
 ** Event handlers now just handle events, and don't return anything
 
-== v0.8.0
+== v0.8.0 (2019-02-12)
 
 * Added support for SCRAM-SHA-1 and SCRAM-SHA-256 SASL mechanisms
 * Added MotdLineReceived event
@@ -116,7 +119,7 @@
 * Add utility method IrcClient.isChannel(String) to identify if a target is a channel or not
 * (Internal) Move event handlers into their own package
 
-== v0.7.0
+== v0.7.0 (2019-02-07)
 
 * Fixed experimental API warnings when using IrcClient
 * BREAKING: IrcClients are now constructed using a DSL
@@ -130,7 +133,7 @@
 * Added ServerConnectionError, raised when connecting to the server fails
 * (Internal) Minor version updates for Gradle, Kotlin and JUnit
 
-== v0.6.0
+== v0.6.0 (2019-02-06)
 
 * Changed USER command to not send the server name, per modern standards
 * Added support for SASL authentication (with PLAIN mechanism)
@@ -146,7 +149,7 @@
 * State is now reset when the client is disconnected, so you can immediately reconnect
 * (Internal) improved how coroutines and channels are used in LineBufferedSocket
 
-== v0.5.0
+== v0.5.0 (2019-02-05)
 
 * Server state:
 ** Added ServerConnecting and ServerDisconnected events
@@ -165,7 +168,7 @@
 ** Added CtcpReplyReceived event
 * Improved some documentation
 
-== v0.4.0
+== v0.4.0 (2019-02-04)
 
 * Added CtcpReceived and ActionReceived events
 * Added sendCtcp and sendAction message builders
@@ -173,12 +176,12 @@
 * Added 'network' server feature
 * Added serverName field to ServerState
 
-== v0.3.1
+== v0.3.1 (2019-02-04)
 
 * Added more documentation to public methods/classes
 * Fixed exception when sending multiple lines at once (e.g. when connecting!)
 
-== v0.3.0
+== v0.3.0 (2019-02-03)
 
 * Simplified how messages are constructed.
 ** Instead of: client.send(joinMessage("#channel"))
@@ -192,18 +195,18 @@
 * Added ChannelQuit event, raised for each channel a user is in when they quit
 * (Internal) Event handlers can now return more events to emit
 
-== v0.2.1
+== v0.2.1 (2019-02-03)
 
 * Added documentation and reduced visibility of some internal methods/classes
 * (Internal) Enabled Travis, Codacy and Coveralls
 
-== v0.2.0
+== v0.2.0 (2019-02-02)
 
 * Added support for connecting over TLS
 * BREAKING: Simplified how event handlers are registered
 * BREAKING: Improved use of coroutines so users don't have to worry about them
 * (Internal) Upgraded to Gradle 5.1.1
 
-== v0.1.0
+== v0.1.0 (2019-02-01)
 
 * Initial release
