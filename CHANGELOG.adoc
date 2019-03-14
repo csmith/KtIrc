@@ -3,6 +3,10 @@
 == Next version (in development)
 * No changes yet
 
+== v1.1.1 (2019-03-14)
+
+* Fix occasional buffer overflow issue on TLS connections.
+
 == v1.1.0 (2019-03-13)
 
 * Away support:

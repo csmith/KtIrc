@@ -53,7 +53,7 @@ internal class TlsSocket(
             useClientMode = true
         }
 
-        incomingNetBuffer = ByteBuffer.allocate(engine.session.packetBufferSize)
+        incomingNetBuffer = ByteBuffer.allocate(engine.session.packetBufferSize + BUFFER_SIZE)
         outgoingAppBuffers = Channel(capacity = Channel.UNLIMITED)
         incomingAppBuffer = ByteBuffer.allocate(engine.session.applicationBufferSize)
 

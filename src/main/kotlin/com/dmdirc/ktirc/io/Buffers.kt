@@ -3,8 +3,8 @@ package com.dmdirc.ktirc.io
 import kotlinx.io.pool.DefaultPool
 import java.nio.ByteBuffer
 
-private const val BUFFER_SIZE = 32768
-private const val MAXIMUM_POOL_SIZE = 1024
+internal const val BUFFER_SIZE = 32768
+internal const val MAXIMUM_POOL_SIZE = 1024
 
 internal val byteBufferPool = ByteBufferPool(MAXIMUM_POOL_SIZE, BUFFER_SIZE)
 
