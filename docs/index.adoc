@@ -37,15 +37,6 @@ repository and then the KtIrc dependency; you may already be using
 JCenter for other dependencies -- in that case just skip the
 repository configuration!
 
-[TIP]
-====
-KtIrc adheres to semantic versioning: you can expect to upgrade between
-minor versions without problems (e.g. from `0.1.2` to `0.13.7`); major
-version changes may include breaking changes such as the removal of
-deprecated methods. You should check the changelog before updating to
-a new major version.
-====
-
 .Gradle (using Kotlin DSL)
 [source,kotlin,subs="attributes"]
 ----
@@ -196,6 +187,30 @@ may need to process. At minimum, when receiving a BatchReceived
 event you should apply your normal processing to all the events
 contained within.
 
+=== Versioning and deprecation
+
+As of version 1.0.0, KtIrc adheres to semantic versioning: you can
+expect to upgrade between minor versions without problems (e.g. from `1.1.2`
+to `1.13.7`); major version changes include breaking changes such as the
+removal of methods. You should check the changelog before updating to
+a new major version.
+
+Where at all possible, methods will be deprecated for a full major version
+cycle before being removed. e.g., a method deprecated in `0.5.0` will be
+present in all `1.x.x` releases and will likely be removed fully in `2.0.0`.
+This gives users of the library opportunity to migrate away from deprecated
+methods in advance of their removal.
+
+In KtIrc, we define a breaking change as one that either:
+
+* removes public methods, classes, or fields; or
+* adds required parameters to an existing public method; or
+* significantly alters the default behaviour without any API changes
+
+Note that changes that don't meet this threshold to be classed as "breaking"
+may still cause errors in downstream projects. In particular, new enum
+values may be added which could cause compilation errors if they are
+used exhaustively (e.g. in a `return when` construct with no `else` clause).
 
 == IrcClient DSL
 
@@ -1006,25 +1021,89 @@ handle the ChannelAway events, and vice-versa.
 
 === Channel/User events
 
-TODO
+These are events that may be targeted to either a channel or a user. You
+can use the <<IsChannel>> method to determine whether the target of one
+of these events is a channel or not.
 
 ==== MessageReceived
+* Type: IrcEvent, TargetedEvent, SourcedEvent
+* Properties:
+** `user`: `User` - the user who sent the message
+** `target`: `String` - the channel or user the message was sent to
+** `message`: `String` - the text of the message
 
-TODO
+Raised whenever we receive a message on a channel or directly to our
+local user. CTCPs and Actions, which are client-side extensions to
+messages will not raise this event; instead they will raise
+<<CtcpReceived>> and <<ActionReceived>> respectively.
+
+The <<Reply>> function can be used to reply to a message,
+automatically selecting the appropriate target and including the
+message ID in the reply where supported by the IRC server.
 
 ==== NoticeReceived
+* Type: IrcEvent, TargetedEvent, SourcedEvent
+* Properties:
+** `user`: `User` - the user who sent the notice
+** `target`: `String` - the channel or user the notice was sent to
+** `message`: `String` - the text of the notice
 
-TODO
+Raised whenever we receive a notice on a channel or directly to our
+local user. CTCP replies, which are client-side extensions to
+notices will not raise this event; instead they will raise
+<<CtcpReplyReceived>>.
+
+During connection, notices may be received which target either the
+magic string `AUTH` or `*`, as the client's nickname is not yet
+known.
 
 ==== ActionReceived
+* Type: IrcEvent, TargetedEvent, SourcedEvent
+* Properties:
+** `user`: `User` - the user who sent the action
+** `target`: `String` - the channel or user the action was sent to
+** `action`: `String` - the text of the action
 
-TODO
+Raised whenever we receive an 'action' message on a channel or
+directly to our local user. Actions are a client-side extension
+to the IRC protocol that allow users to describe something they
+are doing.
 
 ==== CtcpReceived
+* Type: IrcEvent, TargetedEvent, SourcedEvent
+* Properties:
+** `user`: `User` - the user who sent the CTCP
+** `target`: `String` - the channel or user the CTCP was sent to
+** `type`: `String` - the type of the CTCP
+** `content`: `String` - the (possibly empty) content of the CTCP
 
-TODO
+Raised in response to a message that contains a CTCP
+(client-to-client protocol) message other than an action.
+CTCPs have a type, such as `PING`, `VERSION`, and optionally
+some content such as a timestamp or nonce when requesting a PING.
+
+KtIrc does not reply to any CTCPs by itself. Replies to CTCPs are
+by convention sent to the originating user, even if the CTCP is
+sent to a channel.
 
 ==== CtcpReplyReceived
+* Type: IrcEvent, TargetedEvent, SourcedEvent
+* Properties:
+** `user`: `User` - the user who sent the CTCP reply
+** `target`: `String` - the channel or user the reply was sent to
+** `type`: `String` - the type of the CTCP reply
+** `content`: `String` - the (possibly empty) content of the CTCP reply
+
+Raised in response to a notice that contains a CTCP
+(client-to-client protocol) reply. This usually occurs after we
+have issued a CTCP request to a user or channel, and the `content`
+argument will contain the remote client's response.
+
+Replies to CTCPs are by convention sent to the originating user,
+even if the CTCP is sent to a channel. The `target` parameter
+should therefore be the local user in most cases.
+
+=== User events
 
 TODO
 
@@ -1042,6 +1121,10 @@ for our own user.
 If the user is away but we don't know the reason for it, the `message`
 property will be empty.
 
+==== ModeChanged
+
+TODO
+
 ==== UserQuit
 
 TODO
@@ -1057,11 +1140,6 @@ TODO
 ==== UserAccountChanged
 
 TODO
-
-==== ModeChanged
-
-TODO
-
 
 === Other events
 
@@ -1162,6 +1240,10 @@ TODO
 TODO
 
 == Utility methods
+
+TODO
+
+=== IsChannel
 
 TODO
 
