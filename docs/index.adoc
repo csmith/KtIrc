@@ -1103,6 +1103,10 @@ Replies to CTCPs are by convention sent to the originating user,
 even if the CTCP is sent to a channel. The `target` parameter
 should therefore be the local user in most cases.
 
+==== ModeChanged
+
+TODO
+
 === User events
 
 TODO
@@ -1121,25 +1125,49 @@ for our own user.
 If the user is away but we don't know the reason for it, the `message`
 property will be empty.
 
-==== ModeChanged
-
-TODO
+For each channel the user is on, a <<ChannelAway>> event will be generated.
 
 ==== UserQuit
 
 TODO
 
 ==== UserNickChanged
+* Type: IrcEvent, SourcedEvent
+* Properties:
+** `user`: `User` - the user who has changed their nickname
+** `newNick`: `String` - the new nickname of the user
 
-TODO
+Raised when we are informed that a user has changed nicknames.
+For each channel the user is on, a <<ChannelNickChanged>> event will be
+generated
+
+TIP: The user property will contain the user's old details, but you will
+not be able to access additional information from the <<UserState>> using
+these details as KtIrc will have internally renamed the user to use the
+new nickname.
 
 ==== UserHostChanged
+* Type: IrcEvent, SourcedEvent
+* Properties:
+** `user`: `User` - the user who has changed their ident/hostname
+** `newIdent`: `String` - the new ident of the user
+** `newHost`: `String` - the new hostname of the user
 
-TODO
+Raised when we are informed that a user has changed their ident and/or
+hostname. This is only supported by servers with the `chghost` capability.
 
 ==== UserAccountChanged
+* Type: IrcEvent, SourcedEvent
+* Properties:
+** `user`: `User` - the user who has changed their account
+** `newAccount`: `String?` - the new account of the user
 
-TODO
+Raised when we are informed that a user has changed their account name.
+This is only supported by servers with the `account-notify` capability,
+and may occur when the user logs in or out of their account.
+
+If the user is no longer logged in to an account, `newAccount` will be
+`null`.
 
 === Other events
 
