@@ -10,8 +10,8 @@ plugins {
     jacoco
     kotlin("jvm") version "1.3.21"
     id("com.jfrog.bintray") version "1.8.4"
-    id("org.jetbrains.dokka") version "0.9.17"
-    id("name.remal.check-updates") version "1.0.113"
+    id("org.jetbrains.dokka") version "0.9.18"
+    id("name.remal.check-updates") version "1.0.121"
 }
 
 jacoco {
@@ -42,10 +42,10 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-io-jvm:0.1.7")
     compile(kotlin("reflect"))
 
-    testImplementation("org.junit.jupiter:junit-jupiter-api:5.4.0")
-    testImplementation("org.junit.jupiter:junit-jupiter-params:5.4.0")
-    testImplementation("io.mockk:mockk:1.9.1")
-    testRuntime("org.junit.jupiter:junit-jupiter-engine:5.4.0")
+    testImplementation("org.junit.jupiter:junit-jupiter-api:5.4.1")
+    testImplementation("org.junit.jupiter:junit-jupiter-params:5.4.1")
+    testImplementation("io.mockk:mockk:1.9.3")
+    testRuntime("org.junit.jupiter:junit-jupiter-engine:5.4.1")
 }
 
 java {
@@ -90,7 +90,7 @@ tasks {
     }
 
     withType<Wrapper> {
-        gradleVersion = "5.2.1"
+        gradleVersion = "5.3.1"
     }
 
     withType<KotlinCompile> {
