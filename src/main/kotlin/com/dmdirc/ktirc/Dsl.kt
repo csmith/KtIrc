@@ -1,16 +1,12 @@
 package com.dmdirc.ktirc
 
+import java.time.Duration
+
 /**
  * Dsl marker for [IrcClient] dsl.
  */
 @DslMarker
 annotation class IrcClientDsl
-
-internal data class IrcClientConfig(
-        val server: ServerConfig,
-        val profile: ProfileConfig,
-        val behaviour: ClientBehaviour,
-        val sasl: SaslConfig?)
 
 /**
  * Dsl for configuring an IRC Client.
@@ -206,12 +202,63 @@ class SaslConfig {
     }
 }
 
+@IrcClientDsl
+class PingConfig {
+
+    /**
+     * The period of time we will wait between sending pings to the server.
+     *
+     * If [incomingLinesResetTimer] is enabled, then a ping will be sent this period of time after the last line
+     * is received from the server. Otherwise, it will be sent this period of time after the last PONG response.
+     */
+    var sendPeriod: Duration? = null
+
+    /**
+     * The period of time to wait for a reply.
+     *
+     * If the server does not respond to a PING in this period, we consider it stoned and disconnect.
+     */
+    var responseGracePeriod: Duration? = null
+
+    /**
+     * Whether to treat incoming lines from the server as an indication that it is still active.
+     *
+     * This reduces the amount of pings that KtIrc will send, but can result in KtIrc staying connected even if the
+     * server is severely lagged or ignores all lines sent to it (for example).
+     */
+    var incomingLinesResetTimer: Boolean = false
+
+}
+
 /**
  * Dsl for configuring the behaviour of an [IrcClient].
  */
 @IrcClientDsl
 class BehaviourConfig : ClientBehaviour {
+
     override var requestModesOnJoin = false
     override var alwaysEchoMessages = false
     override var preferIPv6 = true
+
+    override var pingTimeouts: PingTimeouts? = null
+        internal set(value) {
+            check(field == null) { "ping timeouts may only be specified once" }
+            field = value
+        }
+
+    /**
+     * Configures how frequently KtIrc will send pings, and how it will deal with non-responsive servers.
+     *
+     * If not specified, KtIrc will not send pings.
+     *
+     * See [PingConfig].
+     */
+    @IrcClientDsl
+    fun sendPings(block: PingConfig.() -> Unit) {
+        val config = PingConfig().apply(block)
+        requireNotNull(config.sendPeriod) { "send period must be specified" }
+        requireNotNull(config.responseGracePeriod) { "response grace period must be specified" }
+        pingTimeouts = IrcPingTimeouts(config.sendPeriod!!, config.responseGracePeriod!!, config.incomingLinesResetTimer)
+    }
+
 }

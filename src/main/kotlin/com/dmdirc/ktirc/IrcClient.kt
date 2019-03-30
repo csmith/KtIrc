@@ -7,6 +7,7 @@ import com.dmdirc.ktirc.messages.tagMap
 import com.dmdirc.ktirc.model.*
 import com.dmdirc.ktirc.util.RemoveIn
 import kotlinx.coroutines.Deferred
+import java.time.Duration
 
 /**
  * Primary interface for interacting with KtIrc.
@@ -187,6 +188,36 @@ internal interface ExperimentalIrcClient : IrcClient {
 }
 
 /**
+ * Defines the configuration for sending pings and dealing with ping timeouts.
+ */
+interface PingTimeouts {
+
+    /**
+     * The period of time we will wait between sending pings to the server.
+     *
+     * If [incomingLinesResetTimer] is enabled, then a ping will be sent this period of time after the last line
+     * is received from the server. Otherwise, it will be sent this period of time after the last PONG response.
+     */
+    val sendPeriod: Duration
+
+    /**
+     * The period of time to wait for a reply.
+     *
+     * If the server does not respond to a PING in this period, we consider it stoned and disconnect.
+     */
+    val responseGracePeriod: Duration
+
+    /**
+     * Whether to treat incoming lines from the server as an indication that it is still active.
+     *
+     * This reduces the amount of pings that KtIrc will send, but can result in KtIrc staying connected even if the
+     * server is severely lagged or ignores all lines sent to it (for example).
+     */
+    val incomingLinesResetTimer: Boolean
+
+}
+
+/**
  * Defines the behaviour of an [IrcClient].
  */
 interface ClientBehaviour {
@@ -209,6 +240,14 @@ interface ClientBehaviour {
      * Otherwise, KtIrc will prefer IPv4.
      */
     val preferIPv6: Boolean
+
+    /**
+     * The settings to use for sending pings to the server, and timing out connections that don't reply to those
+     * pings.
+     *
+     * If unset (i.e., `null`), no pings will be sent, and KtIrc will never time out servers.
+     */
+    val pingTimeouts: PingTimeouts?
 
 }
 

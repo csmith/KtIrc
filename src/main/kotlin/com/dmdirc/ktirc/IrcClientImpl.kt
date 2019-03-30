@@ -23,6 +23,17 @@ import java.net.InetAddress
 import java.time.Duration
 import java.util.logging.Level
 
+internal data class IrcClientConfig(
+        val server: ServerConfig,
+        val profile: ProfileConfig,
+        val behaviour: ClientBehaviour,
+        val sasl: SaslConfig?)
+
+internal data class IrcPingTimeouts(
+        override val sendPeriod: Duration,
+        override val responseGracePeriod: Duration,
+        override val incomingLinesResetTimer: Boolean) : PingTimeouts
+
 /**
  * Concrete implementation of an [IrcClient].
  */

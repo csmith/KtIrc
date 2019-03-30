@@ -3,6 +3,7 @@ package com.dmdirc.ktirc
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
+import java.time.Duration
 
 internal class IrcClientConfigBuilderTest {
 
@@ -210,6 +211,92 @@ internal class IrcClientConfigBuilderTest {
         }.build()
 
         assertFalse(config.behaviour.requestModesOnJoin)
+    }
+
+    @Test
+    fun `defaults to null ping timeouts if sendPings omitted`() {
+        val config = IrcClientConfigBuilder().apply {
+            profile { nickname = "acidBurn" }
+            server { host = "thegibson.com" }
+            behaviour {
+                requestModesOnJoin = true
+            }
+        }.build()
+
+        assertNull(config.behaviour.pingTimeouts)
+    }
+
+    @Test
+    fun `throws if sendPings specified without send period`() {
+        assertThrows<IllegalArgumentException> {
+            IrcClientConfigBuilder().apply {
+                profile { nickname = "acidBurn" }
+                server { host = "thegibson.com" }
+                behaviour {
+                    requestModesOnJoin = true
+                    sendPings {
+                        responseGracePeriod = Duration.ofSeconds(10)
+                    }
+                }
+            }.build()
+        }
+    }
+
+    @Test
+    fun `throws if sendPings specified without grace period`() {
+        assertThrows<IllegalArgumentException> {
+            IrcClientConfigBuilder().apply {
+                profile { nickname = "acidBurn" }
+                server { host = "thegibson.com" }
+                behaviour {
+                    requestModesOnJoin = true
+                    sendPings {
+                        sendPeriod = Duration.ofSeconds(10)
+                    }
+                }
+            }.build()
+        }
+    }
+
+    @Test
+    fun `throws if sendPings specified twice`() {
+        assertThrows<IllegalStateException> {
+            IrcClientConfigBuilder().apply {
+                profile { nickname = "acidBurn" }
+                server { host = "thegibson.com" }
+                behaviour {
+                    requestModesOnJoin = true
+                    sendPings {
+                        sendPeriod = Duration.ofSeconds(10)
+                        responseGracePeriod = Duration.ofSeconds(10)
+                    }
+                    sendPings {
+                        sendPeriod = Duration.ofSeconds(10)
+                        responseGracePeriod = Duration.ofSeconds(10)
+                    }
+                }
+            }.build()
+        }
+    }
+
+    @Test
+    fun `configures ping timeouts`() {
+        val config = IrcClientConfigBuilder().apply {
+            profile { nickname = "acidBurn" }
+            server { host = "thegibson.com" }
+            behaviour {
+                requestModesOnJoin = true
+                sendPings {
+                    sendPeriod = Duration.ofSeconds(50)
+                    responseGracePeriod = Duration.ofSeconds(100)
+                    incomingLinesResetTimer = true
+                }
+            }
+        }.build()
+
+        assertEquals(50, config.behaviour.pingTimeouts?.sendPeriod?.seconds)
+        assertEquals(100, config.behaviour.pingTimeouts?.responseGracePeriod?.seconds)
+        assertEquals(true, config.behaviour.pingTimeouts?.incomingLinesResetTimer)
     }
 
     @Test
