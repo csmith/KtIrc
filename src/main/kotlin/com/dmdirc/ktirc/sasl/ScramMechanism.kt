@@ -94,34 +94,29 @@ internal class ScramMechanism(private val algorithm: String, override val priori
         sendAuthenticationMessage("*")
     }
 
-    private fun IrcClient.sendScramMessage(prefix: String = "", vararg entries: Pair<ScramMessageType, String>) =
-            sendAuthenticationData("$prefix${buildScramMessage(*entries)}")
+    private fun IrcClient.sendScramMessage(prefix: String = "", vararg entries: Pair<ScramMessageType, String>)
+            = sendAuthenticationData("$prefix${buildScramMessage(*entries)}")
 
-    private fun buildScramMessage(vararg entries: Pair<ScramMessageType, String>) = entries.joinToString(",") { (k, v) -> "${k.prefix}=$v" }
+    private fun buildScramMessage(vararg entries: Pair<ScramMessageType, String>)
+            = entries.joinToString(",") { (k, v) -> "${k.prefix}=$v" }
 
-    private fun ByteArray?.parse(): Map<ScramMessageType, String> {
-        return if (this == null || this.isEmpty())
-            emptyMap()
-        else
-            String(this).split(',').map {
-                getMessageType(it[0]) to it.substring(2).unescape()
-            }.toMap()
-    }
+    private fun ByteArray?.parse() = if (this == null || this.isEmpty())
+        emptyMap()
+    else
+        String(this).split(',').map {
+            getMessageType(it[0]) to it.substring(2).unescape()
+        }.toMap()
 
     private fun String.escape() = replace("=", "=3D").replace(",", "=2C")
     private fun String.unescape() = replace("=2C", ",").replace("=3D", "=")
 
-    private fun hmac(keyMaterial: ByteArray, input: ByteArray): ByteArray {
-        return with(Mac.getInstance("hmac${algorithm.replace("-", "")}")) {
-            init(SecretKeySpec(keyMaterial, algorithm))
-            doFinal(input)
-        }
+    private fun hmac(keyMaterial: ByteArray, input: ByteArray) = with(Mac.getInstance("hmac${algorithm.replace("-", "")}")) {
+        init(SecretKeySpec(keyMaterial, algorithm))
+        doFinal(input)
     }
 
-    private fun hash(input: ByteArray): ByteArray {
-        return with(MessageDigest.getInstance(algorithm.replace("-", ""))) {
-            digest(input)
-        }
+    private fun hash(input: ByteArray) = with(MessageDigest.getInstance(algorithm.replace("-", ""))) {
+        digest(input)
     }
 
     private fun pbkdf2(keyMaterial: ByteArray, initialSalt: ByteArray, iterations: Int): ByteArray {
@@ -150,7 +145,7 @@ private class ScramException(message: String) : RuntimeException(message)
 private fun newNonce(): String {
     val charPool: List<Char> = (' '..'~') - ',' - '='
     val random = SecureRandom.getInstanceStrong().asKotlinRandom()
-    return (0..31).map { charPool.random(random) }.joinToString("")
+    return CharArray(32) { charPool.random(random) }.joinToString("")
 }
 
 internal class ScramState(
