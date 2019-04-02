@@ -237,6 +237,12 @@ profile {
 behaviour {
     requestModesOnJoin = true
     alwaysEchoMessages = true
+    preferIPv6 = false
+    sendPings {
+        sendPeriod = Duration.ofSeconds(120)
+        responseGracePeriod = Duration.ofSeconds(30)
+        incomingLinesResetTimer = true
+    }
 }
 
 sasl {
@@ -317,6 +323,41 @@ advanced IRC features even if the server doesn't support them:
    has no effect. _(default: true)_
 
 The behaviour block is optional in its entirety.
+
+==== Ping timeouts
+
+The behaviour config has an optional `sendPings` configuration, which
+instructs KtIrc to automatically send ping requests to the server.
+This ensures that the server is still connected and operating properly,
+and will trigger a disconnect if that is not the case.
+
+The sendPings block looks like:
+
+[source,kotlin]
+----
+sendPings {
+    sendPeriod = Duration.ofSeconds(120) <1>
+    responseGracePeriod = Duration.ofSeconds(30) <2>
+    incomingLinesResetTimer = true <3>
+}
+----
+<1> The `sendPeriod` defines how often KtIrc should send pings. Most
+    applications will probably want to send pings somewhere between
+    every 30 seconds and every minute or two. If the `sendPings`
+    block is present, this field is required.
+<2> The `responseGracePeriod` defines how long KtIrc will wait for a
+    response from the server before it considers the server to be
+    malfunctioning. Setting this too low will result in disconnects
+    when the connection to the server is merely suffering from high
+    latency, rather than irreparably broken.  If the `sendPings`
+    block is present, this field is required.
+<3> The only optional field in the `sendPings` block, the
+    `incomingLinesResetTimer` setting determines whether KtIrc will
+    treat _any_ incoming line in the same way as a `PONG` response;
+    in effect it prevents KtIrc from disconnecting from a server
+    suffering from high latency as long as the server keeps sending
+    _something_. When disabled (or not specified), KtIrc will require
+    an explicit `PONG` reply.
 
 === SASL configuration
 
@@ -1178,6 +1219,14 @@ If the user is no longer logged in to an account, `newAccount` will be
 
 Raised when the IRC server sends a PING message to the client. KtIrc will
 automatically reply with an appropriate PONG.
+
+==== PongReceived
+* Type: IrcEvent
+* Properties:
+** `nonce`: `ByteArray` - the unique data that was sent in the PING
+
+Raised when the IRC server sends a PONG message to the client. KtIrc can
+automatically send pings and handle pongs, see <<Ping timeouts>>.
 
 ==== ServerFeaturesUpdated
 * Type: IrcEvent

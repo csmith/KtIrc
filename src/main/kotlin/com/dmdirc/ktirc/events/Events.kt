@@ -104,6 +104,9 @@ class ServerFeaturesUpdated(metadata: EventMetadata, val serverFeatures: ServerF
 /** Raised whenever a PING is received from the server. */
 class PingReceived(metadata: EventMetadata, val nonce: ByteArray) : IrcEvent(metadata)
 
+/** Raised whenever a PONG is received from the server. */
+class PongReceived(metadata: EventMetadata, val nonce: ByteArray) : IrcEvent(metadata)
+
 /** Raised when a user joins a channel. */
 class ChannelJoined(metadata: EventMetadata, override val user: User, channel: String)
     : TargetedEvent(metadata, channel), SourcedEvent, ChannelMembershipAdjustment {
