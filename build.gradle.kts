@@ -8,10 +8,10 @@ group = "com.dmdirc.ktirc"
 plugins {
     `maven-publish`
     jacoco
-    kotlin("jvm") version "1.3.21"
+    kotlin("jvm") version "1.3.31"
     id("com.jfrog.bintray") version "1.8.4"
-    id("org.jetbrains.dokka") version "0.9.17"
-    id("name.remal.check-updates") version "1.0.113"
+    id("org.jetbrains.dokka") version "0.9.18"
+    id("name.remal.check-updates") version "1.0.130"
 }
 
 jacoco {
@@ -25,7 +25,7 @@ configurations {
     all {
         resolutionStrategy.eachDependency {
             if (requested.group == "org.jetbrains.kotlin") {
-                useVersion("1.3.21")
+                useVersion("1.3.31")
             }
         }
     }
@@ -37,15 +37,15 @@ repositories {
 }
 
 dependencies {
-    implementation(kotlin("stdlib-jdk8", "1.3.21"))
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.1.1")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-io-jvm:0.1.7")
+    implementation(kotlin("stdlib-jdk8", "1.3.31"))
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.2.1")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-io-jvm:0.1.8")
     compile(kotlin("reflect"))
 
-    testImplementation("org.junit.jupiter:junit-jupiter-api:5.4.0")
-    testImplementation("org.junit.jupiter:junit-jupiter-params:5.4.0")
-    testImplementation("io.mockk:mockk:1.9.1")
-    testRuntime("org.junit.jupiter:junit-jupiter-engine:5.4.0")
+    testImplementation("org.junit.jupiter:junit-jupiter-api:5.4.2")
+    testImplementation("org.junit.jupiter:junit-jupiter-params:5.4.2")
+    testImplementation("io.mockk:mockk:1.9.3")
+    testRuntime("org.junit.jupiter:junit-jupiter-engine:5.4.2")
 }
 
 java {
@@ -90,7 +90,7 @@ tasks {
     }
 
     withType<Wrapper> {
-        gradleVersion = "5.2.1"
+        gradleVersion = "5.4.1"
     }
 
     withType<KotlinCompile> {

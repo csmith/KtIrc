@@ -136,7 +136,7 @@ internal class ScramMechanism(private val algorithm: String, override val priori
 
     private val IrcClient.scramState: ScramState
         get() = with(serverState.sasl) {
-            (mechanismState as? ScramState ?: com.dmdirc.ktirc.sasl.ScramState()).apply {
+            (mechanismState as? ScramState ?: ScramState()).apply {
                 mechanismState = this
             }
         }
@@ -149,7 +149,7 @@ private class ScramException(message: String) : RuntimeException(message)
 
 private fun newNonce(): String {
     val charPool: List<Char> = (' '..'~') - ',' - '='
-    val random = SecureRandom.getInstanceStrong().asKotlinRandom()
+    val random = SecureRandom().asKotlinRandom()
     return (0..31).map { charPool.random(random) }.joinToString("")
 }
 

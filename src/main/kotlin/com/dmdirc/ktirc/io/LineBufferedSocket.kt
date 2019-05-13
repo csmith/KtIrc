@@ -57,7 +57,7 @@ internal class LineBufferedSocketImpl(coroutineScope: CoroutineScope, private va
         runBlocking {
             if (tls) {
                 with(SSLContext.getInstance("TLSv1.2")) {
-                    init(null, tlsTrustManager?.let { arrayOf(it) }, SecureRandom.getInstanceStrong())
+                    init(null, tlsTrustManager?.let { arrayOf(it) }, SecureRandom())
                     socket = TlsSocket(this@LineBufferedSocketImpl, socket, this, host)
                 }
             }
